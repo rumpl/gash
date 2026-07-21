@@ -2,7 +2,7 @@
 
 A Go rewrite of [vercel-labs/just-bash](https://github.com/vercel-labs/just-bash): a Bash interpreter with a capability-based virtual filesystem. It is intended for agents and applications that need useful shell workflows without exposing the host filesystem or launching host processes.
 
-> **Status:** active parity work. Bash parsing/execution now uses a full AST interpreter, but command implementations and the overlay, mountable, networking, transform, and optional-runtime layers are not yet at just-bash parity. See [PORTING.md](PORTING.md).
+> **Status:** active parity work. Bash parsing/execution now uses a full AST interpreter, but command implementations and the overlay, networking, transform, and optional-runtime layers are not yet at just-bash parity. See [PORTING.md](PORTING.md).
 
 ## Install
 
@@ -87,7 +87,7 @@ Built-in commands:
 
 `base64`, `basename`, `bash`, `cat`, `cd`, `clear`, `cp`, `dirname`, `echo`, `env`, `false`, `grep`, `head`, `hostname`, `ln -s`, `ls`, `md5sum`, `mkdir`, `mv`, `printf`, `printenv`, `pwd`, `readlink`, `rm`, `rmdir`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `tail`, `tee`, `touch`, `true`, `uniq`, `wc`, and `whoami`.
 
-Command flags and edge cases are still being ported from the upstream command test suites. Mount/overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes remain to be implemented.
+Command flags and edge cases are still being ported from the upstream command test suites. Overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes remain to be implemented. A mountable `io/fs` implementation is available as `fs.Mountable`.
 
 ## Filesystems
 

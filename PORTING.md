@@ -46,7 +46,7 @@ The parser/interpreter is provided by `mvdan.cc/sh/v3`; gash owns all filesystem
 - [ ] hard links, chmod, timestamps, and stable inode identity
 - [ ] copy-on-write overlay implementation
 - [ ] rooted read-write host implementation
-- [ ] mountable filesystem and cross-mount operations
+- [x] mountable filesystem, virtual parent directories, and cross-mount copy/move
 - [ ] lazy initial files
 
 ## Commands
