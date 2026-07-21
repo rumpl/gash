@@ -2,7 +2,7 @@
 
 A Go rewrite of [vercel-labs/just-bash](https://github.com/vercel-labs/just-bash): a Bash interpreter with a capability-based virtual filesystem. It is intended for agents and applications that need useful shell workflows without exposing the host filesystem or launching host processes.
 
-> **Status:** active parity work. Bash parsing/execution now uses a full AST interpreter, but command implementations and the overlay, networking, transform, and optional-runtime layers are not yet at just-bash parity. See [PORTING.md](PORTING.md).
+> **Status:** active parity work. Bash parsing/execution now uses a full AST interpreter, but command implementations and the overlay, networking, transform, and optional-runtime layers are not yet at just-bash parity. See the comprehensive [remaining-work checklist](REMAINING_WORK.md) and [porting plan](PORTING.md).
 
 ## Install
 

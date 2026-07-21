@@ -1,6 +1,6 @@
 # just-bash parity plan
 
-This file tracks the Go port against `vercel-labs/just-bash/packages/just-bash/src`. A checked item means a tested baseline is implemented; it does **not** claim complete upstream flag or edge-case parity. Full parity for a command requires porting its upstream comparison tests, which is tracked separately from command availability.
+This file summarizes the Go port against `vercel-labs/just-bash/packages/just-bash/src`. A checked item means a tested baseline is implemented; it does **not** claim complete upstream flag or edge-case parity. Full parity for a command requires porting its upstream comparison tests. The detailed, authoritative checklist is [REMAINING_WORK.md](REMAINING_WORK.md).
 
 ## Upstream architecture reviewed
 
@@ -45,7 +45,8 @@ The parser/interpreter is provided by `mvdan.cc/sh/v3`; gash owns all filesystem
 - [x] standard `fstest.TestFS` conformance
 - [x] support for arbitrary standard read-only implementations
 - [x] files, directories, symlinks, rename, recursive removal, and quota accounting
-- [ ] hard links, chmod, timestamps, and stable inode identity
+- [x] hard-link, chmod, and timestamp capabilities
+- [ ] complete stable inode identity and metadata parity
 - [ ] copy-on-write overlay implementation
 - [ ] rooted read-write host implementation
 - [x] mountable filesystem, virtual parent directories, and cross-mount copy/move
