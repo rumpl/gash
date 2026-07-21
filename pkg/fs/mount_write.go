@@ -1,8 +1,10 @@
 package fs
 
 import (
+	"errors"
 	iofs "io/fs"
 	"path"
+	"time"
 )
 
 func (m *Mountable) WriteFile(name string, data []byte, perm iofs.FileMode) error {
@@ -84,6 +86,35 @@ func (m *Mountable) Symlink(target, name string) error {
 	}
 	return f.Symlink(target, relative)
 }
+func (m *Mountable) Chmod(name string, mode iofs.FileMode) error {
+	filesystem, relative, _ := m.route(name)
+	f, ok := filesystem.(ChmodFS)
+	if !ok {
+		return ErrReadOnly
+	}
+	return f.Chmod(relative, mode)
+}
+func (m *Mountable) Chtimes(name string, atime, mtime time.Time) error {
+	filesystem, relative, _ := m.route(name)
+	f, ok := filesystem.(ChtimesFS)
+	if !ok {
+		return ErrReadOnly
+	}
+	return f.Chtimes(relative, atime, mtime)
+}
+func (m *Mountable) Link(oldName, newName string) error {
+	oldFS, oldRelative, oldMount := m.route(oldName)
+	_, newRelative, newMount := m.route(newName)
+	if oldMount != newMount {
+		return errors.New("cross-device link")
+	}
+	f, ok := oldFS.(LinkFS)
+	if !ok {
+		return ErrReadOnly
+	}
+	return f.Link(oldRelative, newRelative)
+}
+
 func (m *Mountable) Rename(oldName, newName string) error {
 	oldName, newName = Name(oldName), Name(newName)
 	if m.IsMountPoint(oldName) || m.hasVirtualDir(oldName) {

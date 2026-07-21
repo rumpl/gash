@@ -22,6 +22,7 @@ type node struct {
 	target string
 	mode   iofs.FileMode
 	mtime  time.Time
+	links  uint64
 }
 type nodeKind uint8
 
@@ -33,7 +34,7 @@ const (
 
 func NewMemory(limit int64) *Memory {
 	m := &Memory{nodes: map[string]*node{}, limit: limit}
-	m.nodes["."] = &node{kind: directory, mode: iofs.ModeDir | 0755, mtime: time.Now()}
+	m.nodes["."] = &node{kind: directory, mode: iofs.ModeDir | 0755, mtime: time.Now(), links: 1}
 	return m
 }
 func valid(name string) error {
@@ -184,7 +185,13 @@ func (m *Memory) WriteFile(name string, data []byte, perm iofs.FileMode) error {
 	if m.limit > 0 && m.used-old+int64(len(data)) > m.limit {
 		return ErrQuota
 	}
-	m.nodes[name] = &node{kind: regular, data: append([]byte(nil), data...), mode: perm.Perm(), mtime: time.Now()}
+	if existing := m.nodes[name]; existing != nil {
+		existing.data = append(existing.data[:0], data...)
+		existing.mode = perm.Perm()
+		existing.mtime = time.Now()
+	} else {
+		m.nodes[name] = &node{kind: regular, data: append([]byte(nil), data...), mode: perm.Perm(), mtime: time.Now(), links: 1}
+	}
 	m.used += int64(len(data)) - old
 	return nil
 }
@@ -200,7 +207,7 @@ func (m *Memory) AppendFile(name string, data []byte, perm iofs.FileMode) error 
 		if p == nil || p.kind != directory {
 			return ErrNotDir
 		}
-		n = &node{kind: regular, mode: perm.Perm()}
+		n = &node{kind: regular, mode: perm.Perm(), links: 1}
 		m.nodes[name] = n
 	}
 	if n.kind != regular {
@@ -230,7 +237,7 @@ func (m *Memory) Mkdir(name string, perm iofs.FileMode) error {
 	if p.kind != directory {
 		return ErrNotDir
 	}
-	m.nodes[name] = &node{kind: directory, mode: iofs.ModeDir | perm.Perm(), mtime: time.Now()}
+	m.nodes[name] = &node{kind: directory, mode: iofs.ModeDir | perm.Perm(), mtime: time.Now(), links: 1}
 	return nil
 }
 func (m *Memory) MkdirAll(name string, perm iofs.FileMode) error {
@@ -272,7 +279,12 @@ func (m *Memory) Remove(name string) error {
 			}
 		}
 	}
-	m.used -= int64(len(n.data))
+	if n.links > 0 {
+		n.links--
+	}
+	if n.links == 0 {
+		m.used -= int64(len(n.data))
+	}
 	delete(m.nodes, name)
 	return nil
 }
@@ -285,7 +297,12 @@ func (m *Memory) RemoveAll(name string) error {
 	prefix := name + "/"
 	for p, n := range m.nodes {
 		if p == name || strings.HasPrefix(p, prefix) {
-			m.used -= int64(len(n.data))
+			if n.links > 0 {
+				n.links--
+			}
+			if n.links == 0 {
+				m.used -= int64(len(n.data))
+			}
 			delete(m.nodes, p)
 		}
 	}
@@ -313,7 +330,12 @@ func (m *Memory) Rename(oldName, newName string) error {
 				}
 			}
 		}
-		m.used -= int64(len(existing.data))
+		if existing.links > 0 {
+			existing.links--
+		}
+		if existing.links == 0 {
+			m.used -= int64(len(existing.data))
+		}
 		delete(m.nodes, newName)
 	}
 	moving := map[string]*node{}
@@ -341,7 +363,7 @@ func (m *Memory) Symlink(target, name string) error {
 	if p == nil || p.kind != directory {
 		return ErrNotDir
 	}
-	m.nodes[name] = &node{kind: symlink, target: target, mode: iofs.ModeSymlink | 0777, mtime: time.Now()}
+	m.nodes[name] = &node{kind: symlink, target: target, mode: iofs.ModeSymlink | 0777, mtime: time.Now(), links: 1}
 	return nil
 }
 func (m *Memory) Readlink(name string) (string, error) {
@@ -355,6 +377,54 @@ func (m *Memory) Readlink(name string) (string, error) {
 		return "", errors.New("not a symbolic link")
 	}
 	return n.target, nil
+}
+func (m *Memory) Link(oldName, newName string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if err := valid(newName); err != nil {
+		return err
+	}
+	_, n, err := m.resolveLocked(oldName, true)
+	if err != nil {
+		return err
+	}
+	if n.kind != regular {
+		return errors.New("hard link source is not a regular file")
+	}
+	if m.nodes[newName] != nil {
+		return iofs.ErrExist
+	}
+	p := m.nodes[parent(newName)]
+	if p == nil {
+		return iofs.ErrNotExist
+	}
+	if p.kind != directory {
+		return ErrNotDir
+	}
+	n.links++
+	m.nodes[newName] = n
+	return nil
+}
+func (m *Memory) Chmod(name string, mode iofs.FileMode) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	_, n, err := m.resolveLocked(name, true)
+	if err != nil {
+		return err
+	}
+	n.mode = n.mode.Type() | mode.Perm()
+	n.mtime = time.Now()
+	return nil
+}
+func (m *Memory) Chtimes(name string, _ time.Time, mtime time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	_, n, err := m.resolveLocked(name, true)
+	if err != nil {
+		return err
+	}
+	n.mtime = mtime
+	return nil
 }
 func (m *Memory) Used() int64 { m.mu.RLock(); defer m.mu.RUnlock(); return m.used }
 

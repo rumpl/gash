@@ -6,6 +6,7 @@ import (
 	iofs "io/fs"
 	"path"
 	"strings"
+	"time"
 )
 
 var (
@@ -50,6 +51,15 @@ type ReadlinkFS interface {
 }
 type LstatFS interface {
 	Lstat(name string) (iofs.FileInfo, error)
+}
+type ChmodFS interface {
+	Chmod(name string, mode iofs.FileMode) error
+}
+type LinkFS interface {
+	Link(oldName, newName string) error
+}
+type ChtimesFS interface {
+	Chtimes(name string, atime, mtime time.Time) error
 }
 
 // Name converts a virtual absolute shell path to an io/fs path.
@@ -127,6 +137,24 @@ func Rename(fsys iofs.FS, oldName, newName string) error {
 func Symlink(fsys iofs.FS, target, name string) error {
 	if f, ok := fsys.(SymlinkFS); ok {
 		return f.Symlink(target, Name(name))
+	}
+	return ErrReadOnly
+}
+func Chmod(fsys iofs.FS, name string, mode iofs.FileMode) error {
+	if f, ok := fsys.(ChmodFS); ok {
+		return f.Chmod(Name(name), mode)
+	}
+	return ErrReadOnly
+}
+func Link(fsys iofs.FS, oldName, newName string) error {
+	if f, ok := fsys.(LinkFS); ok {
+		return f.Link(Name(oldName), Name(newName))
+	}
+	return ErrReadOnly
+}
+func Chtimes(fsys iofs.FS, name string, atime, mtime time.Time) error {
+	if f, ok := fsys.(ChtimesFS); ok {
+		return f.Chtimes(Name(name), atime, mtime)
 	}
 	return ErrReadOnly
 }

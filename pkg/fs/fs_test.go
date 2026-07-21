@@ -56,6 +56,41 @@ func TestMemorySymlinksAndQuota(t *testing.T) {
 		t.Fatalf("expected quota, got %v", err)
 	}
 }
+func TestMemoryHardLinksAndMetadata(t *testing.T) {
+	m := NewMemory(0)
+	if err := m.WriteFile("a", []byte("one"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.Link("a", "b"); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.AppendFile("b", []byte("two"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := m.ReadFile("a")
+	if string(got) != "onetwo" {
+		t.Fatalf("hard link content=%q", got)
+	}
+	if err := m.Chmod("a", 0600); err != nil {
+		t.Fatal(err)
+	}
+	info, _ := m.Stat("b")
+	if info.Mode().Perm() != 0600 {
+		t.Fatalf("mode=%o", info.Mode())
+	}
+	if err := m.Remove("a"); err != nil {
+		t.Fatal(err)
+	}
+	if m.Used() != 6 {
+		t.Fatalf("linked bytes released early: %d", m.Used())
+	}
+	if err := m.Remove("b"); err != nil {
+		t.Fatal(err)
+	}
+	if m.Used() != 0 {
+		t.Fatalf("bytes retained: %d", m.Used())
+	}
+}
 func TestMemoryRecursiveRemove(t *testing.T) {
 	m := NewMemory(0)
 	_ = m.MkdirAll("a/b", 0755)
