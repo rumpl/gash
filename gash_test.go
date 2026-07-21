@@ -46,6 +46,35 @@ func TestPipelinesRedirectionsAndConditionals(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 }
+func TestBashLanguageFeatures(t *testing.T) {
+	b := newTestBash(t)
+	script := `
+		greet() { printf 'hello %s\n' "$1"; }
+		total=0
+		for n in 1 2 3; do total=$((total + n)); done
+		if [[ $total -eq 6 ]]; then greet "$(echo world)"; fi
+		cat <<'EOF'
+heredoc $total
+EOF
+	`
+	result := b.Exec(context.Background(), script, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "hello world\nheredoc $total\n" {
+		t.Fatalf("%+v", result)
+	}
+}
+
+func TestVirtualIdentityAndNoHostFilesystem(t *testing.T) {
+	b := newTestBash(t)
+	result := b.Exec(context.Background(), `printf '%s:%s:%s' "$UID" "$EUID" "$GID"`, ExecOptions{})
+	if result.Stdout != "1000:1000:1000" {
+		t.Fatalf("host identity leaked: %+v", result)
+	}
+	result = b.Exec(context.Background(), "cat /etc/passwd", ExecOptions{})
+	if result.ExitCode == 0 {
+		t.Fatalf("host filesystem was visible: %+v", result)
+	}
+}
+
 func TestCustomCommand(t *testing.T) {
 	upper := Command{Name: "upper", Run: func(_ context.Context, _ []string, c *CommandContext) int {
 		d, _ := io.ReadAll(c.Stdin)
