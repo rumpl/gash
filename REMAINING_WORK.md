@@ -147,6 +147,7 @@ For each command above, port all options, recursion rules, symlink behavior, met
 
 ### Text commands
 
+- [ ] `sed`
 - [ ] `head`
 - [ ] `tail`
 - [ ] `wc`
@@ -198,7 +199,6 @@ These commands exist in the audited upstream registry but are not currently impl
 
 - [ ] `fgrep`
 - [ ] `rg`
-- [ ] `sed`
 - [ ] `awk`
 - [ ] `find`
 - [ ] `xargs`

@@ -353,6 +353,23 @@ var catalog = map[string]Info{
 		Summary: "reverse lines characterwise",
 		Usage:   "rev [file ...]",
 	},
+	"sed": {
+		Name:    "sed",
+		Summary: "stream editor for filtering and transforming text",
+		Usage:   "sed [OPTION]... {script} [input-file]...",
+		Options: []string{
+			"-n, --quiet, --silent  suppress automatic printing of pattern space",
+			"-e script              add the script to commands to be executed",
+			"-f script-file         read script from file",
+			"-i, --in-place         edit files in place",
+			"-E, -r, --regexp-extended  use extended regular expressions",
+			"    --help             display this help and exit",
+		},
+		Description: []string{
+			"Commands: s/regexp/replacement/[flags], d, p, a\\ text, i\\ text, c\\ text, h, H, g, G, x, n, N, y/source/dest/, =, l, b, t, T, :label, q, Q.",
+			"Addresses: N, $, /regexp/, N,M, first~step, and /regexp/,+N ranges.",
+		},
+	},
 	"sleep": {
 		Name:    "sleep",
 		Summary: "delay for a specified amount of time",
