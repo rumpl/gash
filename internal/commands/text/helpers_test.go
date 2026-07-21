@@ -3,6 +3,7 @@ package text
 import (
 	"bytes"
 	"context"
+	"path"
 	"testing"
 
 	"github.com/rumpl/gash/internal/command"
@@ -16,6 +17,12 @@ func assertCommand(t *testing.T, run commandFunc, args []string, stdin, stdout s
 	filesystem := gfs.NewMemory(0)
 	_ = filesystem.MkdirAll("work", 0o755)
 	for name, content := range files {
+		dir := path.Dir(name)
+		if dir != "." {
+			if err := filesystem.MkdirAll("work/"+dir, 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}
 		if err := filesystem.WriteFile("work/"+name, []byte(content), 0o644); err != nil {
 			t.Fatal(err)
 		}

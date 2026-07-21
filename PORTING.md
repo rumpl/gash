@@ -59,7 +59,7 @@ Current initial implementations:
 - [x] basic I/O: `echo`, `printf`, `cat`
 - [x] navigation: `cd`, `pwd`
 - [x] files: `ls`, `mkdir`, `rmdir`, `touch`, `rm`, recursive `cp`, `mv`, symbolic/hard `ln`, `readlink`, `chmod`, `stat`, `file`, `tree`, `du`, `split`
-- [x] text baseline: `head`, `tail`, `wc`, `grep`/`egrep`, `sort`, `uniq`, `tee`, `cut`, `paste`, `comm`, `join`, `tr`, `rev`, `tac`, `nl`, `fold`, `expand`, `unexpand`, `strings`, `column`, `od`
+- [x] text baseline: `head`, `tail`, `wc`, `grep`/`egrep`/`fgrep`, `sort`, `uniq`, `tee`, `cut`, `paste`, `comm`, `join`, `tr`, `rev`, `tac`, `nl`, `fold`, `expand`, `unexpand`, `strings`, `column`, `od`
 - [x] environment/path: `env`, `printenv`, `basename`, `dirname`
 - [x] utility subset: `true`, `false`, `sleep`, `seq`, `base64`, checksums, `hostname`, `whoami`, `clear`
 
@@ -68,7 +68,7 @@ The checks above mean a useful baseline exists. Exact GNU/BSD flag behavior is n
 Still to port:
 
 - [ ] remaining file-command edge cases and complete GNU flag parity
-- [ ] `awk`, `sed`, `rg`, fixed-string `fgrep`, complete flags, and remaining text utilities
+- [ ] `awk`, `sed`, `rg`, complete grep flags, and remaining text utilities
 - [ ] `find`, `tree`, `du`, `xargs`, aliases, history, shell wrappers, and timeout
 - [ ] `jq`, `yq`, `xan`, `sqlite3`, gzip, tar, and file detection
 - [ ] secure `curl` and HTML-to-Markdown

@@ -86,7 +86,7 @@ Shell syntax is parsed as Bash into an AST by `mvdan.cc/sh/v3`. It includes:
 
 Built-in commands:
 
-`base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `cut`, `dirname`, `du`, `echo`, `env`, `expand`, `false`, `file`, `fold`, `grep`, `head`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rm`, `rmdir`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`, `tree`, `true`, `unexpand`, `uniq`, `wc`, and `whoami`.
+`base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `cut`, `dirname`, `du`, `echo`, `env`, `expand`, `false`, `fgrep`, `file`, `fold`, `grep`, `head`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rm`, `rmdir`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`, `tree`, `true`, `unexpand`, `uniq`, `wc`, and `whoami`.
 
 Command flags and edge cases are still being ported from the upstream command test suites. Overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes remain to be implemented. A mountable `io/fs` implementation is available as `fs.Mountable`.
 
