@@ -131,6 +131,18 @@ var catalog = map[string]Info{
 			"    --help       display this help and exit",
 		},
 	},
+	"date": {
+		Name:    "date",
+		Summary: "print or set the system date and time",
+		Usage:   "date [OPTION]... [+FORMAT]",
+		Options: []string{
+			"-u, --utc        print or parse dates in UTC",
+			"-d, --date=TEXT  display time described by TEXT instead of now",
+		},
+		Notes: []string{
+			"Gash supports common GNU-style strftime directives and deterministic clock hooks; setting the system clock is intentionally unsupported.",
+		},
+	},
 	"diff": {
 		Name:    "diff",
 		Summary: "compare files line by line",
@@ -307,6 +319,14 @@ var catalog = map[string]Info{
 			"    --help               display this help and exit",
 		},
 	},
+	"history": {
+		Name:    "history",
+		Summary: "display the command history list",
+		Usage:   "history",
+		Notes: []string{
+			"Interactive history storage is intentionally deferred; non-interactive gash executions report an empty history.",
+		},
+	},
 	"head": {
 		Name:    "head",
 		Summary: "output the first part of files",
@@ -317,6 +337,14 @@ var catalog = map[string]Info{
 			"-q, --quiet        never print headers giving file names",
 			"-v, --verbose      always print headers giving file names",
 			"    --help         display this help and exit",
+		},
+	},
+	"help": {
+		Name:    "help",
+		Summary: "display information about gash built-in commands",
+		Usage:   "help [COMMAND...]",
+		Notes: []string{
+			"Standalone help is provided without inventing global --help semantics for commands that do not have registered help text.",
 		},
 	},
 	"join": {
@@ -599,6 +627,22 @@ var catalog = map[string]Info{
 			"    --help             display this help and exit",
 		},
 	},
+	"time": {
+		Name:    "time",
+		Summary: "run a command and report elapsed time",
+		Usage:   "time COMMAND [ARG]...",
+		Notes: []string{
+			"Commands execute through the safe gash command path; CPU accounting is reported as zero rather than host process usage.",
+		},
+	},
+	"timeout": {
+		Name:    "timeout",
+		Summary: "run a command with a time limit",
+		Usage:   "timeout DURATION COMMAND [ARG]...",
+		Options: []string{
+			"DURATION accepts seconds by default, or s, m, h, d suffixes.",
+		},
+	},
 	"tree": {
 		Name:    "tree",
 		Summary: "list contents of directories in a tree-like format",
@@ -631,6 +675,14 @@ var catalog = map[string]Info{
 			"-i, --ignore-case  ignore case when comparing",
 			"-u, --unique       only print unique lines",
 			"    --help         display this help and exit",
+		},
+	},
+	"which": {
+		Name:    "which",
+		Summary: "locate a gash command",
+		Usage:   "which COMMAND...",
+		Notes: []string{
+			"Only gash built-ins and shell entry points are reported; host PATH executables are never resolved.",
 		},
 	},
 	"wc": {

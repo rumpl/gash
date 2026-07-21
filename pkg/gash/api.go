@@ -5,6 +5,7 @@ import (
 	"path"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rumpl/gash/internal/command"
 	"github.com/rumpl/gash/internal/commands"
@@ -25,6 +26,7 @@ type Options struct {
 	Limits       Limits
 	LimitProfile LimitProfile
 	Commands     []Command
+	Now          func() time.Time
 }
 type ExecOptions struct {
 	Env        map[string]string
@@ -45,6 +47,7 @@ type Bash struct {
 	cwd      string
 	commands map[string]Command
 	limits   Limits
+	now      func() time.Time
 	mu       sync.Mutex
 }
 
@@ -78,7 +81,10 @@ func New(options Options) (*Bash, error) {
 		env[k] = v
 	}
 	enforcePublicInternalEnv(env)
-	b := &Bash{FS: filesystem, env: env, cwd: cwd, commands: map[string]Command{}, limits: limits}
+	if options.Now == nil {
+		options.Now = time.Now
+	}
+	b := &Bash{FS: filesystem, env: env, cwd: cwd, commands: map[string]Command{}, limits: limits, now: options.Now}
 	for _, c := range commands.Builtins() {
 		b.RegisterCommand(c)
 	}

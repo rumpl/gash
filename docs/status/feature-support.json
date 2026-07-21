@@ -16,12 +16,13 @@
     "commands": [
         {
             "name": "alias",
-            "status": "unsupported",
+            "status": "partial",
             "category": "environment",
             "sources": [
+                "gash:shell-native",
                 "just-bash:pinned"
             ],
-            "notes": "Interactive alias mutation is not exposed as a registered gash built-in; scripts should prefer shell functions or explicit commands."
+            "notes": "Implemented by mvdan shell built-ins with expand_aliases enabled. Alias mutation/expansion is scoped to a single Exec; standalone internal command help is not provided."
         },
         {
             "name": "awk",
@@ -145,11 +146,13 @@
         },
         {
             "name": "date",
-            "status": "deferred",
+            "status": "partial",
             "category": "utility",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Supports common GNU-style output formats, -u/--utc, -d/--date parsing, and deterministic clock hooks; setting the system clock is unsupported."
         },
         {
             "name": "diff",
@@ -314,21 +317,23 @@
         },
         {
             "name": "help",
-            "status": "deferred",
+            "status": "partial",
             "category": "utility",
             "sources": [
+                "gash",
                 "just-bash:pinned"
             ],
-            "notes": "Many gash commands support --help, but no standalone help command is registered today."
+            "notes": "Standalone help lists registered gash commands and shows command-specific catalog entries."
         },
         {
             "name": "history",
-            "status": "unsupported",
+            "status": "partial",
             "category": "environment",
             "sources": [
+                "gash",
                 "just-bash:pinned"
             ],
-            "notes": "Interactive command history is outside the current non-interactive gash product surface."
+            "notes": "Registered for compatibility, but interactive history persistence is intentionally deferred; non-interactive gash reports an empty history."
         },
         {
             "name": "hostname",
@@ -685,19 +690,23 @@
         },
         {
             "name": "time",
-            "status": "deferred",
+            "status": "partial",
             "category": "utility",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Runs commands through gash safe command dispatch and reports elapsed wall time; CPU accounting is zeroed."
         },
         {
             "name": "timeout",
-            "status": "deferred",
+            "status": "partial",
             "category": "utility",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Runs commands through gash safe command dispatch with context cancellation; selected GNU timeout flags remain deferred."
         },
         {
             "name": "touch",
@@ -737,12 +746,13 @@
         },
         {
             "name": "unalias",
-            "status": "unsupported",
+            "status": "partial",
             "category": "environment",
             "sources": [
+                "gash:shell-native",
                 "just-bash:pinned"
             ],
-            "notes": "Interactive alias mutation is not exposed as a registered gash built-in."
+            "notes": "Implemented by mvdan shell built-ins and scoped to a single Exec."
         },
         {
             "name": "unexpand",
@@ -773,11 +783,13 @@
         },
         {
             "name": "which",
-            "status": "deferred",
+            "status": "partial",
             "category": "path",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Resolves only gash built-ins and shell entry points; host PATH executables are never reported."
         },
         {
             "name": "whoami",

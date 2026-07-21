@@ -79,7 +79,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	for k, v := range env {
 		pairs = append(pairs, k+"="+v)
 	}
-	runner, err := interp.New(interp.Env(expand.ListEnviron(pairs...)), interp.Params(args...), interp.StdIO(strings.NewReader(stdin), stdout, stderr), interp.OpenHandler(b.openHandler), interp.ReadDirHandler2(b.readDirHandler), interp.StatHandler(b.statHandler), interp.CallHandler(func(callCtx context.Context, argv []string) ([]string, error) {
+	runner, err := interp.New(interp.Env(expand.ListEnviron(pairs...)), interp.Params(args...), interp.Interactive(true), interp.StdIO(strings.NewReader(stdin), stdout, stderr), interp.OpenHandler(b.openHandler), interp.ReadDirHandler2(b.readDirHandler), interp.StatHandler(b.statHandler), interp.CallHandler(func(callCtx context.Context, argv []string) ([]string, error) {
 		if err := scope.chargeCommand(); err != nil {
 			fmt.Fprintf(interp.HandlerCtx(callCtx).Stderr, "bash: %v\n", err)
 			return argv, interp.NewExitStatus(126)
@@ -172,7 +172,11 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 		fmt.Fprintf(h.Stderr, "bash: %s: command not found\n", name)
 		return interp.NewExitStatus(127)
 	}
-	code := cmd.Run(ctx, args[1:], &CommandContext{FS: b.FS, Cwd: &cwd, Env: env, Stdin: h.Stdin, Stdout: h.Stdout, Stderr: h.Stderr})
+	commandCtx := &CommandContext{FS: b.FS, Cwd: &cwd, Env: env, Stdin: h.Stdin, Stdout: h.Stdout, Stderr: h.Stderr, Commands: b.commandNames(), Now: b.now}
+	commandCtx.RunCommand = func(runCtx context.Context, argv []string, child *CommandContext) int {
+		return b.runCommandFromContext(runCtx, argv, child, depth, scope)
+	}
+	code := cmd.Run(ctx, args[1:], commandCtx)
 	if code != 0 {
 		return interp.NewExitStatus(uint8(code))
 	}
