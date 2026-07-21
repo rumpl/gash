@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -83,14 +84,14 @@ func New(options Options) (*Bash, error) {
 	if cwd == "" {
 		cwd = "/home/user"
 	}
-	_ = filesystem.Mkdir("/home/user", 0755, true)
-	_ = filesystem.Mkdir("/tmp", 0777, true)
-	_ = filesystem.Mkdir("/bin", 0755, true)
-	_ = filesystem.Mkdir("/usr/bin", 0755, true)
+	_ = gfs.MkdirAll(filesystem, "/home/user", 0755)
+	_ = gfs.MkdirAll(filesystem, "/tmp", 0777)
+	_ = gfs.MkdirAll(filesystem, "/bin", 0755)
+	_ = gfs.MkdirAll(filesystem, "/usr/bin", 0755)
 	for p, data := range options.Files {
-		abs := filesystem.Resolve("/", p)
-		_ = filesystem.Mkdir(pathDir(abs), 0755, true)
-		if err := filesystem.WriteFile(abs, []byte(data), 0644); err != nil {
+		abs := resolve("/", p)
+		_ = gfs.MkdirAll(filesystem, pathDir(abs), 0755)
+		if err := gfs.WriteFile(filesystem, abs, []byte(data), 0644); err != nil {
 			return nil, err
 		}
 	}
@@ -107,6 +108,13 @@ func New(options Options) (*Bash, error) {
 	}
 	return b, nil
 }
+func resolve(base, name string) string {
+	if strings.HasPrefix(name, "/") {
+		return path.Clean(name)
+	}
+	return path.Clean(path.Join(base, name))
+}
+
 func pathDir(p string) string {
 	i := strings.LastIndex(p, "/")
 	if i <= 0 {
@@ -164,11 +172,11 @@ func (b *Bash) Exec(ctx context.Context, script string, options ExecOptions) Res
 	return Result{Stdout: out.String(), Stderr: errout.String(), ExitCode: code, Env: env}
 }
 func (b *Bash) ReadFile(name string) (string, error) {
-	data, e := b.FS.ReadFile(b.FS.Resolve(b.cwd, name))
+	data, e := gfs.ReadFile(b.FS, resolve(b.cwd, name))
 	return string(data), e
 }
 func (b *Bash) WriteFile(name, data string) error {
-	return b.FS.WriteFile(b.FS.Resolve(b.cwd, name), []byte(data), 0644)
+	return gfs.WriteFile(b.FS, resolve(b.cwd, name), []byte(data), 0644)
 }
 func (b *Bash) GetCwd() string            { return b.cwd }
 func (b *Bash) GetEnv() map[string]string { return cloneMap(b.env) }
@@ -213,7 +221,7 @@ func (b *Bash) runPipeline(ctx context.Context, pipeline []simpleCommand, stdin 
 		}
 		in := io.Reader(bytes.NewReader(input))
 		if cmd.Input != "" {
-			data, e := b.FS.ReadFile(b.FS.Resolve(*cwd, cmd.Input))
+			data, e := gfs.ReadFile(b.FS, resolve(*cwd, cmd.Input))
 			if e != nil {
 				fmt.Fprintf(stderr, "bash: %s: %v\n", cmd.Input, e)
 				return 1
@@ -226,12 +234,12 @@ func (b *Bash) runPipeline(ctx context.Context, pipeline []simpleCommand, stdin 
 		}
 		code = b.runCommand(ctx, cmd, in, target, stderr, cwd, env, depth)
 		if cmd.Output != "" {
-			name := b.FS.Resolve(*cwd, cmd.Output)
+			name := resolve(*cwd, cmd.Output)
 			var e error
 			if cmd.Append {
-				e = b.FS.AppendFile(name, fileBuf.Bytes())
+				e = gfs.AppendFile(b.FS, name, fileBuf.Bytes(), 0644)
 			} else {
-				e = b.FS.WriteFile(name, fileBuf.Bytes(), 0644)
+				e = gfs.WriteFile(b.FS, name, fileBuf.Bytes(), 0644)
 			}
 			if e != nil {
 				fmt.Fprintf(stderr, "bash: %s: %v\n", cmd.Output, e)
@@ -268,7 +276,7 @@ func (b *Bash) runCommand(ctx context.Context, cmd simpleCommand, stdin io.Reade
 			return b.execute(ctx, args[1], string(data), cwd, env, stdout, stderr, depth+1)
 		}
 		if len(args) > 0 {
-			data, e := b.FS.ReadFile(b.FS.Resolve(*cwd, args[0]))
+			data, e := gfs.ReadFile(b.FS, resolve(*cwd, args[0]))
 			if e != nil {
 				fmt.Fprintln(stderr, e)
 				return 1

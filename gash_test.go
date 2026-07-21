@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 )
 
@@ -60,6 +61,21 @@ func TestCustomCommand(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 }
+func TestStandardReadOnlyFilesystem(t *testing.T) {
+	b, err := New(Options{FS: fstest.MapFS{"data/message.txt": {Data: []byte("from mapfs\n")}}, Cwd: "/"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := b.Exec(context.Background(), "cat /data/message.txt", ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "from mapfs\n" {
+		t.Fatalf("%+v", result)
+	}
+	result = b.Exec(context.Background(), "echo denied > /new", ExecOptions{})
+	if result.ExitCode == 0 || !strings.Contains(result.Stderr, "read-only") {
+		t.Fatalf("%+v", result)
+	}
+}
+
 func TestTimeout(t *testing.T) {
 	b, e := New(Options{Limits: Limits{MaxExecutionTime: 10 * time.Millisecond}})
 	if e != nil {

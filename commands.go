@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	iofs "io/fs"
 	"path"
 	"regexp"
 	"sort"
@@ -27,10 +28,16 @@ func builtinCommands() []Command {
 		}},
 	}
 }
+
+type fileInfoEntry struct{ iofs.FileInfo }
+
+func (e fileInfoEntry) Type() iofs.FileMode          { return e.Mode().Type() }
+func (e fileInfoEntry) Info() (iofs.FileInfo, error) { return e.FileInfo, nil }
+
 func simpleOutput(s string) CommandFunc {
 	return func(_ context.Context, _ []string, c *CommandContext) int { fmt.Fprintln(c.Stdout, s); return 0 }
 }
-func abs(c *CommandContext, p string) string { return c.FS.Resolve(*c.Cwd, p) }
+func abs(c *CommandContext, p string) string { return resolve(*c.Cwd, p) }
 func report(c *CommandContext, name string, e error) int {
 	fmt.Fprintf(c.Stderr, "%s: %v\n", name, e)
 	return 1
@@ -72,11 +79,11 @@ func commandCD(_ context.Context, args []string, c *CommandContext) int {
 		dest = c.Env["OLDPWD"]
 	}
 	p := abs(c, dest)
-	st, e := c.FS.Stat(p)
+	st, e := gfs.Stat(c.FS, p)
 	if e != nil {
 		return report(c, "cd", e)
 	}
-	if st.Kind != gfs.Directory {
+	if !st.IsDir() {
 		return report(c, "cd", gfs.ErrNotDir)
 	}
 	c.Env["OLDPWD"] = *c.Cwd
@@ -98,7 +105,7 @@ func commandCat(_ context.Context, args []string, c *CommandContext) int {
 			io.Copy(c.Stdout, c.Stdin)
 			continue
 		}
-		data, e := c.FS.ReadFile(abs(c, name))
+		data, e := gfs.ReadFile(c.FS, abs(c, name))
 		if e != nil {
 			code = report(c, "cat: "+name, e)
 			continue
@@ -123,28 +130,29 @@ func commandLS(_ context.Context, args []string, c *CommandContext) int {
 	}
 	code := 0
 	for _, name := range names {
-		entries, e := c.FS.ReadDir(abs(c, name))
+		entries, e := gfs.ReadDir(c.FS, abs(c, name))
 		if e != nil {
-			st, se := c.FS.Stat(abs(c, name))
+			st, se := gfs.Stat(c.FS, abs(c, name))
 			if se != nil {
 				code = report(c, "ls: "+name, se)
 				continue
 			}
-			entries = []gfs.Info{st}
+			entries = []iofs.DirEntry{fileInfoEntry{st}}
 		}
 		for _, entry := range entries {
-			base := path.Base(entry.Path)
+			base := entry.Name()
 			if !all && strings.HasPrefix(base, ".") {
 				continue
 			}
 			if long {
+				info, _ := entry.Info()
 				kind := "-"
-				if entry.Kind == gfs.Directory {
+				if entry.IsDir() {
 					kind = "d"
-				} else if entry.Kind == gfs.Symlink {
+				} else if entry.Type()&iofs.ModeSymlink != 0 {
 					kind = "l"
 				}
-				fmt.Fprintf(c.Stdout, "%srwxr-xr-x %8d %s\n", kind, entry.Size, base)
+				fmt.Fprintf(c.Stdout, "%srwxr-xr-x %8d %s\n", kind, info.Size(), base)
 			} else {
 				fmt.Fprintln(c.Stdout, base)
 			}
@@ -160,7 +168,13 @@ func commandMkdir(_ context.Context, args []string, c *CommandContext) int {
 			recursive = true
 			continue
 		}
-		if e := c.FS.Mkdir(abs(c, a), 0755, recursive); e != nil {
+		var e error
+		if recursive {
+			e = gfs.MkdirAll(c.FS, abs(c, a), 0755)
+		} else {
+			e = gfs.Mkdir(c.FS, abs(c, a), 0755)
+		}
+		if e != nil {
 			code = report(c, "mkdir: "+a, e)
 		}
 	}
@@ -170,10 +184,10 @@ func commandTouch(_ context.Context, args []string, c *CommandContext) int {
 	code := 0
 	for _, a := range args {
 		p := abs(c, a)
-		if _, e := c.FS.Stat(p); e == nil {
+		if _, e := gfs.Stat(c.FS, p); e == nil {
 			continue
 		}
-		if e := c.FS.WriteFile(p, nil, 0644); e != nil {
+		if e := gfs.WriteFile(c.FS, p, nil, 0644); e != nil {
 			code = report(c, "touch: "+a, e)
 		}
 	}
@@ -192,7 +206,13 @@ func commandRM(_ context.Context, args []string, c *CommandContext) int {
 	}
 	code := 0
 	for _, a := range names {
-		if e := c.FS.Remove(abs(c, a), recursive); e != nil && !force {
+		var e error
+		if recursive {
+			e = gfs.RemoveAll(c.FS, abs(c, a))
+		} else {
+			e = gfs.Remove(c.FS, abs(c, a))
+		}
+		if e != nil && !force {
 			code = report(c, "rm: "+a, e)
 		}
 	}
@@ -202,11 +222,11 @@ func commandCP(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) != 2 {
 		return report(c, "cp", fmt.Errorf("expected source and destination"))
 	}
-	data, e := c.FS.ReadFile(abs(c, args[0]))
+	data, e := gfs.ReadFile(c.FS, abs(c, args[0]))
 	if e != nil {
 		return report(c, "cp", e)
 	}
-	if e = c.FS.WriteFile(abs(c, args[1]), data, 0644); e != nil {
+	if e = gfs.WriteFile(c.FS, abs(c, args[1]), data, 0644); e != nil {
 		return report(c, "cp", e)
 	}
 	return 0
@@ -215,14 +235,14 @@ func commandMV(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) != 2 {
 		return report(c, "mv", fmt.Errorf("expected source and destination"))
 	}
-	if e := c.FS.Rename(abs(c, args[0]), abs(c, args[1])); e != nil {
+	if e := gfs.Rename(c.FS, abs(c, args[0]), abs(c, args[1])); e != nil {
 		return report(c, "mv", e)
 	}
 	return 0
 }
 func commandLN(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) == 3 && args[0] == "-s" {
-		if e := c.FS.Symlink(args[1], abs(c, args[2])); e != nil {
+		if e := gfs.Symlink(c.FS, args[1], abs(c, args[2])); e != nil {
 			return report(c, "ln", e)
 		}
 		return 0
@@ -233,7 +253,7 @@ func commandReadlink(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) != 1 {
 		return 1
 	}
-	v, e := c.FS.Readlink(abs(c, args[0]))
+	v, e := gfs.Readlink(c.FS, abs(c, args[0]))
 	if e != nil {
 		return report(c, "readlink", e)
 	}
@@ -246,7 +266,7 @@ func readInputs(args []string, c *CommandContext) ([]byte, error) {
 	}
 	var out []byte
 	for _, a := range args {
-		d, e := c.FS.ReadFile(abs(c, a))
+		d, e := gfs.ReadFile(c.FS, abs(c, a))
 		if e != nil {
 			return nil, e
 		}
@@ -405,7 +425,7 @@ func commandTee(_ context.Context, args []string, c *CommandContext) int {
 	c.Stdout.Write(d)
 	code := 0
 	for _, a := range args {
-		if e := c.FS.WriteFile(abs(c, a), d, 0644); e != nil {
+		if e := gfs.WriteFile(c.FS, abs(c, a), d, 0644); e != nil {
 			code = report(c, "tee", e)
 		}
 	}
