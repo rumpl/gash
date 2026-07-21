@@ -10,6 +10,7 @@ import (
 	"github.com/rumpl/gash/internal/command"
 	"github.com/rumpl/gash/internal/commands"
 	gfs "github.com/rumpl/gash/pkg/fs"
+	"github.com/rumpl/gash/pkg/network"
 )
 
 type Result struct {
@@ -26,6 +27,7 @@ type Options struct {
 	Limits       Limits
 	LimitProfile LimitProfile
 	Commands     []Command
+	Network      *network.Policy
 	Now          func() time.Time
 }
 type ExecOptions struct {
@@ -85,7 +87,7 @@ func New(options Options) (*Bash, error) {
 		options.Now = time.Now
 	}
 	b := &Bash{FS: filesystem, env: env, cwd: cwd, commands: map[string]Command{}, limits: limits, now: options.Now}
-	for _, c := range commands.Builtins() {
+	for _, c := range commands.BuiltinsWithNetwork(options.Network) {
 		b.RegisterCommand(c)
 	}
 	for _, c := range options.Commands {

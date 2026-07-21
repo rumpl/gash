@@ -6,12 +6,18 @@ import (
 
 	"github.com/rumpl/gash/internal/commandhelp"
 	archivecommands "github.com/rumpl/gash/internal/commands/archive"
+	curlcommands "github.com/rumpl/gash/internal/commands/curl"
 	filecommands "github.com/rumpl/gash/internal/commands/files"
 	sqlitecommands "github.com/rumpl/gash/internal/commands/sqlite"
 	textcommands "github.com/rumpl/gash/internal/commands/text"
+	"github.com/rumpl/gash/pkg/network"
 )
 
 func Builtins() []Command {
+	return BuiltinsWithNetwork(nil)
+}
+
+func BuiltinsWithNetwork(policy *network.Policy) []Command {
 	commands := []Command{
 		{Name: "echo", Run: commandEcho},
 		{Name: "printf", Run: commandPrintf},
@@ -47,6 +53,9 @@ func Builtins() []Command {
 	commands = append(commands, textcommands.Commands()...)
 	commands = append(commands, sqlitecommands.Commands()...)
 	commands = append(commands, archivecommands.Commands()...)
+	if policy != nil {
+		commands = append(commands, curlcommands.Commands(*policy)...)
+	}
 	for index := range commands {
 		info, ok := commandhelp.Lookup(commands[index].Name)
 		if !ok {

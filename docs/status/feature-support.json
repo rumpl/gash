@@ -131,9 +131,10 @@
             "status": "optional",
             "category": "network",
             "sources": [
+                "gash",
                 "just-bash:pinned"
             ],
-            "notes": "Network access must remain behind an explicit future policy/API; no gash implementation is registered today."
+            "notes": "Implemented as an opt-in network command registered only when explicit Go API or CLI policy is supplied. Supports practical HTTP(S) methods, headers, auth, bodies/forms/uploads, redirects with revalidation, timeouts, verbose/write-out, virtual file input/output, bounded request/response sizes, and public-address DNS firewalling. Progress meters, proxies, netrc, TLS/client certificates, cookie-jar persistence, and full write-out variable parity are intentionally deferred."
         },
         {
             "name": "cut",

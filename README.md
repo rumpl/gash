@@ -98,9 +98,9 @@ statuses mean:
 
 Current registered built-ins include:
 
-`awk`, `alias`, `base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `cut`, `date`, `diff`, `dirname`, `du`, `echo`, `egrep`, `env`, `expand`, `expr`, `false`, `fgrep`, `file`, `fold`, `grep`, `head`, `help`, `history`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rg`, `rm`, `rmdir`, `sed`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `time`, `timeout`, `touch`, `tr`, `tree`, `true`, `unalias`, `unexpand`, `uniq`, `wc`, `which`, and `whoami`.
+`awk`, `alias`, `base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `curl` (opt-in network only), `cut`, `date`, `diff`, `dirname`, `du`, `echo`, `egrep`, `env`, `expand`, `expr`, `false`, `fgrep`, `file`, `fold`, `grep`, `head`, `help`, `history`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rg`, `rm`, `rmdir`, `sed`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `time`, `timeout`, `touch`, `tr`, `tree`, `true`, `unalias`, `unexpand`, `uniq`, `wc`, `which`, and `whoami`.
 
-Command flags and edge cases are still being ported from the upstream command test suites for selected tasks. Overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes are intentional deferrals unless explicitly enabled by a future task. A mountable `io/fs` implementation is available as `fs.Mountable`.
+Command flags and edge cases are still being ported from the upstream command test suites for selected tasks. Overlay filesystems, transforms, data runtimes, and optional language runtimes are intentional deferrals unless explicitly enabled by a future task. `curl`/network support is opt-in: library users must pass `Options.Network`, and the CLI must pass `--network-allow scheme://host[:port][/path]`; allowed redirects are rechecked and private/loopback/link-local DNS targets are blocked by default. A mountable `io/fs` implementation is available as `fs.Mountable`.
 
 ## Filesystems
 

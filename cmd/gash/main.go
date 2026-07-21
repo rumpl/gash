@@ -12,6 +12,7 @@ import (
 
 	gfs "github.com/rumpl/gash/pkg/fs"
 	"github.com/rumpl/gash/pkg/gash"
+	"github.com/rumpl/gash/pkg/network"
 )
 
 type envFlags map[string]string
@@ -40,6 +41,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	jsonOutput := set.Bool("json", false, "print the result as JSON")
 	cwd := set.String("cwd", "", "virtual working directory (defaults to / with --root)")
 	root := set.String("root", "", "expose a host directory read-only as the virtual filesystem root")
+	networkAllow := set.String("network-allow", "", "enable curl for comma-separated allowed HTTP(S) origins (scheme://host[:port][/path])")
 	env := envFlags{}
 	set.Var(env, "e", "set an environment variable (repeatable)")
 	set.Usage = func() {
@@ -83,6 +85,26 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		if options.Cwd == "" {
 			options.Cwd = "/"
 		}
+	}
+	if *networkAllow != "" {
+		policy := network.NewPolicy()
+		for _, raw := range strings.Split(*networkAllow, ",") {
+			raw = strings.TrimSpace(raw)
+			if raw == "" {
+				continue
+			}
+			rule := network.AllowOrigin(raw)
+			if rule.Host == "" || rule.Scheme == "" {
+				fmt.Fprintf(stderr, "gash: invalid --network-allow origin %q\n", raw)
+				return 2
+			}
+			policy.Rules = append(policy.Rules, rule)
+		}
+		if len(policy.Rules) == 0 {
+			fmt.Fprintln(stderr, "gash: --network-allow requires at least one origin")
+			return 2
+		}
+		options.Network = &policy
 	}
 
 	bash, err := gash.New(options)
