@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rumpl/gash/internal/commandhelp"
+	archivecommands "github.com/rumpl/gash/internal/commands/archive"
 	filecommands "github.com/rumpl/gash/internal/commands/files"
 	textcommands "github.com/rumpl/gash/internal/commands/text"
 )
@@ -43,6 +44,7 @@ func Builtins() []Command {
 	}
 	commands = append(commands, filecommands.Commands()...)
 	commands = append(commands, textcommands.Commands()...)
+	commands = append(commands, archivecommands.Commands()...)
 	for index := range commands {
 		info, ok := commandhelp.Lookup(commands[index].Name)
 		if !ok {

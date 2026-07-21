@@ -319,6 +319,34 @@ var catalog = map[string]Info{
 			"    --help               display this help and exit",
 		},
 	},
+	"gunzip": {
+		Name:    "gunzip",
+		Summary: "expand gzip-compressed files",
+		Usage:   "gunzip [OPTION]... [FILE]...",
+		Options: []string{
+			"-c, --stdout      write on standard output",
+			"-t, --test        test compressed file integrity",
+			"    --help        display this help and exit",
+		},
+		Notes: []string{
+			"Alias-style gzip decompression implemented in-process; advanced gzip flags and source removal semantics are intentionally deferred.",
+		},
+	},
+	"gzip": {
+		Name:    "gzip",
+		Summary: "compress or expand files",
+		Usage:   "gzip [OPTION]... [FILE]...",
+		Options: []string{
+			"-c, --stdout      write on standard output, keep input files",
+			"-d, --decompress  decompress",
+			"-t, --test        test compressed file integrity",
+			"-1..-9            compression level",
+			"    --help        display this help and exit",
+		},
+		Notes: []string{
+			"Input and output stay inside gash streams and virtual files. Header-name preservation, input-file removal, and uncommon gzip flags are intentionally deferred.",
+		},
+	},
 	"history": {
 		Name:    "history",
 		Summary: "display the command history list",
@@ -607,6 +635,24 @@ var catalog = map[string]Info{
 			"    --help         display this help and exit",
 		},
 	},
+	"tar": {
+		Name:    "tar",
+		Summary: "create, list, and extract tar archives",
+		Usage:   "tar -cf ARCHIVE FILE...\ntar -tf ARCHIVE\ntar -xf ARCHIVE",
+		Options: []string{
+			"-c, -t, -x       create, list, or extract an archive",
+			"-f FILE          read/write archive FILE (- for stdin/stdout)",
+			"-z               filter archive through gzip",
+			"-C DIR           change virtual directory before operation",
+			"-v               list processed files on stderr",
+			"-O, --to-stdout  extract regular files to stdout",
+			"--strip-components=N strip leading path components while extracting",
+			"    --help       display this help and exit",
+		},
+		Notes: []string{
+			"Runs entirely against gash's virtual filesystem. Extraction rejects absolute/traversal paths, unsafe symlink and hardlink escapes, unsupported entry types/codecs, and oversized archives. Advanced GNU tar flags and non-gzip codecs are intentionally deferred.",
+		},
+	},
 	"tee": {
 		Name:    "tee",
 		Summary: "read from stdin and write to stdout and files",
@@ -695,6 +741,17 @@ var catalog = map[string]Info{
 			"-l, --lines      print the newline counts",
 			"-w, --words      print the word counts",
 			"    --help       display this help and exit",
+		},
+	},
+	"zcat": {
+		Name:    "zcat",
+		Summary: "decompress gzip files to standard output",
+		Usage:   "zcat [FILE]...",
+		Options: []string{
+			"    --help        display this help and exit",
+		},
+		Notes: []string{
+			"Equivalent to gunzip -c for gzip streams inside gash.",
 		},
 	},
 }

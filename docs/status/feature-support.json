@@ -292,19 +292,23 @@
         },
         {
             "name": "gunzip",
-            "status": "deferred",
+            "status": "partial",
             "category": "archives",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Implemented in-process for virtual filesystem and streams with gzip and ustar/pax tar create/list/extract support. Hostile extraction paths, unsafe links, and oversized archives are rejected; advanced tar/gzip flags and external codecs are intentionally deferred."
         },
         {
             "name": "gzip",
-            "status": "deferred",
+            "status": "partial",
             "category": "archives",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Implemented in-process for virtual filesystem and streams with gzip and ustar/pax tar create/list/extract support. Hostile extraction paths, unsafe links, and oversized archives are rejected; advanced tar/gzip flags and external codecs are intentionally deferred."
         },
         {
             "name": "head",
@@ -673,11 +677,13 @@
         },
         {
             "name": "tar",
-            "status": "deferred",
+            "status": "partial",
             "category": "archives",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Implemented in-process for virtual filesystem and streams with gzip and ustar/pax tar create/list/extract support. Hostile extraction paths, unsafe links, and oversized archives are rejected; advanced tar/gzip flags and external codecs are intentionally deferred."
         },
         {
             "name": "tee",
@@ -828,11 +834,13 @@
         },
         {
             "name": "zcat",
-            "status": "deferred",
+            "status": "partial",
             "category": "archives",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Implemented in-process for virtual filesystem and streams with gzip and ustar/pax tar create/list/extract support. Hostile extraction paths, unsafe links, and oversized archives are rejected; advanced tar/gzip flags and external codecs are intentionally deferred."
         }
     ]
 }
