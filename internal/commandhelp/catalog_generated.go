@@ -152,6 +152,20 @@ var catalog = map[string]Info{
 			"    --help                display this help and exit",
 		},
 	},
+	"expr": {
+		Name:    "expr",
+		Summary: "evaluate expressions",
+		Usage:   "expr EXPRESSION",
+		Description: []string{
+			"Supports just-bash-compatible arithmetic, comparison, boolean, string, and regular expression operators.",
+		},
+		Options: []string{
+			"    --help       display this help and exit",
+		},
+		Notes: []string{
+			"Regular expressions use Go's linear-time regexp engine, so syntax and unsupported constructs may differ from upstream RE2JS diagnostics.",
+		},
+	},
 	"expand": {
 		Name:    "expand",
 		Summary: "convert tabs to spaces",

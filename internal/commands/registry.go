@@ -23,6 +23,7 @@ func Builtins() []Command {
 		{Name: "false", Run: func(context.Context, []string, *CommandContext) int { return 1 }},
 		{Name: "sleep", Run: commandSleep},
 		{Name: "seq", Run: commandSeq},
+		{Name: "expr", Run: commandExpr},
 		{Name: "base64", Run: commandBase64},
 		{Name: "md5sum", Run: checksum("md5")},
 		{Name: "sha1sum", Run: checksum("sha1")},
