@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rumpl/gash/internal/commandhelp"
 )
 
 func commandSleep(ctx context.Context, args []string, c *CommandContext) int {
@@ -51,11 +53,28 @@ func commandSeq(ctx context.Context, args []string, c *CommandContext) int {
 }
 
 func commandBase64(_ context.Context, args []string, c *CommandContext) int {
-	decode := len(args) > 0 && (args[0] == "-d" || args[0] == "--decode")
-	if decode {
-		args = args[1:]
+	decode := false
+	wrap := 0
+	var files []string
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		switch {
+		case arg == "-d" || arg == "--decode":
+			decode = true
+		case arg == "-w" && i+1 < len(args):
+			i++
+			wrap, _ = strconv.Atoi(args[i])
+		case strings.HasPrefix(arg, "-w") && len(arg) > 2:
+			wrap, _ = strconv.Atoi(arg[2:])
+		case strings.HasPrefix(arg, "--wrap="):
+			wrap, _ = strconv.Atoi(strings.TrimPrefix(arg, "--wrap="))
+		case strings.HasPrefix(arg, "-") && arg != "-":
+			return commandhelp.UnknownOption(c, "base64", arg)
+		default:
+			files = append(files, arg)
+		}
 	}
-	d, e := readInputs(args, c)
+	d, e := readInputs(files, c)
 	if e != nil {
 		return report(c, "base64", e)
 	}
@@ -66,31 +85,54 @@ func commandBase64(_ context.Context, args []string, c *CommandContext) int {
 		}
 		c.Stdout.Write(out)
 	} else {
-		fmt.Fprintln(c.Stdout, base64.StdEncoding.EncodeToString(d))
+		encoded := base64.StdEncoding.EncodeToString(d)
+		if wrap > 0 {
+			for len(encoded) > wrap {
+				fmt.Fprintln(c.Stdout, encoded[:wrap])
+				encoded = encoded[wrap:]
+			}
+		}
+		fmt.Fprintln(c.Stdout, encoded)
 	}
 	return 0
 }
 
 func checksum(kind string) CommandFunc {
 	return func(_ context.Context, args []string, c *CommandContext) int {
-		d, e := readInputs(args, c)
-		if e != nil {
-			return report(c, kind+"sum", e)
+		files := args
+		if len(files) == 0 {
+			d, e := readInputs(nil, c)
+			if e != nil {
+				return report(c, kind+"sum", e)
+			}
+			fmt.Fprintf(c.Stdout, "%s  -\n", checksumString(kind, d))
+			return 0
 		}
-		var sum string
-		switch kind {
-		case "md5":
-			sum = fmt.Sprintf("%x", md5.Sum(d))
-		case "sha1":
-			sum = fmt.Sprintf("%x", sha1.Sum(d))
-		default:
-			sum = fmt.Sprintf("%x", sha256.Sum256(d))
+
+		code := 0
+		for _, name := range files {
+			d, e := readInputs([]string{name}, c)
+			if e != nil {
+				code = report(c, kind+"sum: "+name, e)
+				continue
+			}
+			label := name
+			if name == "-" {
+				label = "-"
+			}
+			fmt.Fprintf(c.Stdout, "%s  %s\n", checksumString(kind, d), label)
 		}
-		name := "-"
-		if len(args) > 0 {
-			name = args[0]
-		}
-		fmt.Fprintf(c.Stdout, "%s  %s\n", sum, name)
-		return 0
+		return code
+	}
+}
+
+func checksumString(kind string, d []byte) string {
+	switch kind {
+	case "md5":
+		return fmt.Sprintf("%x", md5.Sum(d))
+	case "sha1":
+		return fmt.Sprintf("%x", sha1.Sum(d))
+	default:
+		return fmt.Sprintf("%x", sha256.Sum256(d))
 	}
 }

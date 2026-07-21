@@ -3,7 +3,10 @@ package text
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
+
+	"github.com/rumpl/gash/internal/commandhelp"
 )
 
 func commandTr(_ context.Context, args []string, c *CommandContext) int {
@@ -11,6 +14,17 @@ func commandTr(_ context.Context, args []string, c *CommandContext) int {
 	var sets []string
 	for _, arg := range args {
 		if strings.HasPrefix(arg, "-") {
+			if arg == "--delete" {
+				del = true
+				continue
+			}
+			if arg == "--squeeze-repeats" {
+				squeeze = true
+				continue
+			}
+			if strings.HasPrefix(arg, "--") {
+				return commandhelp.UnknownOption(c, "tr", arg)
+			}
 			del = del || strings.Contains(arg, "d")
 			squeeze = squeeze || strings.Contains(arg, "s")
 		} else {
@@ -76,6 +90,14 @@ func expandSet(s string) []rune {
 				out = append(out, '\n')
 			case 't':
 				out = append(out, '\t')
+			case '0':
+				j := i
+				for j < len(r) && j < i+3 && r[j] >= '0' && r[j] <= '7' {
+					j++
+				}
+				value, _ := strconv.ParseInt(string(r[i:j]), 8, 32)
+				out = append(out, rune(value))
+				i = j - 1
 			default:
 				out = append(out, r[i])
 			}

@@ -3,7 +3,6 @@ package text
 import (
 	"bytes"
 	"context"
-	"path"
 	"strings"
 	"testing"
 
@@ -13,6 +12,30 @@ import (
 
 func TestGrep(t *testing.T) {
 	assertCommand(t, commandGrep, []string{"needle"}, "hay\nneedle\n", "needle\n", nil)
+}
+
+func TestGrepCommonRegexAndPipeline(t *testing.T) {
+	assertCommand(t, commandGrep, []string{"h.llo"}, "hello\nhxllo\nhillo\nbye\n", "hello\nhxllo\nhillo\n", nil)
+	assertCommand(t, commandGrep, []string{"-E", "^(cat|dog)$"}, "cat\ncattle\ndog\n", "cat\ndog\n", nil)
+	assertCommand(t, commandGrep, []string{"-i", "café"}, "CAFE\nCafé\n", "Café\n", nil)
+	assertCommandBytes(t, commandGrep, []string{string([]byte{'a', 0, 'b'})}, []byte{'x', '\n', 'a', 0, 'b', '\n'}, []byte{'a', 0, 'b', '\n'}, nil)
+	assertCommand(t, commandGrep, []string{"-n", "needle", "one.txt", "-", "two.txt"}, "stdin needle\n", "one.txt:1:needle one\n-:1:stdin needle\ntwo.txt:1:needle two\n", map[string]string{
+		"one.txt": "needle one\n",
+		"two.txt": "needle two\n",
+	})
+
+	code, stdout, stderr, _ := runTextCommandBytes(t, commandGrep, []string{"["}, nil, nil)
+	if code != 2 || len(stdout) != 0 || stderr == "" {
+		t.Fatalf("invalid regex exit=%d stdout=%q stderr=%q", code, stdout, stderr)
+	}
+	code, stdout, stderr, _ = runTextCommandBytes(t, commandGrep, []string{"--bogus", "needle"}, nil, nil)
+	if code == 0 || len(stdout) != 0 || stderr == "" {
+		t.Fatalf("invalid option exit=%d stdout=%q stderr=%q", code, stdout, stderr)
+	}
+	code, stdout, stderr, _ = runTextCommandBytes(t, commandGrep, []string{"needle", "missing.txt"}, nil, nil)
+	if code != 2 || len(stdout) != 0 || !strings.Contains(stderr, "missing.txt") {
+		t.Fatalf("missing file exit=%d stdout=%q stderr=%q", code, stdout, stderr)
+	}
 }
 
 func TestFGrepFixedStringMetacharacters(t *testing.T) {
@@ -75,39 +98,21 @@ func TestFGrepRecursiveIncludeExclude(t *testing.T) {
 }
 
 func TestFGrepStatusesAndErrors(t *testing.T) {
-	if code, _, _ := runTextCommand(t, commandFGrep, []string{"needle"}, "none\n", nil); code != 1 {
+	code, stdout, stderr, _ := runTextCommandBytes(t, commandFGrep, []string{"needle"}, []byte("none\n"), nil)
+	if code != 1 {
 		t.Fatalf("no match exit=%d, want 1", code)
 	}
-	if code, _, stderr := runTextCommand(t, commandFGrep, nil, "", nil); code != 2 || stderr != "grep: missing pattern\n" {
+	code, stdout, stderr, _ = runTextCommandBytes(t, commandFGrep, nil, nil, nil)
+	if code != 2 || string(stderr) != "grep: missing pattern\n" {
 		t.Fatalf("missing pattern exit=%d stderr=%q", code, stderr)
 	}
-	if code, stdout, stderr := runTextCommand(t, commandFGrep, []string{"needle", "missing.txt"}, "", nil); code != 2 || stdout != "" || !strings.Contains(stderr, "grep: missing.txt: No such file or directory") {
+	if code, stdout, stderr, _ = runTextCommandBytes(t, commandFGrep, []string{"needle", "missing.txt"}, nil, nil); code != 2 || string(stdout) != "" || !strings.Contains(stderr, "grep: missing.txt: No such file or directory") {
 		t.Fatalf("missing file exit=%d stdout=%q stderr=%q", code, stdout, stderr)
 	}
-	if code, stdout, stderr := runTextCommand(t, commandFGrep, []string{"needle", "dir"}, "", map[string]string{"dir/file.txt": "needle\n"}); code != 1 || stdout != "" || stderr != "grep: dir: Is a directory\n" {
+	if code, stdout, stderr, _ = runTextCommandBytes(t, commandFGrep, []string{"needle", "dir"}, nil, map[string][]byte{"dir/file.txt": []byte("needle\n")}); code != 1 || string(stdout) != "" || stderr != "grep: dir: Is a directory\n" {
 		t.Fatalf("directory exit=%d stdout=%q stderr=%q", code, stdout, stderr)
 	}
-	if code, stdout, stderr := runTextCommand(t, commandFGrep, []string{"-q", "needle", "missing.txt", "ok.txt"}, "", map[string]string{"ok.txt": "needle\n"}); code != 0 || stdout != "" || !strings.Contains(stderr, "missing.txt") {
+	if code, stdout, stderr, _ = runTextCommandBytes(t, commandFGrep, []string{"-q", "needle", "missing.txt", "ok.txt"}, nil, map[string][]byte{"ok.txt": []byte("needle\n")}); code != 0 || string(stdout) != "" || !strings.Contains(stderr, "missing.txt") {
 		t.Fatalf("quiet missing exit=%d stdout=%q stderr=%q", code, stdout, stderr)
 	}
-}
-
-func runTextCommand(t *testing.T, run commandFunc, args []string, stdin string, files map[string]string) (int, string, string) {
-	t.Helper()
-	filesystem := gfs.NewMemory(0)
-	_ = filesystem.MkdirAll("work", 0o755)
-	for name, content := range files {
-		dir := path.Dir(name)
-		if dir != "." {
-			_ = filesystem.MkdirAll("work/"+dir, 0o755)
-		}
-		if err := filesystem.WriteFile("work/"+name, []byte(content), 0o644); err != nil {
-			t.Fatal(err)
-		}
-	}
-	var out, stderr bytes.Buffer
-	cwd := "/work"
-	ctx := &command.Context{FS: filesystem, Cwd: &cwd, Env: map[string]string{}, Stdin: bytes.NewBufferString(stdin), Stdout: &out, Stderr: &stderr}
-	code := run(context.Background(), args, ctx)
-	return code, out.String(), stderr.String()
 }

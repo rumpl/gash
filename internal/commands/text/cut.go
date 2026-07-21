@@ -59,6 +59,16 @@ func commandCut(_ context.Context, args []string, c *CommandContext) int {
 			parts := strings.Split(line, delimiter)
 			fmt.Fprintln(c.Stdout, selectStrings(parts, indices, delimiter))
 		} else {
+			if mode == "b" {
+				var selected []byte
+				for _, i := range indices {
+					if i > 0 && i <= len(line) {
+						selected = append(selected, line[i-1])
+					}
+				}
+				fmt.Fprintln(c.Stdout, string(selected))
+				continue
+			}
 			r := []rune(line)
 			var selected []rune
 			for _, i := range indices {
