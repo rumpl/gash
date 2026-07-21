@@ -13,12 +13,14 @@ func commandBasename(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandDirname(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) > 0 {
 		fmt.Fprintln(c.Stdout, path.Dir(args[0]))
 	}
 	return 0
 }
+
 func commandEnv(_ context.Context, _ []string, c *CommandContext) int {
 	keys := make([]string, 0, len(c.Env))
 	for k := range c.Env {
@@ -32,6 +34,7 @@ func commandEnv(_ context.Context, _ []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandPrintenv(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) == 0 {
 		return commandEnv(context.Background(), nil, c)

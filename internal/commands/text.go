@@ -27,6 +27,7 @@ func readInputs(args []string, c *CommandContext) ([]byte, error) {
 	}
 	return out, nil
 }
+
 func commandHead(_ context.Context, args []string, c *CommandContext) int {
 	n := 10
 	if len(args) >= 2 && args[0] == "-n" {
@@ -44,6 +45,7 @@ func commandHead(_ context.Context, args []string, c *CommandContext) int {
 	fmt.Fprint(c.Stdout, strings.Join(lines, ""))
 	return 0
 }
+
 func commandTail(_ context.Context, args []string, c *CommandContext) int {
 	n := 10
 	if len(args) >= 2 && args[0] == "-n" {
@@ -64,6 +66,7 @@ func commandTail(_ context.Context, args []string, c *CommandContext) int {
 	fmt.Fprint(c.Stdout, strings.Join(lines, ""))
 	return 0
 }
+
 func commandWC(_ context.Context, args []string, c *CommandContext) int {
 	mode := "l"
 	if len(args) > 0 && strings.HasPrefix(args[0], "-") {
@@ -86,6 +89,7 @@ func commandWC(_ context.Context, args []string, c *CommandContext) int {
 	fmt.Fprintf(c.Stdout, "%d\n", n)
 	return 0
 }
+
 func bytesCount(d []byte, b byte) int {
 	n := 0
 	for _, v := range d {
@@ -95,6 +99,7 @@ func bytesCount(d []byte, b byte) int {
 	}
 	return n
 }
+
 func commandGrep(_ context.Context, args []string, c *CommandContext) int {
 	ignore, invert, number := false, false, false
 	var rest []string
@@ -144,6 +149,7 @@ func commandGrep(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 1
 }
+
 func commandSort(_ context.Context, args []string, c *CommandContext) int {
 	d, e := readInputs(args, c)
 	if e != nil {
@@ -156,6 +162,7 @@ func commandSort(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandUniq(_ context.Context, args []string, c *CommandContext) int {
 	d, e := readInputs(args, c)
 	if e != nil {
@@ -170,6 +177,7 @@ func commandUniq(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandTee(_ context.Context, args []string, c *CommandContext) int {
 	d, e := io.ReadAll(c.Stdin)
 	if e != nil {
@@ -178,7 +186,7 @@ func commandTee(_ context.Context, args []string, c *CommandContext) int {
 	c.Stdout.Write(d)
 	code := 0
 	for _, a := range args {
-		if e := gfs.WriteFile(c.FS, abs(c, a), d, 0644); e != nil {
+		if e := gfs.WriteFile(c.FS, abs(c, a), d, 0o644); e != nil {
 			code = report(c, "tee", e)
 		}
 	}

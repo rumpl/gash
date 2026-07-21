@@ -17,6 +17,7 @@ func newTestBash(t *testing.T) *Bash {
 	}
 	return b
 }
+
 func TestExecFilesystemPersistsShellStateDoesNot(t *testing.T) {
 	b := newTestBash(t)
 	r := b.Exec(context.Background(), `echo "Hello $NAME" > greeting.txt`, ExecOptions{Env: map[string]string{"NAME": "Alice"}})
@@ -35,6 +36,7 @@ func TestExecFilesystemPersistsShellStateDoesNot(t *testing.T) {
 		t.Fatalf("cwd leaked: %s", b.GetCwd())
 	}
 }
+
 func TestPipelinesRedirectionsAndConditionals(t *testing.T) {
 	b := newTestBash(t)
 	r := b.Exec(context.Background(), "printf 'pear\\napple\\npear\\n' | sort | uniq | grep apple && echo found || echo missing", ExecOptions{})
@@ -46,6 +48,7 @@ func TestPipelinesRedirectionsAndConditionals(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 }
+
 func TestBashLanguageFeatures(t *testing.T) {
 	b := newTestBash(t)
 	script := `
@@ -90,6 +93,7 @@ func TestCustomCommand(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 }
+
 func TestStandardReadOnlyFilesystem(t *testing.T) {
 	b, err := New(Options{FS: fstest.MapFS{"data/message.txt": {Data: []byte("from mapfs\n")}}, Cwd: "/"})
 	if err != nil {
@@ -115,6 +119,7 @@ func TestTimeout(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 }
+
 func TestSyntaxAndUnknownCommands(t *testing.T) {
 	b := newTestBash(t)
 	if r := b.Exec(context.Background(), "echo 'oops", ExecOptions{}); r.ExitCode != 2 {

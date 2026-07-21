@@ -10,9 +10,11 @@ import (
 	"github.com/rumpl/gash/internal/command"
 )
 
-type Command = command.Command
-type CommandFunc = command.Func
-type CommandContext = command.Context
+type (
+	Command        = command.Command
+	CommandFunc    = command.Func
+	CommandContext = command.Context
+)
 
 type fileInfoEntry struct{ iofs.FileInfo }
 
@@ -22,6 +24,7 @@ func (e fileInfoEntry) Info() (iofs.FileInfo, error) { return e.FileInfo, nil }
 func simpleOutput(s string) CommandFunc {
 	return func(_ context.Context, _ []string, c *CommandContext) int { fmt.Fprintln(c.Stdout, s); return 0 }
 }
+
 func resolve(base, name string) string {
 	if strings.HasPrefix(name, "/") {
 		return path.Clean(name)

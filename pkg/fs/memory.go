@@ -34,15 +34,17 @@ const (
 
 func NewMemory(limit int64) *Memory {
 	m := &Memory{nodes: map[string]*node{}, limit: limit}
-	m.nodes["."] = &node{kind: directory, mode: iofs.ModeDir | 0755, mtime: time.Now(), links: 1}
+	m.nodes["."] = &node{kind: directory, mode: iofs.ModeDir | 0o755, mtime: time.Now(), links: 1}
 	return m
 }
+
 func valid(name string) error {
 	if !iofs.ValidPath(name) {
 		return &iofs.PathError{Op: "open", Path: name, Err: iofs.ErrInvalid}
 	}
 	return nil
 }
+
 func (m *Memory) resolveLocked(name string, followFinal bool) (string, *node, error) {
 	if err := valid(name); err != nil {
 		return "", nil, err
@@ -87,6 +89,7 @@ func (m *Memory) resolveLocked(name string, followFinal bool) (string, *node, er
 	}
 	return "", nil, ErrLoop
 }
+
 func parent(name string) string {
 	p := path.Dir(name)
 	if p == "/" || p == "" {
@@ -113,6 +116,7 @@ func (m *Memory) Open(name string) (iofs.File, error) {
 	}
 	return f, nil
 }
+
 func (m *Memory) ReadFile(name string) ([]byte, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -125,6 +129,7 @@ func (m *Memory) ReadFile(name string) ([]byte, error) {
 	}
 	return append([]byte(nil), n.data...), nil
 }
+
 func (m *Memory) ReadDir(name string) ([]iofs.DirEntry, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -144,6 +149,7 @@ func (m *Memory) ReadDir(name string) ([]iofs.DirEntry, error) {
 	sort.Slice(out, func(i, j int) bool { return out[i].Name() < out[j].Name() })
 	return out, nil
 }
+
 func (m *Memory) Stat(name string) (iofs.FileInfo, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -153,6 +159,7 @@ func (m *Memory) Stat(name string) (iofs.FileInfo, error) {
 	}
 	return fileInfo{name: path.Base(resolved), node: cloneNode(n)}, nil
 }
+
 func (m *Memory) Lstat(name string) (iofs.FileInfo, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -162,6 +169,7 @@ func (m *Memory) Lstat(name string) (iofs.FileInfo, error) {
 	}
 	return fileInfo{name: path.Base(resolved), node: cloneNode(n)}, nil
 }
+
 func (m *Memory) WriteFile(name string, data []byte, perm iofs.FileMode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -195,6 +203,7 @@ func (m *Memory) WriteFile(name string, data []byte, perm iofs.FileMode) error {
 	m.used += int64(len(data)) - old
 	return nil
 }
+
 func (m *Memory) AppendFile(name string, data []byte, perm iofs.FileMode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -221,6 +230,7 @@ func (m *Memory) AppendFile(name string, data []byte, perm iofs.FileMode) error 
 	m.used += int64(len(data))
 	return nil
 }
+
 func (m *Memory) Mkdir(name string, perm iofs.FileMode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -240,6 +250,7 @@ func (m *Memory) Mkdir(name string, perm iofs.FileMode) error {
 	m.nodes[name] = &node{kind: directory, mode: iofs.ModeDir | perm.Perm(), mtime: time.Now(), links: 1}
 	return nil
 }
+
 func (m *Memory) MkdirAll(name string, perm iofs.FileMode) error {
 	if err := valid(name); err != nil {
 		return err
@@ -262,6 +273,7 @@ func (m *Memory) MkdirAll(name string, perm iofs.FileMode) error {
 	}
 	return nil
 }
+
 func (m *Memory) Remove(name string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -288,6 +300,7 @@ func (m *Memory) Remove(name string) error {
 	delete(m.nodes, name)
 	return nil
 }
+
 func (m *Memory) RemoveAll(name string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -308,6 +321,7 @@ func (m *Memory) RemoveAll(name string) error {
 	}
 	return nil
 }
+
 func (m *Memory) Rename(oldName, newName string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -350,6 +364,7 @@ func (m *Memory) Rename(oldName, newName string) error {
 	}
 	return nil
 }
+
 func (m *Memory) Symlink(target, name string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -363,9 +378,10 @@ func (m *Memory) Symlink(target, name string) error {
 	if p == nil || p.kind != directory {
 		return ErrNotDir
 	}
-	m.nodes[name] = &node{kind: symlink, target: target, mode: iofs.ModeSymlink | 0777, mtime: time.Now(), links: 1}
+	m.nodes[name] = &node{kind: symlink, target: target, mode: iofs.ModeSymlink | 0o777, mtime: time.Now(), links: 1}
 	return nil
 }
+
 func (m *Memory) Readlink(name string) (string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -378,6 +394,7 @@ func (m *Memory) Readlink(name string) (string, error) {
 	}
 	return n.target, nil
 }
+
 func (m *Memory) Link(oldName, newName string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -405,6 +422,7 @@ func (m *Memory) Link(oldName, newName string) error {
 	m.nodes[newName] = n
 	return nil
 }
+
 func (m *Memory) Chmod(name string, mode iofs.FileMode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -416,6 +434,7 @@ func (m *Memory) Chmod(name string, mode iofs.FileMode) error {
 	n.mtime = time.Now()
 	return nil
 }
+
 func (m *Memory) Chtimes(name string, _ time.Time, mtime time.Time) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -475,6 +494,7 @@ func (f *memFile) Read(p []byte) (int, error) {
 	f.offset += n
 	return n, nil
 }
+
 func (f *memFile) ReadDir(n int) ([]iofs.DirEntry, error) {
 	if f.node.kind != directory {
 		return nil, ErrNotDir
@@ -494,7 +514,9 @@ func (f *memFile) ReadDir(n int) ([]iofs.DirEntry, error) {
 	return out, nil
 }
 
-var _ iofs.FS = (*Memory)(nil)
-var _ iofs.ReadFileFS = (*Memory)(nil)
-var _ iofs.ReadDirFS = (*Memory)(nil)
-var _ iofs.StatFS = (*Memory)(nil)
+var (
+	_ iofs.FS         = (*Memory)(nil)
+	_ iofs.ReadFileFS = (*Memory)(nil)
+	_ iofs.ReadDirFS  = (*Memory)(nil)
+	_ iofs.StatFS     = (*Memory)(nil)
+)

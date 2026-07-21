@@ -31,6 +31,7 @@ type Limits struct {
 func normalLimits() Limits {
 	return Limits{MaxSourceBytes: 64 << 20, MaxExecDepth: 64, MaxCallDepth: 100, MaxCommandCount: 100_000, MaxInputBytes: 512 << 20, MaxOutputBytes: 256 << 20, MaxExecutionTime: time.Hour, MaxFileSystemBytes: 1 << 30}
 }
+
 func hardenedLimits() Limits {
 	v := normalLimits()
 	v.MaxSourceBytes = 8 << 20
@@ -41,6 +42,7 @@ func hardenedLimits() Limits {
 	v.MaxFileSystemBytes = 128 << 20
 	return v
 }
+
 func resolveLimits(user Limits, profile LimitProfile) (Limits, error) {
 	var out Limits
 	switch profile {
@@ -96,6 +98,7 @@ func (s *executionScope) chargeCommand() error {
 	}
 	return nil
 }
+
 func (s *executionScope) consumeInput(n int64) error {
 	if s.input.Add(n) > s.limits.MaxInputBytes {
 		return fmt.Errorf("aggregate input size limit exceeded (%d bytes)", s.limits.MaxInputBytes)

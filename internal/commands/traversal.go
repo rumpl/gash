@@ -3,11 +3,12 @@ package commands
 import (
 	"context"
 	"fmt"
-	gfs "github.com/rumpl/gash/pkg/fs"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
+
+	gfs "github.com/rumpl/gash/pkg/fs"
 )
 
 func commandTree(_ context.Context, args []string, c *CommandContext) int {
@@ -52,6 +53,7 @@ func commandTree(_ context.Context, args []string, c *CommandContext) int {
 	fmt.Fprintln(c.Stdout)
 	return code
 }
+
 func treeWalk(c *CommandContext, dir, prefix string, level, maxDepth int, hidden, dirsOnly, full bool) (int, int, error) {
 	if maxDepth >= 0 && level >= maxDepth {
 		return 0, 0, nil
@@ -136,6 +138,7 @@ func commandDu(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return code
 }
+
 func duWalk(c *CommandContext, name, display string, all, recurse, human bool) (int64, []string, error) {
 	info, err := gfs.Stat(c.FS, name)
 	if err != nil {
@@ -167,6 +170,7 @@ func duWalk(c *CommandContext, name, display string, all, recurse, human bool) (
 	}
 	return total, lines, nil
 }
+
 func formatSize(size int64, human bool) string {
 	if !human {
 		blocks := (size + 1023) / 1024

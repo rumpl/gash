@@ -47,6 +47,7 @@ func NewMountable(options MountableOptions) (*Mountable, error) {
 	}
 	return m, nil
 }
+
 func (m *Mountable) Mount(point string, filesystem iofs.FS) error {
 	if filesystem == nil {
 		return errors.New("mount filesystem is nil")
@@ -74,6 +75,7 @@ func (m *Mountable) Mount(point string, filesystem iofs.FS) error {
 	m.mounts[point] = mountEntry{point: point, fs: filesystem}
 	return nil
 }
+
 func (m *Mountable) Unmount(point string) error {
 	point = Name(point)
 	m.mu.Lock()
@@ -84,6 +86,7 @@ func (m *Mountable) Unmount(point string) error {
 	delete(m.mounts, point)
 	return nil
 }
+
 func (m *Mountable) Mounts() []MountConfig {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -94,6 +97,7 @@ func (m *Mountable) Mounts() []MountConfig {
 	sort.Slice(out, func(i, j int) bool { return out[i].Point < out[j].Point })
 	return out
 }
+
 func (m *Mountable) IsMountPoint(name string) bool {
 	name = Name(name)
 	m.mu.RLock()
@@ -101,6 +105,7 @@ func (m *Mountable) IsMountPoint(name string) bool {
 	_, ok := m.mounts[name]
 	return ok
 }
+
 func (m *Mountable) route(name string) (iofs.FS, string, string) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -124,6 +129,7 @@ func (m *Mountable) route(name string) (iofs.FS, string, string) {
 	}
 	return filesystem, relative, best
 }
+
 func (m *Mountable) childMounts(name string) []string {
 	prefix := ""
 	if name != "." {
@@ -170,6 +176,7 @@ func (m *Mountable) Open(name string) (iofs.File, error) {
 	}
 	return &mountDirFile{name: path.Base(Name(name)), entries: entries}, nil
 }
+
 func (m *Mountable) ReadFile(name string) ([]byte, error) {
 	if err := valid(name); err != nil {
 		return nil, err
@@ -177,6 +184,7 @@ func (m *Mountable) ReadFile(name string) ([]byte, error) {
 	filesystem, relative, _ := m.route(name)
 	return iofs.ReadFile(filesystem, relative)
 }
+
 func (m *Mountable) Stat(name string) (iofs.FileInfo, error) {
 	if err := valid(name); err != nil {
 		return nil, err
@@ -197,6 +205,7 @@ func (m *Mountable) Stat(name string) (iofs.FileInfo, error) {
 	}
 	return nil, err
 }
+
 func (m *Mountable) Lstat(name string) (iofs.FileInfo, error) {
 	if err := valid(name); err != nil {
 		return nil, err
@@ -223,6 +232,7 @@ func (m *Mountable) Lstat(name string) (iofs.FileInfo, error) {
 	}
 	return nil, err
 }
+
 func (m *Mountable) ReadDir(name string) ([]iofs.DirEntry, error) {
 	if err := valid(name); err != nil {
 		return nil, err
@@ -263,7 +273,7 @@ type virtualDirInfo string
 
 func (i virtualDirInfo) Name() string      { return string(i) }
 func (virtualDirInfo) Size() int64         { return 0 }
-func (virtualDirInfo) Mode() iofs.FileMode { return iofs.ModeDir | 0755 }
+func (virtualDirInfo) Mode() iofs.FileMode { return iofs.ModeDir | 0o755 }
 func (virtualDirInfo) ModTime() time.Time  { return time.Time{} }
 func (virtualDirInfo) IsDir() bool         { return true }
 func (virtualDirInfo) Sys() any            { return nil }
@@ -297,6 +307,7 @@ func (f *namedFile) Stat() (iofs.FileInfo, error) {
 	}
 	return renamedInfo{name: f.name, FileInfo: info}, nil
 }
+
 func (f *namedFile) ReadDir(n int) ([]iofs.DirEntry, error) {
 	dir, ok := f.File.(iofs.ReadDirFile)
 	if !ok {
@@ -330,7 +341,9 @@ func (f *mountDirFile) ReadDir(n int) ([]iofs.DirEntry, error) {
 	return out, nil
 }
 
-var _ iofs.FS = (*Mountable)(nil)
-var _ iofs.ReadFileFS = (*Mountable)(nil)
-var _ iofs.ReadDirFS = (*Mountable)(nil)
-var _ iofs.StatFS = (*Mountable)(nil)
+var (
+	_ iofs.FS         = (*Mountable)(nil)
+	_ iofs.ReadFileFS = (*Mountable)(nil)
+	_ iofs.ReadDirFS  = (*Mountable)(nil)
+	_ iofs.StatFS     = (*Mountable)(nil)
+)

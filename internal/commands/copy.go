@@ -3,10 +3,11 @@ package commands
 import (
 	"context"
 	"fmt"
-	gfs "github.com/rumpl/gash/pkg/fs"
 	iofs "io/fs"
 	"path"
 	"strings"
+
+	gfs "github.com/rumpl/gash/pkg/fs"
 )
 
 func commandLNParity(_ context.Context, args []string, c *CommandContext) int {
@@ -89,6 +90,7 @@ func commandCPParity(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return code
 }
+
 func copyPath(c *CommandContext, src, dst string, recursive, preserve bool) error {
 	info, err := gfs.Lstat(c.FS, src)
 	if err != nil {
@@ -126,7 +128,7 @@ func copyPath(c *CommandContext, src, dst string, recursive, preserve bool) erro
 	if err != nil {
 		return err
 	}
-	mode := iofs.FileMode(0644)
+	mode := iofs.FileMode(0o644)
 	if preserve {
 		mode = info.Mode().Perm()
 	}

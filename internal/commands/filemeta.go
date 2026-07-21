@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	gfs "github.com/rumpl/gash/pkg/fs"
 	iofs "io/fs"
 	"path"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	gfs "github.com/rumpl/gash/pkg/fs"
 )
 
 func commandChmod(_ context.Context, args []string, c *CommandContext) int {
@@ -44,6 +45,7 @@ func commandChmod(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return code
 }
+
 func chmodPath(c *CommandContext, name, spec string, recursive, verbose bool, display string) error {
 	info, err := gfs.Stat(c.FS, name)
 	if err != nil {
@@ -72,6 +74,7 @@ func chmodPath(c *CommandContext, name, spec string, recursive, verbose bool, di
 	}
 	return nil
 }
+
 func parseMode(spec string, current iofs.FileMode) (iofs.FileMode, error) {
 	if n, err := strconv.ParseUint(spec, 8, 32); err == nil {
 		return iofs.FileMode(n), nil
@@ -216,6 +219,7 @@ func commandFile(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return code
 }
+
 func detectFile(name string, data []byte, mime bool) string {
 	if len(data) == 0 {
 		if mime {

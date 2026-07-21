@@ -15,6 +15,7 @@ func (m *Mountable) WriteFile(name string, data []byte, perm iofs.FileMode) erro
 	}
 	return f.WriteFile(relative, data, perm)
 }
+
 func (m *Mountable) AppendFile(name string, data []byte, perm iofs.FileMode) error {
 	filesystem, relative, _ := m.route(name)
 	f, ok := filesystem.(AppendFileFS)
@@ -23,6 +24,7 @@ func (m *Mountable) AppendFile(name string, data []byte, perm iofs.FileMode) err
 	}
 	return f.AppendFile(relative, data, perm)
 }
+
 func (m *Mountable) Mkdir(name string, perm iofs.FileMode) error {
 	name = Name(name)
 	if m.IsMountPoint(name) {
@@ -35,6 +37,7 @@ func (m *Mountable) Mkdir(name string, perm iofs.FileMode) error {
 	}
 	return f.Mkdir(relative, perm)
 }
+
 func (m *Mountable) MkdirAll(name string, perm iofs.FileMode) error {
 	name = Name(name)
 	if m.IsMountPoint(name) || m.hasVirtualDir(name) {
@@ -46,6 +49,7 @@ func (m *Mountable) MkdirAll(name string, perm iofs.FileMode) error {
 	}
 	return ErrReadOnly
 }
+
 func (m *Mountable) Remove(name string) error {
 	name = Name(name)
 	if m.IsMountPoint(name) || m.hasVirtualDir(name) {
@@ -58,6 +62,7 @@ func (m *Mountable) Remove(name string) error {
 	}
 	return f.Remove(relative)
 }
+
 func (m *Mountable) RemoveAll(name string) error {
 	name = Name(name)
 	if m.IsMountPoint(name) || m.hasVirtualDir(name) {
@@ -70,6 +75,7 @@ func (m *Mountable) RemoveAll(name string) error {
 	}
 	return f.RemoveAll(relative)
 }
+
 func (m *Mountable) Readlink(name string) (string, error) {
 	filesystem, relative, _ := m.route(name)
 	f, ok := filesystem.(ReadlinkFS)
@@ -78,6 +84,7 @@ func (m *Mountable) Readlink(name string) (string, error) {
 	}
 	return f.Readlink(relative)
 }
+
 func (m *Mountable) Symlink(target, name string) error {
 	filesystem, relative, _ := m.route(name)
 	f, ok := filesystem.(SymlinkFS)
@@ -86,6 +93,7 @@ func (m *Mountable) Symlink(target, name string) error {
 	}
 	return f.Symlink(target, relative)
 }
+
 func (m *Mountable) Chmod(name string, mode iofs.FileMode) error {
 	filesystem, relative, _ := m.route(name)
 	f, ok := filesystem.(ChmodFS)
@@ -94,6 +102,7 @@ func (m *Mountable) Chmod(name string, mode iofs.FileMode) error {
 	}
 	return f.Chmod(relative, mode)
 }
+
 func (m *Mountable) Chtimes(name string, atime, mtime time.Time) error {
 	filesystem, relative, _ := m.route(name)
 	f, ok := filesystem.(ChtimesFS)
@@ -102,6 +111,7 @@ func (m *Mountable) Chtimes(name string, atime, mtime time.Time) error {
 	}
 	return f.Chtimes(relative, atime, mtime)
 }
+
 func (m *Mountable) Link(oldName, newName string) error {
 	oldFS, oldRelative, oldMount := m.route(oldName)
 	_, newRelative, newMount := m.route(newName)
@@ -137,6 +147,7 @@ func (m *Mountable) Rename(oldName, newName string) error {
 	}
 	return m.Remove(oldName)
 }
+
 func (m *Mountable) copyAcross(src, dst string) error {
 	info, err := m.Lstat(src)
 	if err != nil {

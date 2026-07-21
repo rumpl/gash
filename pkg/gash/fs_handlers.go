@@ -47,6 +47,7 @@ func (b *Bash) openHandler(ctx context.Context, name string, flag int, perm os.F
 	}
 	return vf, nil
 }
+
 func (b *Bash) readDirHandler(ctx context.Context, name string) ([]iofs.DirEntry, error) {
 	name = handlerPath(ctx, name)
 	entries, err := gfs.ReadDir(b.FS, name)
@@ -66,6 +67,7 @@ func (b *Bash) readDirHandler(ctx context.Context, name string) ([]iofs.DirEntry
 	}
 	return entries, nil
 }
+
 func (b *Bash) statHandler(ctx context.Context, name string, follow bool) (iofs.FileInfo, error) {
 	name = handlerPath(ctx, name)
 	var info iofs.FileInfo
@@ -108,7 +110,7 @@ type syntheticInfo string
 
 func (i syntheticInfo) Name() string      { return string(i) }
 func (syntheticInfo) Size() int64         { return 0 }
-func (syntheticInfo) Mode() iofs.FileMode { return 0755 }
+func (syntheticInfo) Mode() iofs.FileMode { return 0o755 }
 func (syntheticInfo) ModTime() time.Time  { return time.Time{} }
 func (syntheticInfo) IsDir() bool         { return false }
 func (syntheticInfo) Sys() any            { return nil }
@@ -117,7 +119,7 @@ type syntheticDirInfo string
 
 func (i syntheticDirInfo) Name() string      { return string(i) }
 func (syntheticDirInfo) Size() int64         { return 0 }
-func (syntheticDirInfo) Mode() iofs.FileMode { return iofs.ModeDir | 0755 }
+func (syntheticDirInfo) Mode() iofs.FileMode { return iofs.ModeDir | 0o755 }
 func (syntheticDirInfo) ModTime() time.Time  { return time.Time{} }
 func (syntheticDirInfo) IsDir() bool         { return true }
 func (syntheticDirInfo) Sys() any            { return nil }
@@ -146,6 +148,7 @@ func (f *virtualFile) Read(p []byte) (int, error) {
 	f.offset += n
 	return n, nil
 }
+
 func (f *virtualFile) Write(p []byte) (int, error) {
 	if !f.write {
 		return 0, errors.New("file not open for writing")
@@ -158,6 +161,7 @@ func (f *virtualFile) Write(p []byte) (int, error) {
 	f.offset = end
 	return len(p), nil
 }
+
 func (f *virtualFile) Close() error {
 	if !f.write {
 		return nil
@@ -175,8 +179,9 @@ func (b *Bash) ReadFile(name string) (string, error) {
 	data, e := gfs.ReadFile(b.FS, resolve(b.cwd, name))
 	return string(data), e
 }
+
 func (b *Bash) WriteFile(name, data string) error {
-	return gfs.WriteFile(b.FS, resolve(b.cwd, name), []byte(data), 0644)
+	return gfs.WriteFile(b.FS, resolve(b.cwd, name), []byte(data), 0o644)
 }
 func (b *Bash) GetCwd() string            { return b.cwd }
 func (b *Bash) GetEnv() map[string]string { return cloneMap(b.env) }

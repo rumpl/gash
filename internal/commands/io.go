@@ -21,6 +21,7 @@ func commandEcho(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandPrintf(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) == 0 {
 		return 0
@@ -33,10 +34,12 @@ func commandPrintf(_ context.Context, args []string, c *CommandContext) int {
 	fmt.Fprintf(c.Stdout, format, vals...)
 	return 0
 }
+
 func commandPwd(_ context.Context, _ []string, c *CommandContext) int {
 	fmt.Fprintln(c.Stdout, *c.Cwd)
 	return 0
 }
+
 func commandCD(_ context.Context, args []string, c *CommandContext) int {
 	dest := c.Env["HOME"]
 	if len(args) > 0 {
@@ -58,6 +61,7 @@ func commandCD(_ context.Context, args []string, c *CommandContext) int {
 	c.Env["PWD"] = p
 	return 0
 }
+
 func commandCat(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) == 0 {
 		_, e := io.Copy(c.Stdout, c.Stdin)

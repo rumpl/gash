@@ -32,9 +32,11 @@ type ExecOptions struct {
 	ReplaceEnv bool
 	Args       []string
 }
-type CommandFunc = command.Func
-type Command = command.Command
-type CommandContext = command.Context
+type (
+	CommandFunc    = command.Func
+	Command        = command.Command
+	CommandContext = command.Context
+)
 
 type Bash struct {
 	FS       iofs.FS
@@ -59,12 +61,12 @@ func New(options Options) (*Bash, error) {
 		cwd = "/home/user"
 	}
 	for _, dir := range []string{"/home/user", "/tmp", "/bin", "/usr/bin"} {
-		_ = gfs.MkdirAll(filesystem, dir, 0755)
+		_ = gfs.MkdirAll(filesystem, dir, 0o755)
 	}
 	for p, data := range options.Files {
 		abs := resolve("/", p)
-		_ = gfs.MkdirAll(filesystem, path.Dir(abs), 0755)
-		if err := gfs.WriteFile(filesystem, abs, []byte(data), 0644); err != nil {
+		_ = gfs.MkdirAll(filesystem, path.Dir(abs), 0o755)
+		if err := gfs.WriteFile(filesystem, abs, []byte(data), 0o644); err != nil {
 			return nil, err
 		}
 	}
@@ -81,6 +83,7 @@ func New(options Options) (*Bash, error) {
 	}
 	return b, nil
 }
+
 func resolve(base, name string) string {
 	if strings.HasPrefix(name, "/") {
 		return path.Clean(name)

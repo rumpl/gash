@@ -17,6 +17,7 @@ func TestRecursiveCopyAndHardLinks(t *testing.T) {
 		t.Fatalf("%+v", result)
 	}
 }
+
 func TestChmodSymbolicAndRecursive(t *testing.T) {
 	b := newTestBash(t)
 	result := b.Exec(context.Background(), "mkdir -p d/sub; touch d/a d/sub/b; chmod -R u+x d; stat -c %a d/a d/sub/b", ExecOptions{})
@@ -24,6 +25,7 @@ func TestChmodSymbolicAndRecursive(t *testing.T) {
 		t.Fatalf("%+v", result)
 	}
 }
+
 func TestFileDetection(t *testing.T) {
 	b := newTestBash(t)
 	_ = b.WriteFile("main.go", "package main\n")
@@ -37,6 +39,7 @@ func TestFileDetection(t *testing.T) {
 		}
 	}
 }
+
 func TestTreeDuAndSplit(t *testing.T) {
 	b := newTestBash(t)
 	result := b.Exec(context.Background(), "mkdir -p project/sub; printf 'a\\nb\\nc\\n' > project/input; split -l 2 project/input part-; tree project; cat part-aa part-ab; du -s project", ExecOptions{})
@@ -49,6 +52,7 @@ func TestTreeDuAndSplit(t *testing.T) {
 		}
 	}
 }
+
 func TestRmdirOnlyRemovesEmptyDirectories(t *testing.T) {
 	b := newTestBash(t)
 	result := b.Exec(context.Background(), "mkdir -p a/b; touch a/file; rmdir a", ExecOptions{})

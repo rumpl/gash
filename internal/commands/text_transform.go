@@ -27,6 +27,7 @@ func commandRev(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandTac(_ context.Context, args []string, c *CommandContext) int {
 	data, err := readInputs(args, c)
 	if err != nil {
@@ -43,6 +44,7 @@ func commandTac(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandTr(_ context.Context, args []string, c *CommandContext) int {
 	del, squeeze := false, false
 	var sets []string
@@ -96,6 +98,7 @@ func commandTr(_ context.Context, args []string, c *CommandContext) int {
 	fmt.Fprint(c.Stdout, out.String())
 	return 0
 }
+
 func expandSet(s string) []rune {
 	r := []rune(s)
 	var out []rune
@@ -121,6 +124,7 @@ func expandSet(s string) []rune {
 	}
 	return out
 }
+
 func ioReadAll(c *CommandContext) (string, error) {
 	var b strings.Builder
 	_, err := bufio.NewReader(c.Stdin).WriteTo(&b)
@@ -190,6 +194,7 @@ func commandCut(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func parseSelection(s string) ([]int, error) {
 	seen := map[int]bool{}
 	var out []int
@@ -227,6 +232,7 @@ func parseSelection(s string) ([]int, error) {
 	}
 	return out, nil
 }
+
 func selectStrings(parts []string, indices []int, separator string) string {
 	var out []string
 	for _, i := range indices {

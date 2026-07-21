@@ -25,6 +25,7 @@ func TestLimitProfiles(t *testing.T) {
 		t.Fatal("negative limit accepted")
 	}
 }
+
 func TestSourceAndInputLimits(t *testing.T) {
 	b, err := New(Options{Limits: Limits{MaxSourceBytes: 4, MaxInputBytes: 3}})
 	if err != nil {
@@ -39,6 +40,7 @@ func TestSourceAndInputLimits(t *testing.T) {
 		t.Fatalf("%+v", result)
 	}
 }
+
 func TestOutputBudgetIsAggregate(t *testing.T) {
 	b, err := New(Options{Limits: Limits{MaxOutputBytes: 8}})
 	if err != nil {
@@ -55,6 +57,7 @@ func TestOutputBudgetIsAggregate(t *testing.T) {
 		t.Fatalf("output budget exceeded: %+v", result)
 	}
 }
+
 func TestCommandBudgetIncludesBuiltins(t *testing.T) {
 	b, err := New(Options{Limits: Limits{MaxCommandCount: 2}})
 	if err != nil {

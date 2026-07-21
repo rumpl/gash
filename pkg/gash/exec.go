@@ -45,6 +45,7 @@ func (b *Bash) Exec(parent context.Context, script string, options ExecOptions) 
 	}
 	return Result{Stdout: out.String(), Stderr: errout.String(), ExitCode: code, Env: finalEnv}
 }
+
 func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[string]string, args []string, stdout, stderr io.Writer, depth int, scope *executionScope, stdinAccounted bool) (int, map[string]string) {
 	if depth > b.limits.MaxExecDepth {
 		fmt.Fprintf(stderr, "bash: maximum nested execution depth (%d) exceeded\n", b.limits.MaxExecDepth)
@@ -107,6 +108,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	final["PWD"] = runner.Dir
 	return code, final
 }
+
 func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope *executionScope) error {
 	h := interp.HandlerCtx(ctx)
 	if len(args) == 0 {

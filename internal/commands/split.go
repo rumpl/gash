@@ -3,10 +3,11 @@ package commands
 import (
 	"context"
 	"fmt"
-	gfs "github.com/rumpl/gash/pkg/fs"
 	"io"
 	"strconv"
 	"strings"
+
+	gfs "github.com/rumpl/gash/pkg/fs"
 )
 
 func commandSplit(_ context.Context, args []string, c *CommandContext) int {
@@ -100,12 +101,13 @@ func commandSplit(_ context.Context, args []string, c *CommandContext) int {
 	}
 	for i, chunk := range chunks {
 		suffix := splitSuffix(i, numeric, suffixLen)
-		if err := gfs.WriteFile(c.FS, abs(c, prefix+suffix+additional), chunk, 0644); err != nil {
+		if err := gfs.WriteFile(c.FS, abs(c, prefix+suffix+additional), chunk, 0o644); err != nil {
 			return report(c, "split", err)
 		}
 	}
 	return 0
 }
+
 func parseSize(value string) int {
 	mult := 1
 	if len(value) > 0 {
@@ -124,6 +126,7 @@ func parseSize(value string) int {
 	n, _ := strconv.Atoi(value)
 	return n * mult
 }
+
 func splitSuffix(index int, numeric bool, length int) string {
 	if numeric {
 		return fmt.Sprintf("%0*d", length, index)

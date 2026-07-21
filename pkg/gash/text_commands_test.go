@@ -19,6 +19,7 @@ func TestCutPasteCommAndJoin(t *testing.T) {
 		}
 	}
 }
+
 func TestCharacterTransformCommands(t *testing.T) {
 	b := newTestBash(t)
 	result := b.Exec(context.Background(), `printf 'abc\ndef\n' | rev; printf 'one\ntwo\n' | tac; printf 'abc  123' | tr -s ' ' | tr 'a-z' 'A-Z'; printf 'abcdef' | fold -w 3`, ExecOptions{})
@@ -31,6 +32,7 @@ func TestCharacterTransformCommands(t *testing.T) {
 		}
 	}
 }
+
 func TestFormattingAndBinaryInspectionCommands(t *testing.T) {
 	b := newTestBash(t)
 	result := b.Exec(context.Background(), `printf 'a\tb\n' | expand -t 4; printf 'x:y\nlong:z\n' | column -t -s :; printf 'hello\000world' | strings -n 5; printf 'AB' | od -x; printf 'first\n\nthird\n' | nl -ba`, ExecOptions{})

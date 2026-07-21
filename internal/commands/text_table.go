@@ -247,6 +247,7 @@ func commandNL(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandFold(_ context.Context, args []string, c *CommandContext) int {
 	width := 80
 	spaces := false
@@ -296,9 +297,11 @@ func commandFold(_ context.Context, args []string, c *CommandContext) int {
 func commandExpand(_ context.Context, args []string, c *CommandContext) int {
 	return expandTabs(args, c, false)
 }
+
 func commandUnexpand(_ context.Context, args []string, c *CommandContext) int {
 	return expandTabs(args, c, true)
 }
+
 func expandTabs(args []string, c *CommandContext, reverse bool) int {
 	width := 8
 	all := false

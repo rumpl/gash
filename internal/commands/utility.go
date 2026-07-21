@@ -27,6 +27,7 @@ func commandSleep(ctx context.Context, args []string, c *CommandContext) int {
 		return 124
 	}
 }
+
 func commandSeq(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) == 0 {
 		return 1
@@ -43,6 +44,7 @@ func commandSeq(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandBase64(_ context.Context, args []string, c *CommandContext) int {
 	decode := len(args) > 0 && (args[0] == "-d" || args[0] == "--decode")
 	if decode {
@@ -63,6 +65,7 @@ func commandBase64(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func checksum(kind string) CommandFunc {
 	return func(_ context.Context, args []string, c *CommandContext) int {
 		d, e := readInputs(args, c)

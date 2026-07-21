@@ -55,6 +55,7 @@ func commandLS(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return code
 }
+
 func commandMkdir(_ context.Context, args []string, c *CommandContext) int {
 	recursive := false
 	code := 0
@@ -65,9 +66,9 @@ func commandMkdir(_ context.Context, args []string, c *CommandContext) int {
 		}
 		var e error
 		if recursive {
-			e = gfs.MkdirAll(c.FS, abs(c, a), 0755)
+			e = gfs.MkdirAll(c.FS, abs(c, a), 0o755)
 		} else {
-			e = gfs.Mkdir(c.FS, abs(c, a), 0755)
+			e = gfs.Mkdir(c.FS, abs(c, a), 0o755)
 		}
 		if e != nil {
 			code = report(c, "mkdir: "+a, e)
@@ -75,6 +76,7 @@ func commandMkdir(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return code
 }
+
 func commandTouch(_ context.Context, args []string, c *CommandContext) int {
 	code := 0
 	for _, a := range args {
@@ -82,12 +84,13 @@ func commandTouch(_ context.Context, args []string, c *CommandContext) int {
 		if _, e := gfs.Stat(c.FS, p); e == nil {
 			continue
 		}
-		if e := gfs.WriteFile(c.FS, p, nil, 0644); e != nil {
+		if e := gfs.WriteFile(c.FS, p, nil, 0o644); e != nil {
 			code = report(c, "touch: "+a, e)
 		}
 	}
 	return code
 }
+
 func commandRM(_ context.Context, args []string, c *CommandContext) int {
 	recursive, force := false, false
 	var names []string
@@ -113,6 +116,7 @@ func commandRM(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return code
 }
+
 func commandCP(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) != 2 {
 		return report(c, "cp", fmt.Errorf("expected source and destination"))
@@ -121,11 +125,12 @@ func commandCP(_ context.Context, args []string, c *CommandContext) int {
 	if e != nil {
 		return report(c, "cp", e)
 	}
-	if e = gfs.WriteFile(c.FS, abs(c, args[1]), data, 0644); e != nil {
+	if e = gfs.WriteFile(c.FS, abs(c, args[1]), data, 0o644); e != nil {
 		return report(c, "cp", e)
 	}
 	return 0
 }
+
 func commandMV(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) != 2 {
 		return report(c, "mv", fmt.Errorf("expected source and destination"))
@@ -135,6 +140,7 @@ func commandMV(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return 0
 }
+
 func commandLN(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) == 3 && args[0] == "-s" {
 		if e := gfs.Symlink(c.FS, args[1], abs(c, args[2])); e != nil {
@@ -144,6 +150,7 @@ func commandLN(_ context.Context, args []string, c *CommandContext) int {
 	}
 	return report(c, "ln", fmt.Errorf("only symbolic links are supported"))
 }
+
 func commandReadlink(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) != 1 {
 		return 1
