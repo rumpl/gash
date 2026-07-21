@@ -1,8 +1,8 @@
 # gash
 
-A Go rewrite of [vercel-labs/just-bash](https://github.com/vercel-labs/just-bash): a bash-like interpreter with a bounded, in-memory virtual filesystem. It is intended for agents and applications that need useful shell workflows without exposing the host filesystem or launching host processes.
+A Go rewrite of [vercel-labs/just-bash](https://github.com/vercel-labs/just-bash): a Bash interpreter with a capability-based virtual filesystem. It is intended for agents and applications that need useful shell workflows without exposing the host filesystem or launching host processes.
 
-> **Status:** early development. The core execution and filesystem model is implemented, but this is not yet command-for-command compatible with just-bash.
+> **Status:** active parity work. Bash parsing/execution now uses a full AST interpreter, but command implementations and the overlay, mountable, networking, transform, and optional-runtime layers are not yet at just-bash parity. See [PORTING.md](PORTING.md).
 
 ## Install
 
@@ -74,20 +74,35 @@ The CLI starts with a fresh in-memory filesystem. A script filename is read by t
 
 ## Supported behavior
 
-Shell syntax:
+Shell syntax is parsed as Bash into an AST by `mvdan.cc/sh/v3`. It includes:
 
-- single and double quotes, backslash escaping, and comments
-- `$VAR`, `${VAR}`, `${VAR:-default}`, and `$?` expansion
-- pipelines (`|`), lists (`;` and newlines), `&&`, and `||`
-- input, truncate, and append redirections (`<`, `>`, and `>>`)
-- temporary execution environment/cwd and command assignments
+- quoting, parameter expansion, command substitution, and arithmetic expansion
+- pipelines, lists, subshells, background statements, `&&`, and `||`
+- functions, `if`, `case`, C-style and word `for` loops, `while`, and `until`
+- test expressions, shell options, arrays, and positional parameters
+- redirections, heredocs, and process substitution supported by the interpreter
 - nested `bash -c`, `sh -c`, and virtual shell script execution
 
 Built-in commands:
 
 `base64`, `basename`, `bash`, `cat`, `cd`, `clear`, `cp`, `dirname`, `echo`, `env`, `false`, `grep`, `head`, `hostname`, `ln -s`, `ls`, `md5sum`, `mkdir`, `mv`, `printf`, `printenv`, `pwd`, `readlink`, `rm`, `rmdir`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `tail`, `tee`, `touch`, `true`, `uniq`, `wc`, and `whoami`.
 
-Not yet implemented include functions, loops, conditionals (`if`), command substitution, arithmetic, glob expansion, heredocs, jobs, mount/overlay filesystems, and optional network/language runtimes.
+Command flags and edge cases are still being ported from the upstream command test suites. Mount/overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes remain to be implemented.
+
+## Filesystems
+
+`Options.FS` accepts the standard library's minimal `io/fs.FS` interface. Standard read-only implementations work directly:
+
+```go
+shell, _ := gash.New(gash.Options{
+    FS: fstest.MapFS{"data/input.txt": {Data: []byte("hello\n")}},
+    Cwd: "/",
+})
+```
+
+Writable implementations opt into small capability interfaces from `github.com/rumpl/gash/fs`, such as `WriteFileFS`, `MkdirFS`, `RemoveFS`, `RenameFS`, and `SymlinkFS`. Commands return a read-only error when the supplied implementation lacks a required capability. The bundled `fs.Memory` implements the complete capability set and the standard `fs.FS`, `fs.ReadFileFS`, `fs.ReadDirFS`, and `fs.StatFS` interfaces.
+
+Virtual absolute shell paths are translated to valid root-relative `io/fs` paths only at the filesystem boundary.
 
 ## Limits and security
 
