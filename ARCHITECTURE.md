@@ -20,6 +20,8 @@ pkg/fs/                public filesystem implementations
 internal/command/      dependency-neutral command contract
 internal/commandutil/  shared command helpers
 internal/commands/     registry and command-family packages
+  files/               file command package; one command per source file
+                       with an adjacent `<command>_test.go`
   text/                text command package; one command per source file
                        with an adjacent `<command>_test.go`
 ```

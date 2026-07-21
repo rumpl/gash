@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	filecommands "github.com/rumpl/gash/internal/commands/files"
 	textcommands "github.com/rumpl/gash/internal/commands/text"
 )
 
@@ -13,21 +14,6 @@ func Builtins() []Command {
 		{Name: "printf", Run: commandPrintf},
 		{Name: "pwd", Run: commandPwd},
 		{Name: "cat", Run: commandCat},
-		{Name: "ls", Run: commandLS},
-		{Name: "mkdir", Run: commandMkdir},
-		{Name: "touch", Run: commandTouch},
-		{Name: "rm", Run: commandRM},
-		{Name: "rmdir", Run: commandRmdir},
-		{Name: "cp", Run: commandCPParity},
-		{Name: "mv", Run: commandMV},
-		{Name: "ln", Run: commandLNParity},
-		{Name: "chmod", Run: commandChmod},
-		{Name: "stat", Run: commandStat},
-		{Name: "file", Run: commandFile},
-		{Name: "tree", Run: commandTree},
-		{Name: "du", Run: commandDu},
-		{Name: "split", Run: commandSplit},
-		{Name: "readlink", Run: commandReadlink},
 		{Name: "basename", Run: commandBasename},
 		{Name: "dirname", Run: commandDirname},
 		{Name: "env", Run: commandEnv},
@@ -47,5 +33,6 @@ func Builtins() []Command {
 			return 0
 		}},
 	}
+	commands = append(commands, filecommands.Commands()...)
 	return append(commands, textcommands.Commands()...)
 }
