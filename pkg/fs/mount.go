@@ -153,7 +153,10 @@ func (m *Mountable) childMounts(name string) []string {
 	sort.Strings(out)
 	return out
 }
-func (m *Mountable) hasVirtualDir(name string) bool { return len(m.childMounts(name)) > 0 }
+
+func (m *Mountable) hasVirtualDir(name string) bool {
+	return len(m.childMounts(name)) > 0
+}
 
 func (m *Mountable) Open(name string) (iofs.File, error) {
 	if err := valid(name); err != nil {
@@ -271,29 +274,59 @@ func (m *Mountable) ReadDir(name string) ([]iofs.DirEntry, error) {
 
 type virtualDirInfo string
 
-func (i virtualDirInfo) Name() string      { return string(i) }
-func (virtualDirInfo) Size() int64         { return 0 }
-func (virtualDirInfo) Mode() iofs.FileMode { return iofs.ModeDir | 0o755 }
-func (virtualDirInfo) ModTime() time.Time  { return time.Time{} }
-func (virtualDirInfo) IsDir() bool         { return true }
-func (virtualDirInfo) Sys() any            { return nil }
+func (i virtualDirInfo) Name() string {
+	return string(i)
+}
+
+func (virtualDirInfo) Size() int64 {
+	return 0
+}
+
+func (virtualDirInfo) Mode() iofs.FileMode {
+	return iofs.ModeDir | 0o755
+}
+
+func (virtualDirInfo) ModTime() time.Time {
+	return time.Time{}
+}
+
+func (virtualDirInfo) IsDir() bool {
+	return true
+}
+
+func (virtualDirInfo) Sys() any {
+	return nil
+}
 
 type renamedInfo struct {
 	name string
 	iofs.FileInfo
 }
 
-func (i renamedInfo) Name() string { return i.name }
+func (i renamedInfo) Name() string {
+	return i.name
+}
 
 type mountedEntry struct {
 	name string
 	info iofs.FileInfo
 }
 
-func (e mountedEntry) Name() string                 { return e.name }
-func (e mountedEntry) IsDir() bool                  { return e.info.IsDir() }
-func (e mountedEntry) Type() iofs.FileMode          { return e.info.Mode().Type() }
-func (e mountedEntry) Info() (iofs.FileInfo, error) { return e.info, nil }
+func (e mountedEntry) Name() string {
+	return e.name
+}
+
+func (e mountedEntry) IsDir() bool {
+	return e.info.IsDir()
+}
+
+func (e mountedEntry) Type() iofs.FileMode {
+	return e.info.Mode().Type()
+}
+
+func (e mountedEntry) Info() (iofs.FileInfo, error) {
+	return e.info, nil
+}
 
 type namedFile struct {
 	iofs.File
@@ -322,9 +355,18 @@ type mountDirFile struct {
 	offset  int
 }
 
-func (f *mountDirFile) Stat() (iofs.FileInfo, error) { return virtualDirInfo(f.name), nil }
-func (*mountDirFile) Close() error                   { return nil }
-func (*mountDirFile) Read([]byte) (int, error)       { return 0, ErrIsDir }
+func (f *mountDirFile) Stat() (iofs.FileInfo, error) {
+	return virtualDirInfo(f.name), nil
+}
+
+func (*mountDirFile) Close() error {
+	return nil
+}
+
+func (*mountDirFile) Read([]byte) (int, error) {
+	return 0, ErrIsDir
+}
+
 func (f *mountDirFile) ReadDir(n int) ([]iofs.DirEntry, error) {
 	if f.offset >= len(f.entries) {
 		if n > 0 {

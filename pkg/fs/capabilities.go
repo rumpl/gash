@@ -45,6 +45,7 @@ type (
 		Rename(oldName, newName string) error
 	}
 )
+
 type SymlinkFS interface {
 	Symlink(oldName, newName string) error
 }
@@ -73,11 +74,18 @@ func Name(name string) string {
 	return strings.TrimPrefix(name, "/")
 }
 
-func ReadFile(fsys iofs.FS, name string) ([]byte, error) { return iofs.ReadFile(fsys, Name(name)) }
+func ReadFile(fsys iofs.FS, name string) ([]byte, error) {
+	return iofs.ReadFile(fsys, Name(name))
+}
+
 func ReadDir(fsys iofs.FS, name string) ([]iofs.DirEntry, error) {
 	return iofs.ReadDir(fsys, Name(name))
 }
-func Stat(fsys iofs.FS, name string) (iofs.FileInfo, error) { return iofs.Stat(fsys, Name(name)) }
+
+func Stat(fsys iofs.FS, name string) (iofs.FileInfo, error) {
+	return iofs.Stat(fsys, Name(name))
+}
+
 func Lstat(fsys iofs.FS, name string) (iofs.FileInfo, error) {
 	name = Name(name)
 	if f, ok := fsys.(LstatFS); ok {

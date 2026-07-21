@@ -90,7 +90,11 @@ func resolve(base, name string) string {
 	}
 	return path.Clean(path.Join(base, name))
 }
-func (b *Bash) RegisterCommand(c Command) { b.commands[c.Name] = c }
+
+func (b *Bash) RegisterCommand(c Command) {
+	b.commands[c.Name] = c
+}
+
 func cloneMap(in map[string]string) map[string]string {
 	out := make(map[string]string, len(in))
 	for k, v := range in {

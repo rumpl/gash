@@ -18,10 +18,15 @@ pkg/fs/                public filesystem implementations
   mount.go             mount routing and read namespace
   mount_write.go       mutation and cross-mount operations
 internal/command/      dependency-neutral command contract
-internal/commands/     built-ins split by command family
+internal/commandutil/  shared command helpers
+internal/commands/     registry and command-family packages
+  text/                text command package; one command per source file
+                       with an adjacent `<command>_test.go`
 ```
 
-Tests live beside their packages. `public_test.go` compiles as an external consumer so internal types cannot accidentally leak through the public API.
+Tests live beside their packages. Commands are implemented one per source file with an adjacent command test. `public_test.go` compiles as an external consumer so internal types cannot accidentally leak through the public API.
+
+All Go source is formatted with `gofumpt`; CI runs tests, race detection, vet, and a formatting check.
 
 ## Dependency direction
 

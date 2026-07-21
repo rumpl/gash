@@ -108,28 +108,73 @@ func handlerPath(ctx context.Context, name string) (result string) {
 
 type syntheticInfo string
 
-func (i syntheticInfo) Name() string      { return string(i) }
-func (syntheticInfo) Size() int64         { return 0 }
-func (syntheticInfo) Mode() iofs.FileMode { return 0o755 }
-func (syntheticInfo) ModTime() time.Time  { return time.Time{} }
-func (syntheticInfo) IsDir() bool         { return false }
-func (syntheticInfo) Sys() any            { return nil }
+func (i syntheticInfo) Name() string {
+	return string(i)
+}
+
+func (syntheticInfo) Size() int64 {
+	return 0
+}
+
+func (syntheticInfo) Mode() iofs.FileMode {
+	return 0o755
+}
+
+func (syntheticInfo) ModTime() time.Time {
+	return time.Time{}
+}
+
+func (syntheticInfo) IsDir() bool {
+	return false
+}
+
+func (syntheticInfo) Sys() any {
+	return nil
+}
 
 type syntheticDirInfo string
 
-func (i syntheticDirInfo) Name() string      { return string(i) }
-func (syntheticDirInfo) Size() int64         { return 0 }
-func (syntheticDirInfo) Mode() iofs.FileMode { return iofs.ModeDir | 0o755 }
-func (syntheticDirInfo) ModTime() time.Time  { return time.Time{} }
-func (syntheticDirInfo) IsDir() bool         { return true }
-func (syntheticDirInfo) Sys() any            { return nil }
+func (i syntheticDirInfo) Name() string {
+	return string(i)
+}
+
+func (syntheticDirInfo) Size() int64 {
+	return 0
+}
+
+func (syntheticDirInfo) Mode() iofs.FileMode {
+	return iofs.ModeDir | 0o755
+}
+
+func (syntheticDirInfo) ModTime() time.Time {
+	return time.Time{}
+}
+
+func (syntheticDirInfo) IsDir() bool {
+	return true
+}
+
+func (syntheticDirInfo) Sys() any {
+	return nil
+}
 
 type syntheticEntry string
 
-func (e syntheticEntry) Name() string                 { return string(e) }
-func (syntheticEntry) IsDir() bool                    { return false }
-func (syntheticEntry) Type() iofs.FileMode            { return 0 }
-func (e syntheticEntry) Info() (iofs.FileInfo, error) { return syntheticInfo(e), nil }
+func (e syntheticEntry) Name() string {
+	return string(e)
+}
+
+func (syntheticEntry) IsDir() bool {
+	return false
+}
+
+func (syntheticEntry) Type() iofs.FileMode {
+	return 0
+}
+
+func (e syntheticEntry) Info() (iofs.FileInfo, error) {
+	return syntheticInfo(e), nil
+}
 
 type virtualFile struct {
 	fs                iofs.FS
@@ -171,9 +216,17 @@ func (f *virtualFile) Close() error {
 
 type nullFile struct{}
 
-func (*nullFile) Read([]byte) (int, error)    { return 0, io.EOF }
-func (*nullFile) Write(p []byte) (int, error) { return len(p), nil }
-func (*nullFile) Close() error                { return nil }
+func (*nullFile) Read([]byte) (int, error) {
+	return 0, io.EOF
+}
+
+func (*nullFile) Write(p []byte) (int, error) {
+	return len(p), nil
+}
+
+func (*nullFile) Close() error {
+	return nil
+}
 
 func (b *Bash) ReadFile(name string) (string, error) {
 	data, e := gfs.ReadFile(b.FS, resolve(b.cwd, name))
@@ -183,5 +236,11 @@ func (b *Bash) ReadFile(name string) (string, error) {
 func (b *Bash) WriteFile(name, data string) error {
 	return gfs.WriteFile(b.FS, resolve(b.cwd, name), []byte(data), 0o644)
 }
-func (b *Bash) GetCwd() string            { return b.cwd }
-func (b *Bash) GetEnv() map[string]string { return cloneMap(b.env) }
+
+func (b *Bash) GetCwd() string {
+	return b.cwd
+}
+
+func (b *Bash) GetEnv() map[string]string {
+	return cloneMap(b.env)
+}

@@ -14,7 +14,10 @@ import (
 
 type envFlags map[string]string
 
-func (e envFlags) String() string { return "KEY=VALUE" }
+func (e envFlags) String() string {
+	return "KEY=VALUE"
+}
+
 func (e envFlags) Set(value string) error {
 	p := strings.SplitN(value, "=", 2)
 	if len(p) != 2 || p[0] == "" {
@@ -24,7 +27,10 @@ func (e envFlags) Set(value string) error {
 	return nil
 }
 
-func main() { os.Exit(run()) }
+func main() {
+	os.Exit(run())
+}
+
 func run() int {
 	set := flag.NewFlagSet("gash", flag.ContinueOnError)
 	set.SetOutput(os.Stderr)

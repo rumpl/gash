@@ -3,10 +3,12 @@ package commands
 import (
 	"context"
 	"fmt"
+
+	textcommands "github.com/rumpl/gash/internal/commands/text"
 )
 
 func Builtins() []Command {
-	return []Command{
+	commands := []Command{
 		{Name: "echo", Run: commandEcho},
 		{Name: "printf", Run: commandPrintf},
 		{Name: "pwd", Run: commandPwd},
@@ -26,28 +28,6 @@ func Builtins() []Command {
 		{Name: "du", Run: commandDu},
 		{Name: "split", Run: commandSplit},
 		{Name: "readlink", Run: commandReadlink},
-		{Name: "head", Run: commandHead},
-		{Name: "tail", Run: commandTail},
-		{Name: "wc", Run: commandWC},
-		{Name: "grep", Run: commandGrep},
-		{Name: "egrep", Run: commandGrep},
-		{Name: "sort", Run: commandSort},
-		{Name: "uniq", Run: commandUniq},
-		{Name: "tee", Run: commandTee},
-		{Name: "rev", Run: commandRev},
-		{Name: "tac", Run: commandTac},
-		{Name: "tr", Run: commandTr},
-		{Name: "cut", Run: commandCut},
-		{Name: "strings", Run: commandStrings},
-		{Name: "paste", Run: commandPaste},
-		{Name: "comm", Run: commandComm},
-		{Name: "join", Run: commandJoin},
-		{Name: "nl", Run: commandNL},
-		{Name: "fold", Run: commandFold},
-		{Name: "expand", Run: commandExpand},
-		{Name: "unexpand", Run: commandUnexpand},
-		{Name: "column", Run: commandColumn},
-		{Name: "od", Run: commandOD},
 		{Name: "basename", Run: commandBasename},
 		{Name: "dirname", Run: commandDirname},
 		{Name: "env", Run: commandEnv},
@@ -67,4 +47,5 @@ func Builtins() []Command {
 			return 0
 		}},
 	}
+	return append(commands, textcommands.Commands()...)
 }

@@ -1,6 +1,6 @@
 # just-bash parity plan
 
-This file tracks the Go port against `vercel-labs/just-bash/packages/just-bash/src`. A checked item means the behavior is implemented and covered by Go tests; it does not merely mean that an API name exists.
+This file tracks the Go port against `vercel-labs/just-bash/packages/just-bash/src`. A checked item means a tested baseline is implemented; it does **not** claim complete upstream flag or edge-case parity. Full parity for a command requires porting its upstream comparison tests, which is tracked separately from command availability.
 
 ## Upstream architecture reviewed
 

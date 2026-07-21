@@ -445,31 +445,68 @@ func (m *Memory) Chtimes(name string, _ time.Time, mtime time.Time) error {
 	n.mtime = mtime
 	return nil
 }
-func (m *Memory) Used() int64 { m.mu.RLock(); defer m.mu.RUnlock(); return m.used }
 
-func cloneNode(n *node) *node { c := *n; c.data = append([]byte(nil), n.data...); return &c }
+func (m *Memory) Used() int64 {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.used
+}
+
+func cloneNode(n *node) *node {
+	c := *n
+	c.data = append([]byte(nil), n.data...)
+	return &c
+}
 
 type fileInfo struct {
 	name string
 	node *node
 }
 
-func (i fileInfo) Name() string        { return i.name }
-func (i fileInfo) Size() int64         { return int64(len(i.node.data)) }
-func (i fileInfo) Mode() iofs.FileMode { return i.node.mode }
-func (i fileInfo) ModTime() time.Time  { return i.node.mtime }
-func (i fileInfo) IsDir() bool         { return i.node.kind == directory }
-func (i fileInfo) Sys() any            { return nil }
+func (i fileInfo) Name() string {
+	return i.name
+}
+
+func (i fileInfo) Size() int64 {
+	return int64(len(i.node.data))
+}
+
+func (i fileInfo) Mode() iofs.FileMode {
+	return i.node.mode
+}
+
+func (i fileInfo) ModTime() time.Time {
+	return i.node.mtime
+}
+
+func (i fileInfo) IsDir() bool {
+	return i.node.kind == directory
+}
+
+func (i fileInfo) Sys() any {
+	return nil
+}
 
 type entry struct {
 	name string
 	node *node
 }
 
-func (e entry) Name() string                 { return e.name }
-func (e entry) IsDir() bool                  { return e.node.kind == directory }
-func (e entry) Type() iofs.FileMode          { return e.node.mode.Type() }
-func (e entry) Info() (iofs.FileInfo, error) { return fileInfo{name: e.name, node: e.node}, nil }
+func (e entry) Name() string {
+	return e.name
+}
+
+func (e entry) IsDir() bool {
+	return e.node.kind == directory
+}
+
+func (e entry) Type() iofs.FileMode {
+	return e.node.mode.Type()
+}
+
+func (e entry) Info() (iofs.FileInfo, error) {
+	return fileInfo{name: e.name, node: e.node}, nil
+}
 
 type memFile struct {
 	name      string
@@ -482,7 +519,11 @@ type memFile struct {
 func (f *memFile) Stat() (iofs.FileInfo, error) {
 	return fileInfo{name: path.Base(f.name), node: f.node}, nil
 }
-func (f *memFile) Close() error { return nil }
+
+func (f *memFile) Close() error {
+	return nil
+}
+
 func (f *memFile) Read(p []byte) (int, error) {
 	if f.node.kind == directory {
 		return 0, ErrIsDir

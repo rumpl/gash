@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/rumpl/gash/internal/command"
+	"github.com/rumpl/gash/internal/commandutil"
 )
 
 type (
@@ -18,8 +19,13 @@ type (
 
 type fileInfoEntry struct{ iofs.FileInfo }
 
-func (e fileInfoEntry) Type() iofs.FileMode          { return e.Mode().Type() }
-func (e fileInfoEntry) Info() (iofs.FileInfo, error) { return e.FileInfo, nil }
+func (e fileInfoEntry) Type() iofs.FileMode {
+	return e.Mode().Type()
+}
+
+func (e fileInfoEntry) Info() (iofs.FileInfo, error) {
+	return e.FileInfo, nil
+}
 
 func simpleOutput(s string) CommandFunc {
 	return func(_ context.Context, _ []string, c *CommandContext) int { fmt.Fprintln(c.Stdout, s); return 0 }
@@ -31,7 +37,15 @@ func resolve(base, name string) string {
 	}
 	return path.Clean(path.Join(base, name))
 }
-func abs(c *CommandContext, p string) string { return resolve(*c.Cwd, p) }
+
+func abs(c *CommandContext, p string) string {
+	return resolve(*c.Cwd, p)
+}
+
+func readInputs(args []string, c *CommandContext) ([]byte, error) {
+	return commandutil.ReadInputs(args, c)
+}
+
 func report(c *CommandContext, name string, e error) int {
 	fmt.Fprintf(c.Stderr, "%s: %v\n", name, e)
 	return 1

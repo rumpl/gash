@@ -20,5 +20,13 @@ func (b *boundedBuffer) Write(p []byte) (int, error) {
 	}
 	return len(p), nil
 }
-func (b *boundedBuffer) WriteString(s string) (int, error) { return b.Write([]byte(s)) }
-func (b *boundedBuffer) String() string                    { b.mu.Lock(); defer b.mu.Unlock(); return b.Buffer.String() }
+
+func (b *boundedBuffer) WriteString(s string) (int, error) {
+	return b.Write([]byte(s))
+}
+
+func (b *boundedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.Buffer.String()
+}
