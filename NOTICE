@@ -1,0 +1,9 @@
+gash
+Copyright 2025 Djordje Lukic
+
+This project is an independent Go implementation inspired by just-bash:
+https://github.com/vercel-labs/just-bash
+
+just-bash is Copyright Vercel, Inc. and contributors and is distributed under
+the Apache License, Version 2.0. No TypeScript source code or bundled runtime
+artifacts from just-bash are included in this repository.
