@@ -69,7 +69,7 @@ Still to port:
 
 - [ ] remaining file-command edge cases and complete GNU flag parity
 - [ ] `awk`, `sed`, `rg`, complete grep flags, and remaining text utilities
-- [ ] `find`, `tree`, `du`, `xargs`, aliases, history, shell wrappers, and timeout
+- [ ] remaining `find`/`tree`/`du` edge cases, `xargs`, aliases, history, shell wrappers, and timeout
 - [ ] `jq`, `yq`, `xan`, `sqlite3`, gzip, tar, and file detection
 - [ ] secure `curl` and HTML-to-Markdown
 - [ ] opt-in CPython and QuickJS runtimes

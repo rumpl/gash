@@ -200,7 +200,7 @@ These commands exist in the audited upstream registry but are not currently impl
 - [ ] `fgrep`
 - [ ] `rg`
 - [ ] `awk`
-- [ ] `find`
+- [x] `find`
 - [ ] `xargs`
 - [ ] `diff`
 - [ ] `expr`
