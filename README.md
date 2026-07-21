@@ -85,7 +85,7 @@ Shell syntax is parsed as Bash into an AST by `mvdan.cc/sh/v3`. It includes:
 
 Built-in commands:
 
-`base64`, `basename`, `bash`, `cat`, `cd`, `clear`, `cp`, `dirname`, `echo`, `env`, `false`, `grep`, `head`, `hostname`, `ln -s`, `ls`, `md5sum`, `mkdir`, `mv`, `printf`, `printenv`, `pwd`, `readlink`, `rm`, `rmdir`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `tail`, `tee`, `touch`, `true`, `uniq`, `wc`, and `whoami`.
+`base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `cp`, `dirname`, `du`, `echo`, `env`, `false`, `file`, `grep`, `head`, `hostname`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `printf`, `printenv`, `pwd`, `readlink`, `rm`, `rmdir`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `tail`, `tee`, `touch`, `tree`, `true`, `uniq`, `wc`, and `whoami`.
 
 Command flags and edge cases are still being ported from the upstream command test suites. Overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes remain to be implemented. A mountable `io/fs` implementation is available as `fs.Mountable`.
 

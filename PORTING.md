@@ -57,7 +57,7 @@ Current initial implementations:
 
 - [x] basic I/O: `echo`, `printf`, `cat`
 - [x] navigation: `cd`, `pwd`
-- [x] basic files: `ls`, `mkdir`, `rmdir`, `touch`, `rm`, `cp`, `mv`, `ln -s`, `readlink`
+- [x] files: `ls`, `mkdir`, `rmdir`, `touch`, `rm`, recursive `cp`, `mv`, symbolic/hard `ln`, `readlink`, `chmod`, `stat`, `file`, `tree`, `du`, `split`
 - [x] basic text: `head`, `tail`, `wc`, `grep`, `sort`, `uniq`, `tee`
 - [x] environment/path: `env`, `printenv`, `basename`, `dirname`
 - [x] utility subset: `true`, `false`, `sleep`, `seq`, `base64`, checksums, `hostname`, `whoami`, `clear`
@@ -66,7 +66,7 @@ The checks above mean a useful baseline exists. Exact GNU/BSD flag behavior is n
 
 Still to port:
 
-- [ ] remaining file commands and complete flags (`stat`, `chmod`, hard links, recursive `cp`, etc.)
+- [ ] remaining file-command edge cases and complete GNU flag parity
 - [ ] `awk`, `sed`, `rg`, complete `grep`, and the remaining text utilities
 - [ ] `find`, `tree`, `du`, `xargs`, aliases, history, shell wrappers, and timeout
 - [ ] `jq`, `yq`, `xan`, `sqlite3`, gzip, tar, and file detection
