@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rumpl/gash/internal/commandhelp"
 	filecommands "github.com/rumpl/gash/internal/commands/files"
 	textcommands "github.com/rumpl/gash/internal/commands/text"
 )
@@ -34,5 +35,19 @@ func Builtins() []Command {
 		}},
 	}
 	commands = append(commands, filecommands.Commands()...)
-	return append(commands, textcommands.Commands()...)
+	commands = append(commands, textcommands.Commands()...)
+	for index := range commands {
+		info, ok := commandhelp.Lookup(commands[index].Name)
+		if !ok {
+			continue
+		}
+		run := commands[index].Run
+		commands[index].Run = func(ctx context.Context, args []string, commandCtx *CommandContext) int {
+			if commandhelp.Requested(args) {
+				return commandhelp.Show(commandCtx, info)
+			}
+			return run(ctx, args, commandCtx)
+		}
+	}
+	return commands
 }
