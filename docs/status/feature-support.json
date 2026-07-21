@@ -351,11 +351,13 @@
         },
         {
             "name": "html-to-markdown",
-            "status": "deferred",
+            "status": "partial",
             "category": "data",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Implemented in-process with the Go HTML parser for common headings, paragraphs, emphasis, links/images, lists, blockquotes, and code blocks. Script/style content and unsafe javascript/data links are suppressed; exact upstream whitespace/plugins are intentionally deferred."
         },
         {
             "name": "join",
@@ -368,11 +370,13 @@
         },
         {
             "name": "jq",
-            "status": "deferred",
+            "status": "partial",
             "category": "data",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Implemented as an in-process practical subset using gojq with JSON/raw/slurp/null input, raw/compact output, env and --arg/--argjson support, virtual file/stdin IO, and resource limits. Module/file loading, host execution, uncommon CLI flags, and exact jq diagnostics are intentionally deferred."
         },
         {
             "name": "js-exec",
@@ -810,11 +814,13 @@
         },
         {
             "name": "xan",
-            "status": "deferred",
+            "status": "partial",
             "category": "data",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Implemented as an in-process practical CSV subset supporting headers/columns, select, filter, sort, map, aggregate, groupby, multifile input, view output, UTF-8 data, and resource limits. Full xan expression language, reshape/join/statistical surface, and terminal styling are intentionally deferred."
         },
         {
             "name": "xargs",
@@ -828,11 +834,13 @@
         },
         {
             "name": "yq",
-            "status": "deferred",
+            "status": "partial",
             "category": "data",
             "sources": [
+                "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Implemented as an in-process practical subset using gopkg.in/yaml.v3 plus gojq filters, supporting YAML stdin/files, multi-doc input, env navigation, JSON/raw output, UTF-8 data, and resource limits. Round-trip comments/styles, update-in-place, additional formats, and full yq CLI parity are intentionally deferred."
         },
         {
             "name": "zcat",

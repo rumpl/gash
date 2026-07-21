@@ -375,6 +375,21 @@ var catalog = map[string]Info{
 			"Standalone help is provided without inventing global --help semantics for commands that do not have registered help text.",
 		},
 	},
+
+	"html-to-markdown": {
+		Name:    "html-to-markdown",
+		Summary: "convert HTML documents to Markdown",
+		Usage:   "html-to-markdown [FILE]...",
+		Description: []string{
+			"Converts HTML from stdin or virtual filesystem files to Markdown using an in-process parser. Supports headings, paragraphs, emphasis, links, images, lists, blockquotes, and code blocks.",
+		},
+		Options: []string{
+			"    --help       display this help and exit",
+		},
+		Notes: []string{
+			"Script/style content is ignored and javascript:/data: links are not emitted. Advanced upstream conversion plugins and exact whitespace formatting are intentionally deferred.",
+		},
+	},
 	"join": {
 		Name:    "join",
 		Summary: "join lines of two files on a common field",
@@ -762,6 +777,24 @@ var catalog = map[string]Info{
 			"-l, --lines      print the newline counts",
 			"-w, --words      print the word counts",
 			"    --help       display this help and exit",
+		},
+	},
+
+	"yq": {
+		Name:    "yq",
+		Summary: "process YAML with jq-style filters",
+		Usage:   "yq [OPTIONS] [FILTER] [FILE]...",
+		Description: []string{
+			"Parses YAML documents in-process, normalizes them to JSON-like values, applies gojq filters, and writes YAML by default or JSON with -o=json.",
+		},
+		Options: []string{
+			"-o=json, -j           output JSON instead of YAML",
+			"-r, --raw-output      print string results without quoting",
+			"-y, -P                output YAML (default)",
+			"    --help            display this help and exit",
+		},
+		Notes: []string{
+			"YAML anchors are resolved by gopkg.in/yaml.v3 without executing tags or constructing host objects. Round-trip comments/styles, update-in-place, XML/TOML formats, and full yq CLI parity are intentionally deferred.",
 		},
 	},
 	"zcat": {
