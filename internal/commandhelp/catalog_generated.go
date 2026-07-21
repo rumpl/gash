@@ -3,6 +3,23 @@
 package commandhelp
 
 var catalog = map[string]Info{
+	"awk": {
+		Name:    "awk",
+		Summary: "pattern scanning and text processing language",
+		Usage:   "awk [OPTION]... 'program' [FILE]...",
+		Description: []string{
+			"Runs an in-process AWK interpreter over stdin or virtual filesystem files. Supports BEGIN/END, pattern-action rules, fields, variables, associative arrays, user functions, print/printf, getline-style record reads, next/nextfile, and common string/math built-ins.",
+		},
+		Options: []string{
+			"-F SEP       use SEP as the input field separator",
+			"-v VAR=VAL   assign VAR before program execution",
+			"-f FILE      read the AWK program from FILE in the virtual filesystem",
+			"    --help   display this help and exit",
+		},
+		Notes: []string{
+			"Advanced awk features such as pipes/co-processes, system(), close(), fflush(), extension loading, locale-specific formatting, and full replacement back-reference semantics are intentionally deferred to keep execution inside gash capabilities.",
+		},
+	},
 	"base64": {
 		Name:    "base64",
 		Summary: "base64 encode/decode data and print to standard output",

@@ -28,6 +28,7 @@ func Commands() []command.Command {
 		{Name: "unexpand", Run: commandUnexpand},
 		{Name: "column", Run: commandColumn},
 		{Name: "od", Run: commandOD},
+		{Name: "awk", Run: commandAwk},
 		{Name: "sed", Run: commandSed},
 		{Name: "rg", Run: commandRg},
 	}
