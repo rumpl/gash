@@ -16,12 +16,10 @@ const (
 // Limits is the Go representation of just-bash's top-level shell limits.
 // Zero values inherit the selected profile.
 type Limits struct {
-	MaxSourceBytes  int64
-	MaxExecDepth    int
-	MaxCallDepth    int
-	MaxCommandCount int64
-	// MaxCommands is retained for compatibility and overrides MaxCommandCount.
-	MaxCommands        int
+	MaxSourceBytes     int64
+	MaxExecDepth       int
+	MaxCallDepth       int
+	MaxCommandCount    int64
 	MaxInputBytes      int64
 	MaxOutputBytes     int
 	MaxExecutionTime   time.Duration
@@ -64,9 +62,6 @@ func resolveLimits(user Limits, profile LimitProfile) (Limits, error) {
 	}
 	if user.MaxCommandCount != 0 {
 		out.MaxCommandCount = user.MaxCommandCount
-	}
-	if user.MaxCommands != 0 {
-		out.MaxCommandCount = int64(user.MaxCommands)
 	}
 	if user.MaxInputBytes != 0 {
 		out.MaxInputBytes = user.MaxInputBytes
