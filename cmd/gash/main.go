@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rumpl/gash"
+	"github.com/rumpl/gash/pkg/gash"
 )
 
 type envFlags map[string]string

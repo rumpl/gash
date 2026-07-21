@@ -7,7 +7,7 @@ A Go rewrite of [vercel-labs/just-bash](https://github.com/vercel-labs/just-bash
 ## Install
 
 ```sh
-go get github.com/rumpl/gash
+go get github.com/rumpl/gash/pkg/gash
 # or install the CLI
 go install github.com/rumpl/gash/cmd/gash@latest
 ```
@@ -21,7 +21,7 @@ import (
     "context"
     "fmt"
 
-    "github.com/rumpl/gash"
+    "github.com/rumpl/gash/pkg/gash"
 )
 
 func main() {
@@ -100,7 +100,7 @@ shell, _ := gash.New(gash.Options{
 })
 ```
 
-Writable implementations opt into small capability interfaces from `github.com/rumpl/gash/fs`, such as `WriteFileFS`, `MkdirFS`, `RemoveFS`, `RenameFS`, and `SymlinkFS`. Commands return a read-only error when the supplied implementation lacks a required capability. The bundled `fs.Memory` implements the complete capability set and the standard `fs.FS`, `fs.ReadFileFS`, `fs.ReadDirFS`, and `fs.StatFS` interfaces.
+Writable implementations opt into small capability interfaces from `github.com/rumpl/gash/pkg/fs`, such as `WriteFileFS`, `MkdirFS`, `RemoveFS`, `RenameFS`, and `SymlinkFS`. Commands return a read-only error when the supplied implementation lacks a required capability. The bundled `fs.Memory` implements the complete capability set and the standard `fs.FS`, `fs.ReadFileFS`, `fs.ReadDirFS`, and `fs.StatFS` interfaces.
 
 Virtual absolute shell paths are translated to valid root-relative `io/fs` paths only at the filesystem boundary.
 
@@ -118,6 +118,10 @@ Defaults are deliberately bounded:
 Override them with `gash.Options{Limits: gash.Limits{...}}`. A zero field selects its default.
 
 Gash does not invoke `os/exec`, and its default filesystem does not touch disk. It is an application-level capability boundary, not a kernel or VM sandbox. Custom commands are trusted Go code and can use any host capability they import; do not register untrusted implementations.
+
+## Architecture
+
+The public libraries are `pkg/gash` and `pkg/fs`; implementation-only command contracts and built-ins live under `internal/`. See [ARCHITECTURE.md](ARCHITECTURE.md) for package responsibilities, dependency direction, and security boundaries.
 
 ## Development
 

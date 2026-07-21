@@ -25,10 +25,12 @@ The upstream currently contains roughly 1,545 TypeScript source/test files, 133 
 - [x] functions, conditionals, loops, arithmetic, command substitution, and heredocs
 - [x] isolated shell state per `Exec`; shared filesystem across calls
 - [x] positional arguments supplied without source-string escaping
-- [x] context deadline and bounded output
+- [x] context deadline and aggregate stdout/stderr output budget
+- [x] shared source, input, command, and nested-execution limits
+- [x] normal and hardened top-level limit profiles
 - [x] virtual UID/EUID/GID defaults
 - [ ] exact upstream environment, shell option, and process metadata defaults
-- [ ] aggregate command/input/source/string/archive/database limit accounting
+- [ ] string/live-byte/work/loop/archive/database limit accounting
 - [ ] abort propagation and extension cleanup/revocation semantics
 - [ ] byte/text output-kind tracking matching upstream's encoding pipeline
 - [ ] transform plugin API and Bash serializer
