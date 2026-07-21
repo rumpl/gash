@@ -20,6 +20,7 @@ func Commands() []command.Command {
 		{Name: "strings", Run: commandStrings},
 		{Name: "paste", Run: commandPaste},
 		{Name: "comm", Run: commandComm},
+		{Name: "diff", Run: commandDiff},
 		{Name: "join", Run: commandJoin},
 		{Name: "nl", Run: commandNL},
 		{Name: "fold", Run: commandFold},

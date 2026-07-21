@@ -31,7 +31,7 @@ not as one large bucket:
 | `sed` | Add the common stream-editing subset needed by scripts, with clear unsupported-expression errors. | upstream `sed` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
 | `find` | Expand the existing baseline around predicates/actions used by agent workflows. | upstream `find` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
 | `xargs` | Implement stdin-to-argv batching with safe limits and virtual command execution. | upstream `xargs` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
-| `diff` | Implement useful text diffs for files/stdin in the virtual filesystem. | upstream `diff` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
+| `diff` | Implemented just-bash-inspired file/stdin comparison, status handling, brief/identical/ignore-case flags, and unified diff output. Large-file hunk grouping may differ from upstream jsdiff formatting. | upstream `diff` command source/tests under [`commands/diff`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands/diff) |
 | `expr` | Implement expression evaluation commonly used by shell scripts. | upstream `expr` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
 | `rg` | Provide a practical ripgrep-like search command over the virtual filesystem. | upstream `rg` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
 | `awk` | Add a useful AWK subset or embedded implementation decision, with explicit limits. | upstream `awk` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
@@ -61,7 +61,7 @@ Implemented or partially implemented command families include:
 - files: `ls`, `mkdir`, `rmdir`, `touch`, `rm`, `cp`, `mv`, `ln`, `readlink`,
   `chmod`, `stat`, `file`, `tree`, `du`, `split`
 - text baseline: `head`, `tail`, `wc`, `grep`/`egrep`/`fgrep`, `sort`, `uniq`,
-  `tee`, `cut`, `paste`, `comm`, `join`, `tr`, `rev`, `tac`, `nl`, `fold`,
+  `tee`, `cut`, `paste`, `comm`, `diff`, `join`, `tr`, `rev`, `tac`, `nl`, `fold`,
   `expand`, `unexpand`, `strings`, `column`, `od`
 - environment/path: `env`, `printenv`, `basename`, `dirname`
 - utility subset: `true`, `false`, `sleep`, `seq`, `base64`, checksums,

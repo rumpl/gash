@@ -114,6 +114,21 @@ var catalog = map[string]Info{
 			"    --help       display this help and exit",
 		},
 	},
+	"diff": {
+		Name:    "diff",
+		Summary: "compare files line by line",
+		Usage:   "diff [OPTION]... FILE1 FILE2",
+		Options: []string{
+			"-u, --unified     output unified diff format (default)",
+			"-q, --brief       report only whether files differ",
+			"-s, --report-identical-files  report when files are the same",
+			"-i, --ignore-case  ignore case differences",
+			"    --help        display this help and exit",
+		},
+		Notes: []string{
+			"Uses gash's Go unified-diff formatter; large-file hunk grouping may differ from upstream jsdiff output.",
+		},
+	},
 	"du": {
 		Name:    "du",
 		Summary: "estimate file space usage",

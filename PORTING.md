@@ -65,7 +65,7 @@ Current initial implementations:
 - [x] basic I/O: `echo`, `printf`, `cat`
 - [x] navigation: `cd`, `pwd`
 - [x] files: `ls`, `mkdir`, `rmdir`, `touch`, `rm`, recursive `cp`, `mv`, symbolic/hard `ln`, `readlink`, `chmod`, `stat`, `file`, `tree`, `du`, `split`
-- [x] text baseline: `head`, `tail`, `wc`, `grep`/`egrep`/`fgrep`, `sort`, `uniq`, `tee`, `cut`, `paste`, `comm`, `join`, `tr`, `rev`, `tac`, `nl`, `fold`, `expand`, `unexpand`, `strings`, `column`, `od`
+- [x] text baseline: `head`, `tail`, `wc`, `grep`/`egrep`/`fgrep`, `sort`, `uniq`, `tee`, `cut`, `paste`, `comm`, `diff`, `join`, `tr`, `rev`, `tac`, `nl`, `fold`, `expand`, `unexpand`, `strings`, `column`, `od`
 - [x] environment/path: `env`, `printenv`, `basename`, `dirname`
 - [x] utility subset: `true`, `false`, `sleep`, `seq`, `base64`, checksums, `hostname`, `whoami`, `clear`
 
@@ -79,7 +79,7 @@ Near-term search/text priorities:
 - [ ] `sed`
 - [ ] `find` — expand the existing baseline around common predicates/actions
 - [ ] `xargs`
-- [ ] `diff`
+- [x] `diff` — just-bash-inspired file/stdin comparison with `-u`, `-q`, `-s`, and `-i`; Go-native unified hunk grouping may differ from upstream jsdiff output for larger files.
 - [ ] `expr`
 - [ ] `rg`
 - [ ] `awk`
