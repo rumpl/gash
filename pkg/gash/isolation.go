@@ -1,0 +1,87 @@
+package gash
+
+import (
+	"fmt"
+
+	"mvdan.cc/sh/v3/syntax"
+)
+
+const (
+	virtualPID  = "2000"
+	virtualPPID = "1999"
+)
+
+var internalEnv = map[string]string{
+	"HOME":      "/home/user",
+	"PATH":      "/usr/bin:/bin",
+	"IFS":       " \t\n",
+	"OSTYPE":    "linux-gnu",
+	"MACHTYPE":  "x86_64-pc-linux-gnu",
+	"HOSTTYPE":  "x86_64",
+	"HOSTNAME":  "localhost",
+	"USER":      "user",
+	"UID":       "1000",
+	"EUID":      "1000",
+	"GID":       "1000",
+	"PPID":      virtualPPID,
+	"GASH_PID":  virtualPID,
+	"GASH_PPID": virtualPPID,
+}
+
+func executionEnv(base map[string]string) map[string]string {
+	env := cloneMap(base)
+	if env == nil {
+		env = map[string]string{}
+	}
+	enforceInternalEnv(env)
+	return env
+}
+
+func enforceInternalEnv(env map[string]string) {
+	for k, v := range internalEnv {
+		env[k] = v
+	}
+}
+
+func enforcePublicInternalEnv(env map[string]string) {
+	for k, v := range internalEnv {
+		if !isHiddenInternalEnv(k) {
+			env[k] = v
+		}
+	}
+}
+
+func isHiddenInternalEnv(name string) bool {
+	return name == "GASH_PID" || name == "GASH_PPID"
+}
+
+func virtualizeHostParameters(program syntax.Node) {
+	syntax.Walk(program, func(node syntax.Node) bool {
+		param, ok := node.(*syntax.ParamExp)
+		if !ok || param.Param == nil {
+			return true
+		}
+		switch param.Param.Value {
+		case "$":
+			param.Param.Value = "GASH_PID"
+		case "PPID":
+			param.Param.Value = "GASH_PPID"
+		}
+		return true
+	})
+}
+
+func rejectHostBackedSyntax(program syntax.Node) error {
+	var err error
+	syntax.Walk(program, func(node syntax.Node) bool {
+		if err != nil || node == nil {
+			return false
+		}
+		if _, ok := node.(*syntax.ProcSubst); ok {
+			err = fmt.Errorf("process substitution is not supported in isolated execution")
+			return false
+		}
+		return true
+	})
+	return err
+}

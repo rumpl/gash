@@ -26,6 +26,12 @@ type Limits struct {
 	MaxFileSystemBytes int64
 }
 
+func (b *outputBudget) cancelExecution() {
+	if b.cancel != nil {
+		b.cancel()
+	}
+}
+
 func normalLimits() Limits {
 	return Limits{MaxSourceBytes: 64 << 20, MaxExecDepth: 64, MaxCallDepth: 100, MaxCommandCount: 100_000, MaxInputBytes: 512 << 20, MaxOutputBytes: 256 << 20, MaxExecutionTime: time.Hour, MaxFileSystemBytes: 1 << 30}
 }
@@ -105,6 +111,7 @@ type outputBudget struct {
 	used     atomic.Int64
 	maximum  int64
 	exceeded atomic.Bool
+	cancel   func()
 }
 
 func (b *outputBudget) take(n int) int {
@@ -116,6 +123,7 @@ func (b *outputBudget) take(n int) int {
 		remaining := b.maximum - used
 		if remaining <= 0 {
 			b.exceeded.Store(true)
+			b.cancelExecution()
 			return 0
 		}
 		take := int64(n)
@@ -125,6 +133,7 @@ func (b *outputBudget) take(n int) int {
 		if b.used.CompareAndSwap(used, used+take) {
 			if take < int64(n) {
 				b.exceeded.Store(true)
+				b.cancelExecution()
 			}
 			return int(take)
 		}

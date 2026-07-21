@@ -49,7 +49,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return 2
 	}
 
-	script, exitCode := readScript(*command, set.Args(), stdin, stderr)
+	script, scriptName, scriptArgs, exitCode := readScript(*command, set.Args(), stdin, stderr)
 	if exitCode != 0 {
 		return exitCode
 	}
@@ -84,7 +84,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "gash:", err)
 		return 1
 	}
-	result := bash.Exec(context.Background(), script, gash.ExecOptions{})
+	result := bash.Exec(context.Background(), script, gash.ExecOptions{Args: scriptArgs, ScriptName: scriptName})
 	if *jsonOutput {
 		if err := json.NewEncoder(stdout).Encode(result); err != nil {
 			fmt.Fprintln(stderr, "gash:", err)
@@ -97,22 +97,22 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	return result.ExitCode
 }
 
-func readScript(command string, args []string, stdin io.Reader, stderr io.Writer) (string, int) {
+func readScript(command string, args []string, stdin io.Reader, stderr io.Writer) (script, scriptName string, scriptArgs []string, exitCode int) {
 	if command != "" {
-		return command, 0
+		return command, "", args, 0
 	}
 	if len(args) > 0 {
 		data, err := os.ReadFile(args[0])
 		if err != nil {
 			fmt.Fprintln(stderr, "gash:", err)
-			return "", 1
+			return "", "", nil, 1
 		}
-		return string(data), 0
+		return string(data), args[0], args[1:], 0
 	}
 	data, err := io.ReadAll(stdin)
 	if err != nil {
 		fmt.Fprintln(stderr, "gash:", err)
-		return "", 1
+		return "", "", nil, 1
 	}
-	return string(data), 0
+	return string(data), "", nil, 0
 }

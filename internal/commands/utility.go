@@ -28,7 +28,7 @@ func commandSleep(ctx context.Context, args []string, c *CommandContext) int {
 	}
 }
 
-func commandSeq(_ context.Context, args []string, c *CommandContext) int {
+func commandSeq(ctx context.Context, args []string, c *CommandContext) int {
 	if len(args) == 0 {
 		return 1
 	}
@@ -40,6 +40,11 @@ func commandSeq(_ context.Context, args []string, c *CommandContext) int {
 		end, _ = strconv.Atoi(args[1])
 	}
 	for i := start; i <= end; i++ {
+		select {
+		case <-ctx.Done():
+			return 124
+		default:
+		}
 		fmt.Fprintln(c.Stdout, i)
 	}
 	return 0
