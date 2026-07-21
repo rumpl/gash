@@ -12,12 +12,20 @@ Pinned upstream reference for current planning:
 
 - repository/commit: <https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4>
 - command registry: <https://github.com/vercel-labs/just-bash/blob/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands/registry.ts>
+- gash feature support manifest: [`docs/status/feature-support.json`](docs/status/feature-support.json)
 - implementation root: <https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src>
 
 When a task selects an upstream feature, implement what just-bash implements for
 that feature unless the task explicitly documents an intentional Go-specific
 simplification or deferral. Prefer small, testable slices over broad compatibility
 audits.
+
+The feature support manifest is the product source of truth for command-level
+status. It uses these statuses: `core` for dependable baseline features,
+`useful` for practical in-process subsets, `partial` for present but explicitly
+limited behavior, `optional` for future opt-in capabilities/runtimes, `deferred`
+for tracked upstream items not implemented yet, and `unsupported` for features
+intentionally outside the current product surface.
 
 ## Near-term priority: search and text commands
 

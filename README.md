@@ -84,9 +84,21 @@ Shell syntax is parsed as Bash into an AST by `mvdan.cc/sh/v3`. It includes:
 - redirections, heredocs, and process substitution supported by the interpreter
 - nested `bash -c`, `sh -c`, and virtual shell script execution
 
-Built-in commands:
+Built-in commands are summarized in the product-oriented
+[feature support manifest](docs/status/feature-support.json), which is seeded
+from the pinned just-bash command registry and checked by registry tests. Manifest
+statuses mean:
 
-`awk`, `base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `cut`, `diff`, `dirname`, `du`, `echo`, `env`, `expand`, `expr`, `false`, `fgrep`, `file`, `fold`, `grep`, `head`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rg`, `rm`, `rmdir`, `sed`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`, `tree`, `true`, `unexpand`, `uniq`, `wc`, and `whoami`.
+- `core`: implemented as dependable baseline shell/product surface;
+- `useful`: implemented as a practical in-process subset for common workflows;
+- `partial`: present, but intentionally limited enough to check help/tests/notes;
+- `optional`: only appropriate behind an explicit future capability or runtime policy;
+- `deferred`: tracked from upstream but not implemented yet;
+- `unsupported`: intentionally outside the current gash product surface.
+
+Current registered built-ins include:
+
+`awk`, `base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `cut`, `diff`, `dirname`, `du`, `echo`, `egrep`, `env`, `expand`, `expr`, `false`, `fgrep`, `file`, `fold`, `grep`, `head`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rg`, `rm`, `rmdir`, `sed`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`, `tree`, `true`, `unexpand`, `uniq`, `wc`, and `whoami`.
 
 Command flags and edge cases are still being ported from the upstream command test suites for selected tasks. Overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes are intentional deferrals unless explicitly enabled by a future task. A mountable `io/fs` implementation is available as `fs.Mountable`.
 

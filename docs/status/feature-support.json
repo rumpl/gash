@@ -1,0 +1,826 @@
+{
+    "schemaVersion": 1,
+    "title": "gash just-bash-seeded feature support manifest",
+    "pinnedJustBash": {
+        "commit": "2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4",
+        "registry": "https://github.com/vercel-labs/just-bash/blob/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands/registry.ts"
+    },
+    "statusDefinitions": {
+        "core": "Implemented as part of the baseline shell/product surface and expected to be dependable for common use.",
+        "useful": "Implemented with a practical in-process subset that is useful today; additional flags and edge cases may still be ported.",
+        "partial": "Implemented or present, but intentionally limited enough that users should check command help, tests, or notes before relying on broad compatibility.",
+        "optional": "Upstream-inspired feature that should only be available behind an explicit opt-in capability or runtime policy.",
+        "deferred": "Tracked from the pinned upstream registry, but not implemented in gash yet.",
+        "unsupported": "Known upstream feature that is intentionally not part of the current gash product surface."
+    },
+    "commands": [
+        {
+            "name": "alias",
+            "status": "unsupported",
+            "category": "environment",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "Interactive alias mutation is not exposed as a registered gash built-in; scripts should prefer shell functions or explicit commands."
+        },
+        {
+            "name": "awk",
+            "status": "partial",
+            "category": "priority-search-text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ],
+            "nearTermPriority": true,
+            "notes": "First-class priority text command. Gash provides an in-process AWK subset with documented deferred language/runtime differences."
+        },
+        {
+            "name": "base64",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "basename",
+            "status": "core",
+            "category": "path",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "bash",
+            "status": "core",
+            "category": "shell",
+            "sources": [
+                "gash:shell-native",
+                "just-bash:pinned"
+            ],
+            "notes": "Handled by the gash interpreter rather than internal/commands.Builtins."
+        },
+        {
+            "name": "cat",
+            "status": "core",
+            "category": "io",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "cd",
+            "status": "core",
+            "category": "shell",
+            "sources": [
+                "gash:shell-native"
+            ],
+            "notes": "Shell built-in provided by the interpreter; it is not listed in the pinned just-bash command registry."
+        },
+        {
+            "name": "chmod",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "clear",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "column",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "comm",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "cp",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "curl",
+            "status": "optional",
+            "category": "network",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "Network access must remain behind an explicit future policy/API; no gash implementation is registered today."
+        },
+        {
+            "name": "cut",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "date",
+            "status": "deferred",
+            "category": "utility",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "diff",
+            "status": "partial",
+            "category": "priority-search-text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ],
+            "nearTermPriority": true,
+            "notes": "First-class priority text command. Gash implements practical comparison and unified diff output; large-file hunk grouping may differ from upstream."
+        },
+        {
+            "name": "dirname",
+            "status": "core",
+            "category": "path",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "du",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "echo",
+            "status": "core",
+            "category": "io",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "egrep",
+            "status": "partial",
+            "category": "priority-search-text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ],
+            "notes": "Alias-style grep variant implemented by the gash grep handler."
+        },
+        {
+            "name": "env",
+            "status": "core",
+            "category": "environment",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "expand",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "expr",
+            "status": "partial",
+            "category": "priority-search-text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ],
+            "nearTermPriority": true,
+            "notes": "First-class priority utility used by shell scripts; implemented with a practical expression subset."
+        },
+        {
+            "name": "false",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "fgrep",
+            "status": "partial",
+            "category": "priority-search-text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ],
+            "nearTermPriority": true,
+            "notes": "First-class priority fixed-string grep variant implemented by the gash grep handler."
+        },
+        {
+            "name": "file",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "find",
+            "status": "partial",
+            "category": "priority-search-text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ],
+            "nearTermPriority": true,
+            "notes": "First-class priority search command. Baseline exists and predicate/action coverage should expand with focused tasks."
+        },
+        {
+            "name": "fold",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "grep",
+            "status": "partial",
+            "category": "priority-search-text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ],
+            "notes": "Practical grep implementation; selected flags and variants are implemented in-process."
+        },
+        {
+            "name": "gunzip",
+            "status": "deferred",
+            "category": "archives",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "gzip",
+            "status": "deferred",
+            "category": "archives",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "head",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "help",
+            "status": "deferred",
+            "category": "utility",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "Many gash commands support --help, but no standalone help command is registered today."
+        },
+        {
+            "name": "history",
+            "status": "unsupported",
+            "category": "environment",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "Interactive command history is outside the current non-interactive gash product surface."
+        },
+        {
+            "name": "hostname",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "html-to-markdown",
+            "status": "deferred",
+            "category": "data",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "join",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "jq",
+            "status": "deferred",
+            "category": "data",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "js-exec",
+            "status": "optional",
+            "category": "javascript-runtime",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "JavaScript execution is an optional runtime boundary and is not registered by gash today."
+        },
+        {
+            "name": "ln",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "ls",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "md5sum",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "mkdir",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "mv",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "nl",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "node",
+            "status": "optional",
+            "category": "javascript-runtime",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "Node.js-compatible execution is an optional runtime boundary and is not registered by gash today."
+        },
+        {
+            "name": "od",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "paste",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "printenv",
+            "status": "core",
+            "category": "environment",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "printf",
+            "status": "core",
+            "category": "io",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "pwd",
+            "status": "core",
+            "category": "path",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "python",
+            "status": "optional",
+            "category": "python-runtime",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "Python execution is an optional runtime boundary and is not registered by gash today."
+        },
+        {
+            "name": "python3",
+            "status": "optional",
+            "category": "python-runtime",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "Python execution is an optional runtime boundary and is not registered by gash today."
+        },
+        {
+            "name": "readlink",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "rev",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "rg",
+            "status": "partial",
+            "category": "priority-search-text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ],
+            "nearTermPriority": true,
+            "notes": "First-class priority search command. Gash searches the virtual filesystem with bounded in-process behavior and documented ripgrep differences."
+        },
+        {
+            "name": "rm",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "rmdir",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "sed",
+            "status": "partial",
+            "category": "priority-search-text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ],
+            "nearTermPriority": true,
+            "notes": "First-class priority stream editor. Gash implements a sandboxed subset and intentionally rejects shell-execution commands."
+        },
+        {
+            "name": "seq",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "sh",
+            "status": "core",
+            "category": "shell",
+            "sources": [
+                "gash:shell-native",
+                "just-bash:pinned"
+            ],
+            "notes": "Handled by the gash interpreter rather than internal/commands.Builtins."
+        },
+        {
+            "name": "sha1sum",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "sha256sum",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "sleep",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "sort",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "split",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "sqlite3",
+            "status": "deferred",
+            "category": "data",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "Requires an embedded SQLite decision and virtual-filesystem-only access policy before implementation."
+        },
+        {
+            "name": "stat",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "strings",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "tac",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "tail",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "tar",
+            "status": "deferred",
+            "category": "archives",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "tee",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "time",
+            "status": "deferred",
+            "category": "utility",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "timeout",
+            "status": "deferred",
+            "category": "utility",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "touch",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "tr",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "tree",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "true",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "unalias",
+            "status": "unsupported",
+            "category": "environment",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "notes": "Interactive alias mutation is not exposed as a registered gash built-in."
+        },
+        {
+            "name": "unexpand",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "uniq",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "wc",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "which",
+            "status": "deferred",
+            "category": "path",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "whoami",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash",
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "xan",
+            "status": "deferred",
+            "category": "data",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "xargs",
+            "status": "deferred",
+            "category": "priority-search-text",
+            "sources": [
+                "just-bash:pinned"
+            ],
+            "nearTermPriority": true,
+            "notes": "High-priority missing utility for search/text workflows; should be implemented as stdin-to-argv batching inside gash."
+        },
+        {
+            "name": "yq",
+            "status": "deferred",
+            "category": "data",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        },
+        {
+            "name": "zcat",
+            "status": "deferred",
+            "category": "archives",
+            "sources": [
+                "just-bash:pinned"
+            ]
+        }
+    ]
+}
