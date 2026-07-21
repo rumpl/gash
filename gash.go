@@ -15,9 +15,10 @@ import (
 )
 
 type Result struct {
-	Stdout, Stderr string
-	ExitCode       int
-	Env            map[string]string
+	Stdout   string            `json:"stdout"`
+	Stderr   string            `json:"stderr"`
+	ExitCode int               `json:"exitCode"`
+	Env      map[string]string `json:"env,omitempty"`
 }
 type Limits struct {
 	MaxCommands        int
