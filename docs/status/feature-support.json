@@ -632,12 +632,13 @@
         },
         {
             "name": "sqlite3",
-            "status": "deferred",
+            "status": "partial",
             "category": "data",
             "sources": [
+                "gash",
                 "just-bash:pinned"
             ],
-            "notes": "Requires an embedded SQLite decision and virtual-filesystem-only access policy before implementation."
+            "notes": "Implemented in-process with modernc.org/sqlite (CGO-free) using virtual filesystem database image load/write-back, per-virtual-file locking, statement parsing, common sqlite3 output modes/options, and resource ceilings. Gash intentionally differs from just-bash by using Go context cancellation and SQLite limits instead of the sql.js worker protocol; ATTACH, VACUUM INTO, load_extension, and dot-command host escape paths are disabled."
         },
         {
             "name": "stat",

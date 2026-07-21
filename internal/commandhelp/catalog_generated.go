@@ -602,6 +602,27 @@ var catalog = map[string]Info{
 			"--additional-suffix=SUFFIX  Append SUFFIX to file names",
 		},
 	},
+	"sqlite3": {
+		Name:    "sqlite3",
+		Summary: "SQLite database CLI",
+		Usage:   "sqlite3 [OPTIONS] DATABASE [SQL]",
+		Options: []string{
+			"-list, -csv, -json, -line, -column, -table, -markdown, -tabs, -box, -quote, -html, -ascii",
+			"-header, -noheader       show or hide column headers",
+			"-separator SEP           field separator for list mode",
+			"-newline SEP             row separator for list/tabs/quote modes",
+			"-nullvalue TEXT          text for NULL values",
+			"-readonly                execute without writing database changes back",
+			"-bail                    stop on the first SQL error",
+			"-echo                    print SQL before execution",
+			"-cmd SQL                 run SQL before the main SQL/stdin script",
+			"-version                 show SQLite version",
+			"    --help, -help        display this help and exit",
+		},
+		Notes: []string{
+			"Runs modernc.org/sqlite in-process without invoking host sqlite3. Database images are read from and written back to the gash virtual filesystem; extension loading, ATTACH, VACUUM INTO, and sqlite dot-commands are disabled. Gash uses Go context cancellation and SQLite limits instead of just-bash's sql.js worker protocol.",
+		},
+	},
 	"stat": {
 		Name:    "stat",
 		Summary: "display file or file system status",
