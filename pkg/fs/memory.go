@@ -39,17 +39,17 @@ func NewMemory(limit int64) *Memory {
 }
 
 func valid(name string) error {
-	if !iofs.ValidPath(name) {
+	if name == "" || strings.HasPrefix(name, "/") || !iofs.ValidPath(name) {
 		return &iofs.PathError{Op: "open", Path: name, Err: iofs.ErrInvalid}
 	}
 	return nil
 }
 
 func (m *Memory) resolveLocked(name string, followFinal bool) (string, *node, error) {
-	if err := valid(name); err != nil {
-		return "", nil, err
-	}
 	for links := 0; links <= 40; links++ {
+		if err := valid(name); err != nil {
+			return "", nil, err
+		}
 		parts := strings.Split(name, "/")
 		cur := "."
 		restart := false
@@ -176,31 +176,39 @@ func (m *Memory) WriteFile(name string, data []byte, perm iofs.FileMode) error {
 	if err := valid(name); err != nil {
 		return err
 	}
-	p := m.nodes[parent(name)]
-	if p == nil {
-		return iofs.ErrNotExist
+	resolved, existingNode, e := m.resolveLocked(name, true)
+	if e != nil && !errors.Is(e, iofs.ErrNotExist) {
+		return e
 	}
-	if p.kind != directory {
-		return ErrNotDir
+	if existingNode == nil {
+		resolvedParent, p, e := m.resolveLocked(parent(name), true)
+		if e != nil {
+			return e
+		}
+		if p.kind != directory {
+			return ErrNotDir
+		}
+		resolved = path.Join(resolvedParent, path.Base(name))
 	}
 	old := int64(0)
-	if n := m.nodes[name]; n != nil {
-		if n.kind == directory {
+	if existingNode != nil {
+		if existingNode.kind == directory {
 			return ErrIsDir
 		}
-		old = int64(len(n.data))
+		old = int64(len(existingNode.data))
 	}
 	if m.limit > 0 && m.used-old+int64(len(data)) > m.limit {
 		return ErrQuota
 	}
-	if existing := m.nodes[name]; existing != nil {
-		existing.data = append(existing.data[:0], data...)
-		existing.mode = perm.Perm()
-		existing.mtime = time.Now()
+	if existingNode != nil {
+		m.used += int64(len(data)) - old
+		existingNode.data = append([]byte(nil), data...)
+		existingNode.mode = existingNode.mode.Type() | perm.Perm()
+		existingNode.mtime = time.Now()
 	} else {
-		m.nodes[name] = &node{kind: regular, data: append([]byte(nil), data...), mode: perm.Perm(), mtime: time.Now(), links: 1}
+		m.nodes[resolved] = &node{kind: regular, data: append([]byte(nil), data...), mode: perm.Perm(), mtime: time.Now(), links: 1}
+		m.used += int64(len(data))
 	}
-	m.used += int64(len(data)) - old
 	return nil
 }
 
@@ -210,14 +218,21 @@ func (m *Memory) AppendFile(name string, data []byte, perm iofs.FileMode) error 
 	if err := valid(name); err != nil {
 		return err
 	}
-	n := m.nodes[name]
+	resolved, n, e := m.resolveLocked(name, true)
+	if e != nil && !errors.Is(e, iofs.ErrNotExist) {
+		return e
+	}
 	if n == nil {
-		p := m.nodes[parent(name)]
-		if p == nil || p.kind != directory {
+		resolvedParent, p, parentErr := m.resolveLocked(parent(name), true)
+		if parentErr != nil {
+			return parentErr
+		}
+		if p.kind != directory {
 			return ErrNotDir
 		}
-		n = &node{kind: regular, mode: perm.Perm(), links: 1}
-		m.nodes[name] = n
+		resolved = path.Join(resolvedParent, path.Base(name))
+		n = &node{kind: regular, mode: perm.Perm(), links: 1, mtime: time.Now()}
+		m.nodes[resolved] = n
 	}
 	if n.kind != regular {
 		return ErrIsDir
@@ -237,17 +252,23 @@ func (m *Memory) Mkdir(name string, perm iofs.FileMode) error {
 	if err := valid(name); err != nil {
 		return err
 	}
-	if m.nodes[name] != nil {
+	if _, _, err := m.resolveLocked(name, true); err == nil {
 		return iofs.ErrExist
+	} else if !errors.Is(err, iofs.ErrNotExist) {
+		return err
 	}
-	p := m.nodes[parent(name)]
-	if p == nil {
-		return iofs.ErrNotExist
+	resolvedParent, p, err := m.resolveLocked(parent(name), true)
+	if err != nil {
+		return err
 	}
 	if p.kind != directory {
 		return ErrNotDir
 	}
-	m.nodes[name] = &node{kind: directory, mode: iofs.ModeDir | perm.Perm(), mtime: time.Now(), links: 1}
+	resolved := path.Join(resolvedParent, path.Base(name))
+	if m.nodes[resolved] != nil {
+		return iofs.ErrExist
+	}
+	m.nodes[resolved] = &node{kind: directory, mode: iofs.ModeDir | perm.Perm(), mtime: time.Now(), links: 1}
 	return nil
 }
 
@@ -280,13 +301,16 @@ func (m *Memory) Remove(name string) error {
 	if name == "." {
 		return errors.New("cannot remove root")
 	}
-	n := m.nodes[name]
-	if n == nil {
-		return iofs.ErrNotExist
+	if err := valid(name); err != nil {
+		return err
+	}
+	resolved, n, e := m.resolveLocked(name, false)
+	if e != nil {
+		return e
 	}
 	if n.kind == directory {
 		for p := range m.nodes {
-			if parent(p) == name {
+			if parent(p) == resolved {
 				return ErrNotEmpty
 			}
 		}
@@ -297,7 +321,7 @@ func (m *Memory) Remove(name string) error {
 	if n.links == 0 {
 		m.used -= int64(len(n.data))
 	}
-	delete(m.nodes, name)
+	delete(m.nodes, resolved)
 	return nil
 }
 
@@ -307,9 +331,19 @@ func (m *Memory) RemoveAll(name string) error {
 	if name == "." {
 		return errors.New("cannot remove root")
 	}
-	prefix := name + "/"
+	if err := valid(name); err != nil {
+		return err
+	}
+	resolved, _, e := m.resolveLocked(name, false)
+	if e != nil {
+		if errors.Is(e, iofs.ErrNotExist) {
+			return nil
+		}
+		return e
+	}
+	prefix := resolved + "/"
 	for p, n := range m.nodes {
-		if p == name || strings.HasPrefix(p, prefix) {
+		if p == resolved || strings.HasPrefix(p, prefix) {
 			if n.links > 0 {
 				n.links--
 			}
@@ -325,21 +359,37 @@ func (m *Memory) RemoveAll(name string) error {
 func (m *Memory) Rename(oldName, newName string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	n := m.nodes[oldName]
-	if n == nil {
-		return iofs.ErrNotExist
+	if err := valid(oldName); err != nil {
+		return err
 	}
-	if strings.HasPrefix(newName+"/", oldName+"/") {
-		return errors.New("cannot move directory into itself")
+	if err := valid(newName); err != nil {
+		return err
 	}
-	p := m.nodes[parent(newName)]
-	if p == nil || p.kind != directory {
+	oldResolved, n, e := m.resolveLocked(oldName, false)
+	if e != nil {
+		return e
+	}
+	newParentResolved, p, e := m.resolveLocked(parent(newName), true)
+	if e != nil {
+		return e
+	}
+	if p.kind != directory {
 		return ErrNotDir
 	}
-	if existing := m.nodes[newName]; existing != nil {
+	newResolved := path.Join(newParentResolved, path.Base(newName))
+	if strings.HasPrefix(newResolved+"/", oldResolved+"/") {
+		return errors.New("cannot move directory into itself")
+	}
+	if existing := m.nodes[newResolved]; existing != nil {
+		if existing.kind == directory && n.kind != directory {
+			return ErrIsDir
+		}
+		if existing.kind != directory && n.kind == directory {
+			return ErrNotDir
+		}
 		if existing.kind == directory {
 			for q := range m.nodes {
-				if parent(q) == newName {
+				if parent(q) == newResolved {
 					return ErrNotEmpty
 				}
 			}
@@ -350,17 +400,17 @@ func (m *Memory) Rename(oldName, newName string) error {
 		if existing.links == 0 {
 			m.used -= int64(len(existing.data))
 		}
-		delete(m.nodes, newName)
+		delete(m.nodes, newResolved)
 	}
 	moving := map[string]*node{}
 	for p, v := range m.nodes {
-		if p == oldName || strings.HasPrefix(p, oldName+"/") {
+		if p == oldResolved || strings.HasPrefix(p, oldResolved+"/") {
 			moving[p] = v
 			delete(m.nodes, p)
 		}
 	}
 	for p, v := range moving {
-		m.nodes[newName+strings.TrimPrefix(p, oldName)] = v
+		m.nodes[newResolved+strings.TrimPrefix(p, oldResolved)] = v
 	}
 	return nil
 }
@@ -371,14 +421,20 @@ func (m *Memory) Symlink(target, name string) error {
 	if err := valid(name); err != nil {
 		return err
 	}
-	if m.nodes[name] != nil {
+	if _, _, err := m.resolveLocked(name, false); err == nil {
 		return iofs.ErrExist
+	} else if !errors.Is(err, iofs.ErrNotExist) {
+		return err
 	}
-	p := m.nodes[parent(name)]
-	if p == nil || p.kind != directory {
+	resolvedParent, p, err := m.resolveLocked(parent(name), true)
+	if err != nil {
+		return err
+	}
+	if p.kind != directory {
 		return ErrNotDir
 	}
-	m.nodes[name] = &node{kind: symlink, target: target, mode: iofs.ModeSymlink | 0o777, mtime: time.Now(), links: 1}
+	resolved := path.Join(resolvedParent, path.Base(name))
+	m.nodes[resolved] = &node{kind: symlink, target: target, mode: iofs.ModeSymlink | 0o777, mtime: time.Now(), links: 1}
 	return nil
 }
 

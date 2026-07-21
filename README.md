@@ -105,7 +105,7 @@ Writable implementations opt into small capability interfaces from `github.com/r
 
 Virtual absolute shell paths are translated to valid root-relative `io/fs` paths only at the filesystem boundary.
 
-The CLI's `--root DIR` option uses `os.DirFS` and is intended for trusted local use. It is read-only through gash, but it is not a secure containment boundary because symlinks in `DIR` may resolve outside that directory. A symlink-safe rooted host filesystem remains future work.
+The CLI's `--root DIR` option exposes a host directory as `/` through `fs.Rooted`. `fs.Rooted` resolves symlinks under the configured root and rejects lexical traversal or symlink escapes outside that directory. It implements write capabilities for gash commands, so scripts can mutate files inside `DIR`; use a read-only `Options.FS` implementation when mutation must be disallowed.
 
 ## Limits and security
 

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	gfs "github.com/rumpl/gash/pkg/fs"
 	"github.com/rumpl/gash/pkg/gash"
 )
 
@@ -73,7 +74,12 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "gash: root: %s is not a directory\n", *root)
 			return 1
 		}
-		options.FS = os.DirFS(absoluteRoot)
+		rootFS, err := gfs.NewRooted(absoluteRoot)
+		if err != nil {
+			fmt.Fprintln(stderr, "gash: root:", err)
+			return 1
+		}
+		options.FS = rootFS
 		if options.Cwd == "" {
 			options.Cwd = "/"
 		}
