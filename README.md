@@ -2,7 +2,7 @@
 
 A Go rewrite of [vercel-labs/just-bash](https://github.com/vercel-labs/just-bash): a Bash interpreter with a capability-based virtual filesystem. It is intended for agents and applications that need useful shell workflows without exposing the host filesystem or launching host processes.
 
-> **Status:** active parity work. Bash parsing/execution now uses a full AST interpreter, but command implementations and the overlay, networking, transform, and optional-runtime layers are not yet at just-bash parity. See the comprehensive [remaining-work checklist](REMAINING_WORK.md) and [porting plan](PORTING.md).
+> **Status:** active practical rewrite work. Bash parsing/execution now uses a full AST interpreter, and near-term work prioritizes missing search/text commands such as `fgrep`, `sed`, `find`, `xargs`, `diff`, `expr`, `rg`, and `awk`. Gash uses pinned just-bash behavior as guidance for selected tasks while documenting intentional deferrals. See [remaining work](REMAINING_WORK.md) and [porting notes](PORTING.md).
 
 ## Install
 
@@ -88,7 +88,7 @@ Built-in commands:
 
 `base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `cut`, `dirname`, `du`, `echo`, `env`, `expand`, `false`, `fgrep`, `file`, `fold`, `grep`, `head`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rm`, `rmdir`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`, `tree`, `true`, `unexpand`, `uniq`, `wc`, and `whoami`.
 
-Command flags and edge cases are still being ported from the upstream command test suites. Overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes remain to be implemented. A mountable `io/fs` implementation is available as `fs.Mountable`.
+Command flags and edge cases are still being ported from the upstream command test suites for selected tasks. Overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes are intentional deferrals unless explicitly enabled by a future task. A mountable `io/fs` implementation is available as `fs.Mountable`.
 
 ## Filesystems
 
