@@ -312,8 +312,10 @@ These must be explicit opt-ins and are a larger security boundary than ordinary 
 - [ ] Finalize stable constructors, option types, command registration, filesystem injection, and result types.
 - [ ] Add public support for network policy, transforms, optional runtimes, deterministic time, and lazy files.
 - [ ] Define backward-compatibility policy before a stable release; do not retain accidental pre-release compatibility aliases.
+- [x] Add explicit read-only `--root DIR` CLI access for trusted local use via `os.DirFS`.
+- [ ] Replace or supplement `--root` with a symlink-safe rooted host filesystem for untrusted use.
 - [ ] Match CLI `-c`, script-file, stdin, environment, cwd, exit status, and signal behavior.
-- [ ] Add CLI help/version and invalid-invocation tests.
+- [ ] Add CLI help/version and complete invalid-invocation tests.
 - [ ] Add black-box tests against a built `gash` binary.
 - [ ] Test Linux, macOS, and Windows build/runtime behavior where supported.
 - [ ] Document unsupported shell/platform behavior explicitly.

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/rumpl/gash/pkg/gash"
@@ -28,51 +29,90 @@ func (e envFlags) Set(value string) error {
 }
 
 func main() {
-	os.Exit(run())
+	os.Exit(run(os.Args[1:], os.Stdin, os.Stdout, os.Stderr))
 }
 
-func run() int {
+func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	set := flag.NewFlagSet("gash", flag.ContinueOnError)
-	set.SetOutput(os.Stderr)
+	set.SetOutput(stderr)
 	command := set.String("c", "", "shell script to execute")
 	jsonOutput := set.Bool("json", false, "print the result as JSON")
-	cwd := set.String("cwd", "/home/user", "virtual working directory")
+	cwd := set.String("cwd", "", "virtual working directory (defaults to / with --root)")
+	root := set.String("root", "", "expose a host directory read-only as the virtual filesystem root")
 	env := envFlags{}
 	set.Var(env, "e", "set an environment variable (repeatable)")
-	set.Usage = func() { fmt.Fprintln(set.Output(), "Usage: gash [-c script | file] [options]"); set.PrintDefaults() }
-	if err := set.Parse(os.Args[1:]); err != nil {
+	set.Usage = func() {
+		fmt.Fprintln(set.Output(), "Usage: gash [-c script | file] [options]")
+		set.PrintDefaults()
+	}
+	if err := set.Parse(args); err != nil {
 		return 2
 	}
-	script := *command
-	if script == "" && set.NArg() > 0 {
-		data, err := os.ReadFile(set.Arg(0))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "gash:", err)
-			return 1
-		}
-		script = string(data)
-	} else if script == "" {
-		data, err := io.ReadAll(os.Stdin)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "gash:", err)
-			return 1
-		}
-		script = string(data)
+
+	script, exitCode := readScript(*command, set.Args(), stdin, stderr)
+	if exitCode != 0 {
+		return exitCode
 	}
-	bash, err := gash.New(gash.Options{Cwd: *cwd, Env: env})
+
+	options := gash.Options{
+		Cwd: *cwd,
+		Env: env,
+	}
+	if *root != "" {
+		absoluteRoot, err := filepath.Abs(*root)
+		if err != nil {
+			fmt.Fprintln(stderr, "gash: resolve root:", err)
+			return 1
+		}
+		info, err := os.Stat(absoluteRoot)
+		if err != nil {
+			fmt.Fprintln(stderr, "gash: root:", err)
+			return 1
+		}
+		if !info.IsDir() {
+			fmt.Fprintf(stderr, "gash: root: %s is not a directory\n", *root)
+			return 1
+		}
+		options.FS = os.DirFS(absoluteRoot)
+		if options.Cwd == "" {
+			options.Cwd = "/"
+		}
+	}
+
+	bash, err := gash.New(options)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "gash:", err)
+		fmt.Fprintln(stderr, "gash:", err)
 		return 1
 	}
 	result := bash.Exec(context.Background(), script, gash.ExecOptions{})
 	if *jsonOutput {
-		if err := json.NewEncoder(os.Stdout).Encode(result); err != nil {
-			fmt.Fprintln(os.Stderr, "gash:", err)
+		if err := json.NewEncoder(stdout).Encode(result); err != nil {
+			fmt.Fprintln(stderr, "gash:", err)
 			return 1
 		}
 	} else {
-		fmt.Fprint(os.Stdout, result.Stdout)
-		fmt.Fprint(os.Stderr, result.Stderr)
+		fmt.Fprint(stdout, result.Stdout)
+		fmt.Fprint(stderr, result.Stderr)
 	}
 	return result.ExitCode
+}
+
+func readScript(command string, args []string, stdin io.Reader, stderr io.Writer) (string, int) {
+	if command != "" {
+		return command, 0
+	}
+	if len(args) > 0 {
+		data, err := os.ReadFile(args[0])
+		if err != nil {
+			fmt.Fprintln(stderr, "gash:", err)
+			return "", 1
+		}
+		return string(data), 0
+	}
+	data, err := io.ReadAll(stdin)
+	if err != nil {
+		fmt.Fprintln(stderr, "gash:", err)
+		return "", 1
+	}
+	return string(data), 0
 }

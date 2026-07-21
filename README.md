@@ -65,12 +65,13 @@ Custom commands receive only explicit capabilities: the virtual filesystem, virt
 
 ```sh
 gash -c 'echo hello | grep hell'
+gash --root . -c 'ls; cat README.md'
 printf 'echo "$NAME"\n' | gash -e NAME=world
 gash --json -c 'false'
 gash script.sh
 ```
 
-The CLI starts with a fresh in-memory filesystem. A script filename is read by the CLI as input; commands inside the script cannot access host files.
+The CLI starts with a fresh in-memory filesystem by default. Pass `--root DIR` to expose a host directory read-only as `/`; the virtual working directory then defaults to `/`. A script filename is read by the CLI as input but does not, by itself, expose the script's directory.
 
 ## Supported behavior
 
@@ -103,6 +104,8 @@ shell, _ := gash.New(gash.Options{
 Writable implementations opt into small capability interfaces from `github.com/rumpl/gash/pkg/fs`, such as `WriteFileFS`, `MkdirFS`, `RemoveFS`, `RenameFS`, and `SymlinkFS`. Commands return a read-only error when the supplied implementation lacks a required capability. The bundled `fs.Memory` implements the complete capability set and the standard `fs.FS`, `fs.ReadFileFS`, `fs.ReadDirFS`, and `fs.StatFS` interfaces.
 
 Virtual absolute shell paths are translated to valid root-relative `io/fs` paths only at the filesystem boundary.
+
+The CLI's `--root DIR` option uses `os.DirFS` and is intended for trusted local use. It is read-only through gash, but it is not a secure containment boundary because symlinks in `DIR` may resolve outside that directory. A symlink-safe rooted host filesystem remains future work.
 
 ## Limits and security
 
