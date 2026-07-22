@@ -37,8 +37,7 @@ func commandChmod(_ context.Context, args []string, c *CommandContext) int {
 	code := 0
 	for _, target := range targets {
 		if err := chmodPath(c, abs(c, target), spec, recursive, verbose, target); err != nil {
-			fmt.Fprintf(c.Stderr, "chmod: cannot access '%s': No such file or directory\n", target)
-			code = 1
+			code = report(c, "chmod: "+target, err)
 		}
 	}
 	return code

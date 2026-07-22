@@ -58,6 +58,17 @@ func TestOutputBudgetIsAggregate(t *testing.T) {
 	}
 }
 
+func TestYesStopsAtSharedOutputLimit(t *testing.T) {
+	b, err := New(Options{Limits: Limits{MaxOutputBytes: 16}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := b.Exec(context.Background(), "yes agent", ExecOptions{})
+	if result.ExitCode != 126 || len(result.Stdout)+len(result.Stderr) > 16 {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestCommandBudgetIncludesBuiltins(t *testing.T) {
 	b, err := New(Options{Limits: Limits{MaxCommandCount: 2}})
 	if err != nil {

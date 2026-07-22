@@ -146,7 +146,7 @@ flags or edge cases:
 `chmod`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `file`, `fold`, `head`,
 `join`, `ln`, `ls`, `mkdir`, `mv`, `nl`, `od`, `paste`, `readlink`, `rev`, `rm`,
 `rmdir`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`,
-`tree`, `unexpand`, `uniq`, `wc`.
+`tree`, `unexpand`, `uniq`, `wc`, `yes`.
 
 ### Partial
 
@@ -210,6 +210,8 @@ assumption:
 - [ ] Alias expansion order and function/local-variable call-frame behavior.
 - [ ] `[[ ... ]]`, regex, arithmetic-test, and pattern-matching differences.
 - [ ] File-descriptor duplication/closing and uncommon redirection ordering.
+- [ ] Implement virtual `umask`, `PIPESTATUS`, `RANDOM`, Bash printf time
+      formatting, and complete `command -V`/`type -a` discovery semantics.
 - [ ] Complete background-job IDs and per-job `wait` status semantics.
 - [ ] Complete background-job, trap, signal, and cancellation semantics,
       including external context-to-trap delivery and exact default signal termination.

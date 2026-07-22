@@ -88,7 +88,8 @@
             "sources": [
                 "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Reports underlying virtual filesystem capability errors instead of rewriting all failures as missing files."
         },
         {
             "name": "clear",
@@ -839,6 +840,15 @@
             ],
             "nearTermPriority": true,
             "notes": "Implemented in-process with whitespace, custom, and NUL delimiters; replacement and argument batching, including attached -n1/-P2/-Ivalue/-dvalue forms; bounded parallel execution; verbose output; UTF-8 input; and safe virtual command dispatch. Full GNU quoting semantics and additional flags remain deferred."
+        },
+        {
+            "name": "yes",
+            "status": "useful",
+            "category": "utility",
+            "sources": [
+                "gash"
+            ],
+            "notes": "Cancellation-aware in-process output generator bounded by the shared execution output limit."
         },
         {
             "name": "yq",

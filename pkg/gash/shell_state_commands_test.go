@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+func TestNonInteractiveAliasesRequireExpandAliases(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `alias hi='echo expanded'; hi`, ExecOptions{})
+	if result.ExitCode != 127 || result.Stdout != "" || !strings.Contains(result.Stderr, "hi: command not found") {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestShellStateDiscoveryAndTimeCommands(t *testing.T) {
 	shell, err := New(Options{})
 	if err != nil {

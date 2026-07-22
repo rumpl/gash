@@ -46,6 +46,7 @@ func BuiltinsWithNetwork(policy *network.Policy) []Command {
 		{Name: "sha256sum", Run: checksum("sha256")},
 		{Name: "hostname", Run: simpleOutput("localhost")},
 		{Name: "whoami", Run: simpleOutput("user")},
+		{Name: "yes", Run: commandYes},
 		{Name: "clear", Run: func(_ context.Context, _ []string, c *CommandContext) int {
 			fmt.Fprint(c.Stdout, "\033[H\033[2J")
 			return 0

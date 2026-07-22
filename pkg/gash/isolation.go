@@ -2,6 +2,7 @@ package gash
 
 import (
 	"fmt"
+	"strconv"
 
 	"mvdan.cc/sh/v3/syntax"
 )
@@ -79,6 +80,13 @@ func rejectHostBackedSyntax(program syntax.Node) error {
 		if _, ok := node.(*syntax.ProcSubst); ok {
 			err = fmt.Errorf("process substitution is not supported in isolated execution")
 			return false
+		}
+		if redirect, ok := node.(*syntax.Redirect); ok && redirect.N != nil {
+			descriptor, parseErr := strconv.Atoi(redirect.N.Value)
+			if parseErr != nil || descriptor > 2 {
+				err = fmt.Errorf("file descriptor %q is not supported; only 0, 1, and 2 are available", redirect.N.Value)
+				return false
+			}
 		}
 		return true
 	})

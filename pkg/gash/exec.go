@@ -101,7 +101,6 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	runner, err := interp.New(
 		interp.Env(expand.ListEnviron(pairs...)),
 		interp.Params(args...),
-		interp.Interactive(true),
 		interp.StdIO(strings.NewReader(stdin), stdout, stderr),
 		interp.OpenHandler(b.openHandler),
 		interp.ReadDirHandler2(b.readDirHandler),

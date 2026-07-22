@@ -172,6 +172,14 @@ func TestOutputLimitCoversLongLoopPipelineAndCommandSubstitution(t *testing.T) {
 	}
 }
 
+func TestUnsupportedFileDescriptorRejectedBeforeInterpreter(t *testing.T) {
+	b := newTestBash(t)
+	result := b.Exec(context.Background(), `echo hi 3>&1`, ExecOptions{})
+	if result.ExitCode != 2 || !strings.Contains(result.Stderr, `file descriptor "3" is not supported`) || strings.Contains(result.Stderr, "interpreter failure") {
+		t.Fatalf("%+v", result)
+	}
+}
+
 func TestProcessSubstitutionRejectedToAvoidHostFIFO(t *testing.T) {
 	b := newTestBash(t)
 	result := b.Exec(context.Background(), `cat <(echo nope)`, ExecOptions{})
