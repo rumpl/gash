@@ -4,7 +4,9 @@ This example embeds gash as the `shell` tool of a
 [Docker Agent](https://github.com/docker/cagent) Go application. The model can
 inspect files and run gash commands, but it cannot launch host executables.
 Docker Agent framework logs are discarded; the terminal shows streamed assistant
-text, complete shell tool calls, and their structured results.
+text, complete shell tool calls, and their structured results. Interactive output
+uses colors automatically; use `-color always` when piping a demonstration or
+`-color never` to disable ANSI styling.
 
 The example is a nested Go module because Docker Agent has a large, independently
 versioned dependency graph and a newer Go toolchain requirement than the core
@@ -59,6 +61,8 @@ addresses. Private, loopback, and link-local addresses remain denied by default.
 ## Other flags
 
 ```text
+-color string
+      color output: auto, always, or never (default "auto")
 -model string
       OpenAI model used by docker-agent (default "gpt-4o")
 -prompt string

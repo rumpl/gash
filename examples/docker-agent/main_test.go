@@ -58,7 +58,7 @@ func TestWritableFlagExposesMutationCapabilities(t *testing.T) {
 func TestStreamPrinterShowsAssistantToolCallAndResult(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-	printer := newStreamPrinter(&stdout, &stderr)
+	printer := newStreamPrinter(&stdout, &stderr, false)
 	printer.writeAssistant("I will ")
 	printer.writeAssistant("inspect it.")
 	printer.writeToolCall(tools.ToolCall{
@@ -86,6 +86,31 @@ func TestStreamPrinterShowsAssistantToolCallAndResult(t *testing.T) {
 	}
 	if stderr.Len() != 0 {
 		t.Fatalf("stderr=%q", stderr.String())
+	}
+}
+
+func TestStreamPrinterColorsLabelsWhenEnabled(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	printer := newStreamPrinter(&stdout, &stderr, true)
+	printer.writeAssistant("hello")
+	printer.writeToolCall(tools.ToolCall{
+		Function: tools.FunctionCall{Name: "shell", Arguments: `{"cmd":"pwd"}`},
+	})
+	printer.writeToolResult("shell", tools.ResultSuccess(`{"exit_code":0}`), "")
+	printer.finish()
+
+	output := stdout.String()
+	for _, expected := range []string{ansiCyan, ansiMagenta, ansiGreen, ansiDim, ansiReset} {
+		if !strings.Contains(output, expected) {
+			t.Fatalf("colored output missing %q: %q", expected, output)
+		}
+	}
+}
+
+func TestColorEnabledRejectsUnknownMode(t *testing.T) {
+	if _, err := colorEnabled("sometimes", &bytes.Buffer{}); err == nil {
+		t.Fatal("expected invalid color mode to fail")
 	}
 }
 

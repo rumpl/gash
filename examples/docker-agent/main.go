@@ -16,6 +16,8 @@ import (
 	"syscall"
 	"time"
 
+	"golang.org/x/term"
+
 	"github.com/docker/docker-agent/pkg/agent"
 	"github.com/docker/docker-agent/pkg/config/latest"
 	"github.com/docker/docker-agent/pkg/environment"
@@ -35,6 +37,7 @@ type options struct {
 	networkAllow string
 	model        string
 	prompt       string
+	color        string
 }
 
 type readOnlyFS struct {
@@ -76,8 +79,9 @@ func parseFlags() options {
 	root := flag.String("root", ".", "host directory exposed as / inside gash")
 	writable := flag.Bool("writable", false, "allow shell commands to modify files under -root")
 	networkAllow := flag.String("network-allow", "", "comma-separated HTTP(S) origins allowed for curl")
-	model := flag.String("model", "gpt-4o", "OpenAI model used by docker-agent")
+	model := flag.String("model", "gpt-5.6-sol", "OpenAI model used by docker-agent")
 	prompt := flag.String("prompt", "", "question or task for the agent; remaining arguments are also accepted")
+	color := flag.String("color", "auto", "color output: auto, always, or never")
 	flag.Parse()
 
 	question := strings.TrimSpace(*prompt)
@@ -93,6 +97,7 @@ func parseFlags() options {
 		networkAllow: *networkAllow,
 		model:        *model,
 		prompt:       question,
+		color:        *color,
 	}
 }
 
@@ -150,7 +155,11 @@ Host executables are unavailable. Network access is unavailable unless curl was 
 		session.WithUserMessage(configured.prompt),
 		session.WithToolsApproved(true),
 	)
-	printer := newStreamPrinter(os.Stdout, os.Stderr)
+	colors, err := colorEnabled(configured.color, os.Stdout)
+	if err != nil {
+		return err
+	}
+	printer := newStreamPrinter(os.Stdout, os.Stderr, colors)
 	var streamErr error
 	for event := range rt.RunStream(ctx, sess) {
 		switch typed := event.(type) {
@@ -173,15 +182,26 @@ Host executables are unavailable. Network access is unavailable unless curl was 
 	return streamErr
 }
 
+const (
+	ansiReset   = "\x1b[0m"
+	ansiBold    = "\x1b[1m"
+	ansiDim     = "\x1b[2m"
+	ansiRed     = "\x1b[31m"
+	ansiGreen   = "\x1b[32m"
+	ansiMagenta = "\x1b[35m"
+	ansiCyan    = "\x1b[36m"
+)
+
 type streamPrinter struct {
 	stdout        io.Writer
 	stderr        io.Writer
+	colors        bool
 	assistantOpen bool
 	wroteSection  bool
 }
 
-func newStreamPrinter(stdout, stderr io.Writer) *streamPrinter {
-	return &streamPrinter{stdout: stdout, stderr: stderr}
+func newStreamPrinter(stdout, stderr io.Writer, colors bool) *streamPrinter {
+	return &streamPrinter{stdout: stdout, stderr: stderr, colors: colors}
 }
 
 func (p *streamPrinter) writeAssistant(content string) {
@@ -190,7 +210,7 @@ func (p *streamPrinter) writeAssistant(content string) {
 	}
 	if !p.assistantOpen {
 		p.startSection()
-		fmt.Fprint(p.stdout, "assistant> ")
+		fmt.Fprint(p.stdout, p.style(ansiBold+ansiCyan, "assistant>"), " ")
 		p.assistantOpen = true
 	}
 	fmt.Fprint(p.stdout, content)
@@ -199,28 +219,35 @@ func (p *streamPrinter) writeAssistant(content string) {
 func (p *streamPrinter) writeToolCall(toolCall tools.ToolCall) {
 	p.closeAssistant()
 	p.startSection()
-	fmt.Fprintf(p.stdout, "tool call> %s\n", toolCall.Function.Name)
-	fmt.Fprintln(p.stdout, indent(prettyJSON(toolCall.Function.Arguments)))
+	fmt.Fprintf(p.stdout, "%s %s\n", p.style(ansiBold+ansiMagenta, "tool call>"), toolCall.Function.Name)
+	fmt.Fprintln(p.stdout, p.style(ansiDim, indent(prettyJSON(toolCall.Function.Arguments))))
 }
 
 func (p *streamPrinter) writeToolResult(name string, result *tools.ToolCallResult, response string) {
 	p.closeAssistant()
 	p.startSection()
-	fmt.Fprintf(p.stdout, "tool result> %s\n", name)
+	fmt.Fprintf(p.stdout, "%s %s\n", p.style(ansiBold+ansiGreen, "tool result>"), name)
 	value := response
 	if result != nil {
 		value = result.Output
 	}
-	fmt.Fprintln(p.stdout, indent(prettyJSON(value)))
+	fmt.Fprintln(p.stdout, p.style(ansiDim, indent(prettyJSON(value))))
 }
 
 func (p *streamPrinter) writeError(message string) {
 	p.closeAssistant()
-	fmt.Fprintf(p.stderr, "error: %s\n", message)
+	fmt.Fprintf(p.stderr, "%s %s\n", p.style(ansiBold+ansiRed, "error:"), message)
 }
 
 func (p *streamPrinter) finish() {
 	p.closeAssistant()
+}
+
+func (p *streamPrinter) style(code, value string) string {
+	if !p.colors {
+		return value
+	}
+	return code + value + ansiReset
 }
 
 func (p *streamPrinter) startSection() {
@@ -236,6 +263,23 @@ func (p *streamPrinter) closeAssistant() {
 	}
 	fmt.Fprintln(p.stdout)
 	p.assistantOpen = false
+}
+
+func colorEnabled(mode string, output io.Writer) (bool, error) {
+	switch strings.ToLower(strings.TrimSpace(mode)) {
+	case "always":
+		return true, nil
+	case "never":
+		return false, nil
+	case "", "auto":
+		if os.Getenv("NO_COLOR") != "" || os.Getenv("TERM") == "dumb" {
+			return false, nil
+		}
+		file, ok := output.(*os.File)
+		return ok && term.IsTerminal(int(file.Fd())), nil
+	default:
+		return false, fmt.Errorf("invalid -color value %q: use auto, always, or never", mode)
+	}
 }
 
 func prettyJSON(value string) string {
