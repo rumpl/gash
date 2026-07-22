@@ -86,7 +86,6 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	rewriteDeclarationPrinting(program)
 	normalizeClobberRedirects(program)
 	normalizeSubshellSemantics(program)
-	serializeBackgroundStatements(program)
 	rewriteWaitBuiltin(program)
 	rewritePrintfBuiltin(program)
 	rewriteVirtualSignalBuiltins(program)
@@ -99,6 +98,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 		pairs = append(pairs, k+"="+v)
 	}
 	ctx, shellOptions := withShellOptionState(ctx)
+	positionals := newPositionalState(len(args))
 	runner, err := interp.New(
 		interp.Env(expand.ListEnviron(pairs...)),
 		interp.Params(args...),
@@ -111,10 +111,16 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 				fmt.Fprintf(interp.HandlerCtx(callCtx).Stderr, "bash: %v\n", err)
 				return argv, interp.NewExitStatus(126)
 			}
+			if replacement, handled := virtualShiftFailure(argv, positionals); handled {
+				return replacement, nil
+			}
 			if replacement, handled := virtualSetOptions(argv, shellOptions); handled {
 				return replacement, nil
 			}
 			if replacement, handled := b.virtualCommandDiscovery(callCtx, argv); handled {
+				return replacement, nil
+			}
+			if replacement, handled := b.virtualTypeDiscovery(callCtx, argv); handled {
 				return replacement, nil
 			}
 			if len(argv) > 0 && argv[0] == "cd" {

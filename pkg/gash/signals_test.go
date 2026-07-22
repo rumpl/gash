@@ -17,6 +17,14 @@ func TestVirtualSignalTrapAndKill(t *testing.T) {
 	}
 }
 
+func TestVirtualTrapPrintsSelectedDefinitions(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `trap 'echo interrupted' INT; trap -p INT`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "trap -- \"echo interrupted\" INT\n" || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestExitTrapStillUsesInterpreterBehavior(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(context.Background(), `trap 'echo exiting' EXIT; echo body`, ExecOptions{})

@@ -35,6 +35,12 @@ func rewriteVirtualSignalBuiltins(program syntax.Node) {
 		case "kill":
 			setLiteralWord(call.Args[0], internalKillCommand)
 		case "trap":
+			if len(call.Args) > 1 {
+				if option, literal := literalWord(call.Args[1]); literal && option == "-p" {
+					setLiteralWord(call.Args[0], internalTrapCommand)
+					break
+				}
+			}
 			for _, argument := range call.Args[1:] {
 				value, literal := literalWord(argument)
 				if literal && isVirtualSignal(value) {
@@ -85,8 +91,20 @@ func normalizeVirtualSignal(value string) (string, int, bool) {
 }
 
 func (b *Bash) runVirtualTrap(_ context.Context, args []string, commandCtx *CommandContext, scope *executionScope) int {
-	if len(args) == 0 {
-		for _, signal := range []string{"HUP", "INT", "QUIT", "TERM"} {
+	if len(args) == 0 || args[0] == "-p" {
+		signals := []string{"HUP", "INT", "QUIT", "TERM"}
+		if len(args) > 1 {
+			signals = signals[:0]
+			for _, value := range args[1:] {
+				signal, _, ok := normalizeVirtualSignal(value)
+				if !ok {
+					fmt.Fprintf(commandCtx.Stderr, "trap: %s: invalid signal specification\n", value)
+					return 2
+				}
+				signals = append(signals, signal)
+			}
+		}
+		for _, signal := range signals {
 			if callback, ok := scope.trap(signal); ok {
 				fmt.Fprintf(commandCtx.Stdout, "trap -- %q %s\n", callback, signal)
 			}

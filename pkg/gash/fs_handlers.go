@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
 
 	gfs "github.com/rumpl/gash/pkg/fs"
 	"mvdan.cc/sh/v3/interp"
@@ -57,22 +56,7 @@ func (b *Bash) openHandler(ctx context.Context, name string, flag int, perm os.F
 
 func (b *Bash) readDirHandler(ctx context.Context, name string) ([]iofs.DirEntry, error) {
 	name = handlerPath(ctx, name)
-	entries, err := gfs.ReadDir(b.FS, name)
-	if err != nil {
-		return nil, err
-	}
-	if name == "/bin" || name == "/usr/bin" {
-		seen := map[string]bool{}
-		for _, entry := range entries {
-			seen[entry.Name()] = true
-		}
-		for command := range b.commands {
-			if !seen[command] {
-				entries = append(entries, syntheticEntry(command))
-			}
-		}
-	}
-	return entries, nil
+	return gfs.ReadDir(b.FS, name)
 }
 
 func (b *Bash) statHandler(ctx context.Context, name string, follow bool) (iofs.FileInfo, error) {
@@ -83,18 +67,6 @@ func (b *Bash) statHandler(ctx context.Context, name string, follow bool) (iofs.
 		info, err = gfs.Stat(b.FS, name)
 	} else {
 		info, err = gfs.Lstat(b.FS, name)
-	}
-	if err != nil && (name == "/bin" || name == "/usr/bin") {
-		return syntheticDirInfo(path.Base(name)), nil
-	}
-	if err != nil && (path.Dir(name) == "/bin" || path.Dir(name) == "/usr/bin") {
-		base := path.Base(name)
-		if _, ok := b.commands[base]; ok {
-			return syntheticInfo(base), nil
-		}
-		if base == "bash" || base == "sh" {
-			return syntheticInfo(base), nil
-		}
 	}
 	return info, err
 }
@@ -111,76 +83,6 @@ func handlerPath(ctx context.Context, name string) (result string) {
 		}
 	}()
 	return resolve(interp.HandlerCtx(ctx).Dir, name)
-}
-
-type syntheticInfo string
-
-func (i syntheticInfo) Name() string {
-	return string(i)
-}
-
-func (syntheticInfo) Size() int64 {
-	return 0
-}
-
-func (syntheticInfo) Mode() iofs.FileMode {
-	return 0o755
-}
-
-func (syntheticInfo) ModTime() time.Time {
-	return time.Time{}
-}
-
-func (syntheticInfo) IsDir() bool {
-	return false
-}
-
-func (syntheticInfo) Sys() any {
-	return nil
-}
-
-type syntheticDirInfo string
-
-func (i syntheticDirInfo) Name() string {
-	return string(i)
-}
-
-func (syntheticDirInfo) Size() int64 {
-	return 0
-}
-
-func (syntheticDirInfo) Mode() iofs.FileMode {
-	return iofs.ModeDir | 0o755
-}
-
-func (syntheticDirInfo) ModTime() time.Time {
-	return time.Time{}
-}
-
-func (syntheticDirInfo) IsDir() bool {
-	return true
-}
-
-func (syntheticDirInfo) Sys() any {
-	return nil
-}
-
-type syntheticEntry string
-
-func (e syntheticEntry) Name() string {
-	return string(e)
-}
-
-func (syntheticEntry) IsDir() bool {
-	return false
-}
-
-func (syntheticEntry) Type() iofs.FileMode {
-	return 0
-}
-
-func (e syntheticEntry) Info() (iofs.FileInfo, error) {
-	return syntheticInfo(e), nil
 }
 
 type virtualFile struct {

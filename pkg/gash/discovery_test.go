@@ -3,6 +3,7 @@ package gash
 import (
 	"context"
 	"testing"
+	"testing/fstest"
 
 	"github.com/rumpl/gash/pkg/network"
 )
@@ -15,7 +16,16 @@ command -v realpath >/dev/null; echo realpath=$?
 command -v ls
 command -v echo
 `, ExecOptions{})
-	want := "curl=1\nrealpath=1\n/usr/bin/ls\necho\n"
+	want := "curl=1\nrealpath=1\nls\necho\n"
+	if result.ExitCode != 0 || result.Stdout != want || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
+func TestVerboseCommandAndTypeDiscoveryAvoidFilesystemPaths(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `command -V bash; type bash; type -a ls`, ExecOptions{})
+	want := "bash is a gash command\nbash is a gash command\nls is a gash command\n"
 	if result.ExitCode != 0 || result.Stdout != want || result.Stderr != "" {
 		t.Fatalf("result=%+v", result)
 	}
@@ -28,7 +38,19 @@ func TestCommandVReflectsOptionalCapabilities(t *testing.T) {
 		t.Fatal(err)
 	}
 	result := shell.Exec(context.Background(), `command -v curl`, ExecOptions{})
-	if result.ExitCode != 0 || result.Stdout != "/usr/bin/curl\n" || result.Stderr != "" {
+	if result.ExitCode != 0 || result.Stdout != "curl\n" || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
+func TestCommandDiscoveryDoesNotCreateFilesystemEntries(t *testing.T) {
+	filesystem := fstest.MapFS{".": {Mode: 0o555 | 0x80000000}}
+	shell, err := New(Options{FS: filesystem})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := shell.Exec(context.Background(), `test -e /usr/bin/bash; echo test=$?; [[ -e /bin/sh ]]; echo bracket=$?; command -v bash`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "test=1\nbracket=1\nbash\n" || result.Stderr != "" {
 		t.Fatalf("result=%+v", result)
 	}
 }
@@ -41,7 +63,7 @@ func TestCommandVFindsCustomCommands(t *testing.T) {
 		t.Fatal(err)
 	}
 	result := shell.Exec(context.Background(), `command -v custom; custom`, ExecOptions{})
-	if result.ExitCode != 0 || result.Stdout != "/usr/bin/custom\n" || result.Stderr != "" {
+	if result.ExitCode != 0 || result.Stdout != "custom\n" || result.Stderr != "" {
 		t.Fatalf("result=%+v", result)
 	}
 }

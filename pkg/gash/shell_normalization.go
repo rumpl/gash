@@ -53,19 +53,6 @@ func normalizeClobberRedirects(program syntax.Node) {
 	})
 }
 
-func serializeBackgroundStatements(program syntax.Node) {
-	// mvdan v3.10 backgrounds a runner whose environment overlays the parent
-	// environment while the parent continues mutating it, which is racy. Until
-	// isolated job environments are available, execute virtual jobs serially.
-	syntax.Walk(program, func(node syntax.Node) bool {
-		statement, ok := node.(*syntax.Stmt)
-		if ok {
-			statement.Background = false
-		}
-		return true
-	})
-}
-
 func rewriteWaitBuiltin(program syntax.Node) {
 	syntax.Walk(program, func(node syntax.Node) bool {
 		call, ok := node.(*syntax.CallExpr)

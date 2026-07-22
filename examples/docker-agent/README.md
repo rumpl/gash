@@ -64,7 +64,7 @@ addresses. Private, loopback, and link-local addresses remain denied by default.
 -color string
       color output: auto, always, or never (default "auto")
 -model string
-      OpenAI model used by docker-agent (default "gpt-4o")
+      OpenAI model used by docker-agent (default "gpt-5.6-sol")
 -prompt string
       question or task for the agent
 -root string

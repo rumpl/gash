@@ -61,8 +61,8 @@ substantial work.
 - [x] Normalize argument-bearing `wait` calls to the supported wait-all form,
       avoiding an upstream interpreter panic, and contain unexpected synchronous
       interpreter panics at the embedding boundary.
-- [x] Serialize background statements until isolated job environments replace
-      the upstream interpreter's racy parent-environment overlay.
+- [x] Reject background `&` statements before execution rather than silently
+      serializing them or sharing the parent environment.
 - [x] Isolate shell variables, functions, options, arguments, cwd, and environment
       between top-level `Exec` calls.
 - [x] Pass only exported variables to commands and nested shells; keep shell IFS
@@ -214,8 +214,9 @@ assumption:
 - [ ] Alias expansion order and function/local-variable call-frame behavior.
 - [ ] `[[ ... ]]`, regex, arithmetic-test, and pattern-matching differences.
 - [ ] File-descriptor duplication/closing and uncommon redirection ordering.
-- [ ] Implement virtual `umask`, `PIPESTATUS`, `RANDOM`, Bash printf time
-      formatting, and complete `command -V`/`type -a` discovery semantics.
+- [ ] Implement virtual `umask`, `PIPESTATUS`, `RANDOM`, and Bash printf time
+      formatting.
+- [ ] Complete function/alias-aware `command` and `type` discovery.
 - [ ] Complete background-job IDs and per-job `wait` status semantics.
 - [ ] Complete background-job, trap, signal, and cancellation semantics,
       including external context-to-trap delivery and exact default signal termination.

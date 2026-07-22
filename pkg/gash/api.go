@@ -78,7 +78,7 @@ func New(options Options) (*Bash, error) {
 	}
 	cwd = canonicalDirectory(cwd)
 	if ownsFilesystem {
-		for _, dir := range []string{"/home/user", "/tmp", "/bin", "/usr/bin"} {
+		for _, dir := range []string{"/home/user", "/tmp"} {
 			_ = gfs.MkdirAll(filesystem, dir, 0o755)
 		}
 	}

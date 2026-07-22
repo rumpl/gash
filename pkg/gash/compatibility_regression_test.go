@@ -96,15 +96,18 @@ func TestPipelineRightHandSideUsesSubshell(t *testing.T) {
 	}
 }
 
-func TestWaitWithVirtualJobArgumentDoesNotPanic(t *testing.T) {
+func TestBackgroundExecutionIsRejectedInsteadOfSerialized(t *testing.T) {
 	shell := newTestBash(t)
-	result := shell.Exec(context.Background(), `sleep 0.01 & job=$!; wait "$job"; echo done`, ExecOptions{})
-	if result.ExitCode != 0 || result.Stdout != "done\n" || result.Stderr != "" {
+	result := shell.Exec(context.Background(), `x=before; { sleep 0.1; x=background; echo child; } & echo SHOULD_NOT_RUN`, ExecOptions{})
+	if result.ExitCode != 2 || result.Stdout != "" || !strings.Contains(result.Stderr, "background execution is not supported") {
 		t.Fatalf("result=%+v", result)
 	}
+}
 
-	result = shell.Exec(context.Background(), `sleep 0.01 & command wait 123; echo command-done`, ExecOptions{})
-	if result.ExitCode != 0 || result.Stdout != "command-done\n" || result.Stderr != "" {
+func TestWaitArgumentsDoNotPanic(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `wait 123; echo done`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "done\n" || result.Stderr != "" {
 		t.Fatalf("result=%+v", result)
 	}
 }

@@ -76,6 +76,10 @@ func rejectHostBackedSyntax(program syntax.Node) error {
 		if err != nil || node == nil {
 			return false
 		}
+		if statement, ok := node.(*syntax.Stmt); ok && statement.Background {
+			err = fmt.Errorf("background execution is not supported; '&' requires isolated asynchronous jobs")
+			return false
+		}
 		if _, ok := node.(*syntax.ProcSubst); ok {
 			err = fmt.Errorf("process substitution is not supported in isolated execution")
 			return false
