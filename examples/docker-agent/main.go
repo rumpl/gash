@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	iofs "io/fs"
 	"log"
+	"log/slog"
+	"os"
 	"os/signal"
 	"path/filepath"
 	"strings"
@@ -56,6 +59,10 @@ type shellOutput struct {
 }
 
 func main() {
+	// Docker Agent logs through slog. This example renders the event stream
+	// explicitly, so framework logs would only obscure the conversation.
+	slog.SetDefault(slog.New(slog.DiscardHandler))
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -143,15 +150,111 @@ Host executables are unavailable. Network access is unavailable unless curl was 
 		session.WithUserMessage(configured.prompt),
 		session.WithToolsApproved(true),
 	)
-	messages, err := rt.Run(ctx, sess)
+	printer := newStreamPrinter(os.Stdout, os.Stderr)
+	var streamErr error
+	for event := range rt.RunStream(ctx, sess) {
+		switch typed := event.(type) {
+		case *runtime.AgentChoiceEvent:
+			printer.writeAssistant(typed.Content)
+		case *runtime.ToolCallEvent:
+			printer.writeToolCall(typed.ToolCall)
+		case *runtime.ToolCallResponseEvent:
+			printer.writeToolResult(typed.ToolDefinition.Name, typed.Result, typed.Response)
+		case *runtime.ToolCallConfirmationEvent:
+			// The session is pre-approved, but approve defensively if a model or
+			// runtime configuration still requests confirmation.
+			rt.Resume(ctx, runtime.ResumeApproveSession())
+		case *runtime.ErrorEvent:
+			streamErr = fmt.Errorf("%s", typed.Error)
+			printer.writeError(typed.Error)
+		}
+	}
+	printer.finish()
+	return streamErr
+}
+
+type streamPrinter struct {
+	stdout        io.Writer
+	stderr        io.Writer
+	assistantOpen bool
+	wroteSection  bool
+}
+
+func newStreamPrinter(stdout, stderr io.Writer) *streamPrinter {
+	return &streamPrinter{stdout: stdout, stderr: stderr}
+}
+
+func (p *streamPrinter) writeAssistant(content string) {
+	if content == "" {
+		return
+	}
+	if !p.assistantOpen {
+		p.startSection()
+		fmt.Fprint(p.stdout, "assistant> ")
+		p.assistantOpen = true
+	}
+	fmt.Fprint(p.stdout, content)
+}
+
+func (p *streamPrinter) writeToolCall(toolCall tools.ToolCall) {
+	p.closeAssistant()
+	p.startSection()
+	fmt.Fprintf(p.stdout, "tool call> %s\n", toolCall.Function.Name)
+	fmt.Fprintln(p.stdout, indent(prettyJSON(toolCall.Function.Arguments)))
+}
+
+func (p *streamPrinter) writeToolResult(name string, result *tools.ToolCallResult, response string) {
+	p.closeAssistant()
+	p.startSection()
+	fmt.Fprintf(p.stdout, "tool result> %s\n", name)
+	value := response
+	if result != nil {
+		value = result.Output
+	}
+	fmt.Fprintln(p.stdout, indent(prettyJSON(value)))
+}
+
+func (p *streamPrinter) writeError(message string) {
+	p.closeAssistant()
+	fmt.Fprintf(p.stderr, "error: %s\n", message)
+}
+
+func (p *streamPrinter) finish() {
+	p.closeAssistant()
+}
+
+func (p *streamPrinter) startSection() {
+	if p.wroteSection {
+		fmt.Fprintln(p.stdout)
+	}
+	p.wroteSection = true
+}
+
+func (p *streamPrinter) closeAssistant() {
+	if !p.assistantOpen {
+		return
+	}
+	fmt.Fprintln(p.stdout)
+	p.assistantOpen = false
+}
+
+func prettyJSON(value string) string {
+	var decoded any
+	if err := json.Unmarshal([]byte(value), &decoded); err != nil {
+		return value
+	}
+	formatted, err := json.MarshalIndent(decoded, "", "  ")
 	if err != nil {
-		return err
+		return value
 	}
-	if len(messages) == 0 {
-		return fmt.Errorf("docker-agent returned no messages")
+	return string(formatted)
+}
+
+func indent(value string) string {
+	if value == "" {
+		return "  (empty)"
 	}
-	fmt.Println(messages[len(messages)-1].Message.Content)
-	return nil
+	return "  " + strings.ReplaceAll(value, "\n", "\n  ")
 }
 
 func newShell(configured options) (*gash.Bash, string, error) {

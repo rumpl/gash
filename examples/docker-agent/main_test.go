@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-agent/pkg/tools"
@@ -50,6 +52,40 @@ func TestWritableFlagExposesMutationCapabilities(t *testing.T) {
 	}
 	if string(contents) != "created\n" {
 		t.Fatalf("host file=%q", contents)
+	}
+}
+
+func TestStreamPrinterShowsAssistantToolCallAndResult(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	printer := newStreamPrinter(&stdout, &stderr)
+	printer.writeAssistant("I will ")
+	printer.writeAssistant("inspect it.")
+	printer.writeToolCall(tools.ToolCall{
+		Function: tools.FunctionCall{
+			Name:      "shell",
+			Arguments: `{"cmd":"ls"}`,
+		},
+	})
+	printer.writeToolResult("shell", tools.ResultSuccess(`{"stdout":"README.md\\n","stderr":"","exit_code":0}`), "")
+	printer.writeAssistant("The project has a README.")
+	printer.finish()
+
+	output := stdout.String()
+	for _, expected := range []string{
+		"assistant> I will inspect it.",
+		"tool call> shell",
+		`"cmd": "ls"`,
+		"tool result> shell",
+		`"exit_code": 0`,
+		"assistant> The project has a README.",
+	} {
+		if !strings.Contains(output, expected) {
+			t.Fatalf("output missing %q:\n%s", expected, output)
+		}
+	}
+	if stderr.Len() != 0 {
+		t.Fatalf("stderr=%q", stderr.String())
 	}
 }
 

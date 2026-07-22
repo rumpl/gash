@@ -3,6 +3,8 @@
 This example embeds gash as the `shell` tool of a
 [Docker Agent](https://github.com/docker/cagent) Go application. The model can
 inspect files and run gash commands, but it cannot launch host executables.
+Docker Agent framework logs are discarded; the terminal shows streamed assistant
+text, complete shell tool calls, and their structured results.
 
 The example is a nested Go module because Docker Agent has a large, independently
 versioned dependency graph and a newer Go toolchain requirement than the core
@@ -71,6 +73,7 @@ addresses. Private, loopback, and link-local addresses remain denied by default.
 
 The shell uses gash's hardened limit profile. Tool results are JSON objects with
 `stdout`, `stderr`, and `exit_code`, and the agent is instructed to check failures
-rather than assuming command success. The example pre-approves tool calls so it
+rather than assuming command success. Assistant text is printed chunk-by-chunk as
+Docker Agent emits it, while calls and results are separated into labeled blocks. The example pre-approves tool calls so it
 can run non-interactively; its safety boundary is the read-only filesystem,
 disabled-by-default network, hardened limits, and lack of host-process fallback.
