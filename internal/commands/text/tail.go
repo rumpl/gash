@@ -36,6 +36,8 @@ func commandTail(_ context.Context, args []string, c *CommandContext) int {
 			n, fromStart = parseTailCount(strings.TrimPrefix(arg, "--bytes="))
 		case arg == "-q" || arg == "--quiet" || arg == "-v" || arg == "--verbose":
 			// Headers for multi-file output are intentionally deferred; gash concatenates inputs like just-bash's simpler common cases.
+		case isLegacyTailCount(arg):
+			n, fromStart = parseTailCount(strings.TrimPrefix(arg, "-"))
 		case strings.HasPrefix(arg, "-") && arg != "-":
 			return commandhelp.UnknownOption(c, "tail", arg)
 		default:
@@ -87,6 +89,18 @@ func commandTail(_ context.Context, args []string, c *CommandContext) int {
 		fmt.Fprint(c.Stdout, strings.Join(lines, ""))
 	}
 	return 0
+}
+
+func isLegacyTailCount(argument string) bool {
+	if len(argument) < 2 || argument[0] != '-' {
+		return false
+	}
+	for _, character := range argument[1:] {
+		if character < '0' || character > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 func parseTailCount(s string) (int, bool) {

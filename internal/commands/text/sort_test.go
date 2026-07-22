@@ -12,6 +12,7 @@ func TestSortCommonWorkflows(t *testing.T) {
 		"b.txt": "a\n",
 	})
 	assertCommand(t, commandSort, []string{"-n"}, "10\n2\n1\n", "1\n2\n10\n", nil)
+	assertCommand(t, commandSort, []string{"-nr"}, "3\n1\n2\n", "3\n2\n1\n", nil)
 	assertCommand(t, commandSort, []string{"-f", "-u"}, "b\nA\na\n", "A\nb\n", nil)
 	assertCommand(t, commandSort, []string{"-o", "out.txt"}, "β\na\n", "", nil)
 

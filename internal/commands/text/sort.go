@@ -31,6 +31,21 @@ func commandSort(_ context.Context, args []string, c *CommandContext) int {
 			output = args[i]
 		case strings.HasPrefix(arg, "--output="):
 			output = strings.TrimPrefix(arg, "--output=")
+		case strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") && arg != "-":
+			for _, option := range strings.TrimPrefix(arg, "-") {
+				switch option {
+				case 'r':
+					reverse = true
+				case 'n':
+					numeric = true
+				case 'f':
+					ignoreCase = true
+				case 'u':
+					unique = true
+				default:
+					return commandhelp.UnknownOption(c, "sort", "-"+string(option))
+				}
+			}
 		case strings.HasPrefix(arg, "-") && arg != "-":
 			return commandhelp.UnknownOption(c, "sort", arg)
 		default:
