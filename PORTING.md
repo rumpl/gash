@@ -110,7 +110,9 @@ substantial work.
 - [x] Route shell redirections through the virtual filesystem.
 - [x] Provide `/dev/null` through virtual command and redirection I/O without a
       host device dependency.
-- [x] Provide least-authority read-only views that strip mutation capabilities.
+- [x] Provide least-authority read-only views that strip mutation capabilities
+      while preserving read-only symlink inspection through `ReadlinkFS` and
+      `LstatFS`.
 
 ### Security boundaries
 

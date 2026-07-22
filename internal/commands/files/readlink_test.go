@@ -14,8 +14,15 @@ func TestReadlink(t *testing.T) {
 	if err := filesystem.Symlink("a", "work/link"); err != nil {
 		t.Fatal(err)
 	}
-	result := runCommandWithFS(t, commandReadlink, []string{"link"}, filesystem)
+	result := runCommandWithStandardFS(t, commandReadlink, []string{"link"}, gfs.ReadOnly(filesystem))
 	if result.exitCode != 0 || result.stdout != "a\n" {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", result.exitCode, result.stdout, result.stderr)
+	}
+	if err := filesystem.WriteFile("work/regular", []byte("data"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	result = runCommandWithStandardFS(t, commandReadlink, []string{"regular"}, gfs.ReadOnly(filesystem))
+	if result.exitCode != 1 || result.stderr != "readlink: not a symbolic link\n" {
 		t.Fatalf("exit=%d stdout=%q stderr=%q", result.exitCode, result.stdout, result.stderr)
 	}
 }

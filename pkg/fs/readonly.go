@@ -16,3 +16,11 @@ func ReadOnly(filesystem iofs.FS) iofs.FS {
 func (r readOnly) Open(name string) (iofs.File, error) {
 	return r.filesystem.Open(name)
 }
+
+func (r readOnly) Readlink(name string) (string, error) {
+	return Readlink(r.filesystem, name)
+}
+
+func (r readOnly) Lstat(name string) (iofs.FileInfo, error) {
+	return Lstat(r.filesystem, name)
+}

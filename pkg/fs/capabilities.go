@@ -16,6 +16,7 @@ var (
 	ErrIsDir       = errors.New("is a directory")
 	ErrNotEmpty    = errors.New("directory not empty")
 	ErrReadOnly    = errors.New("filesystem is read-only")
+	ErrUnsupported = errors.New("operation not supported")
 	ErrQuota       = errors.New("filesystem quota exceeded")
 	ErrLoop        = errors.New("too many symbolic links")
 	ErrCrossDevice = errors.New("cross-device operation")
@@ -108,7 +109,7 @@ func Readlink(fsys iofs.FS, name string) (string, error) {
 	if f, ok := fsys.(ReadlinkFS); ok {
 		return f.Readlink(Name(name))
 	}
-	return "", ErrReadOnly
+	return "", ErrUnsupported
 }
 
 func WriteFile(fsys iofs.FS, name string, data []byte, perm iofs.FileMode) error {
