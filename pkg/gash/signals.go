@@ -90,13 +90,50 @@ func normalizeVirtualSignal(value string) (string, int, bool) {
 	return value, number, ok
 }
 
+func normalizeTrapSignal(value string) (string, bool) {
+	value = strings.ToUpper(value)
+	if value == "EXIT" || value == "0" {
+		return "EXIT", true
+	}
+	signal, _, ok := normalizeVirtualSignal(value)
+	return signal, ok
+}
+
+func observeExitTrap(argv []string, scope *executionScope) {
+	if len(argv) < 2 || argv[0] != "trap" || argv[1] == "-p" {
+		return
+	}
+	args := argv[1:]
+	if args[0] == "--" {
+		args = args[1:]
+	}
+	if len(args) == 0 {
+		return
+	}
+	callback := "-"
+	signals := args
+	if len(args) > 1 {
+		callback = args[0]
+		signals = args[1:]
+	}
+	for _, value := range signals {
+		if signal, ok := normalizeTrapSignal(value); ok && signal == "EXIT" {
+			if callback == "-" {
+				scope.setTrap("EXIT", "")
+			} else {
+				scope.setTrap("EXIT", callback)
+			}
+		}
+	}
+}
+
 func (b *Bash) runVirtualTrap(_ context.Context, args []string, commandCtx *CommandContext, scope *executionScope) int {
 	if len(args) == 0 || args[0] == "-p" {
-		signals := []string{"HUP", "INT", "QUIT", "TERM"}
+		signals := []string{"HUP", "INT", "QUIT", "TERM", "EXIT"}
 		if len(args) > 1 {
 			signals = signals[:0]
 			for _, value := range args[1:] {
-				signal, _, ok := normalizeVirtualSignal(value)
+				signal, ok := normalizeTrapSignal(value)
 				if !ok {
 					fmt.Fprintf(commandCtx.Stderr, "trap: %s: invalid signal specification\n", value)
 					return 2

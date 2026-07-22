@@ -78,6 +78,9 @@ substantial work.
 - [x] Default `HOME` to the always-representable virtual root `/`.
 - [x] Reject process substitution because the interpreter implementation would
       otherwise require a host-backed mechanism.
+- [x] Reject unsupported `coproc`, `printf -v`, and `PIPESTATUS` usage before
+      execution with compatibility diagnostics instead of internal failures or
+      silently incorrect values.
 - [x] Replace `$$` and `PPID` with virtual values.
 - [x] Support virtual `HUP`, `INT`, `QUIT`, and `TERM` traps triggered by a
       capability-scoped `kill` command; no host process is signaled.
@@ -214,8 +217,10 @@ assumption:
 - [ ] Alias expansion order and function/local-variable call-frame behavior.
 - [ ] `[[ ... ]]`, regex, arithmetic-test, and pattern-matching differences.
 - [ ] File-descriptor duplication/closing and uncommon redirection ordering.
-- [ ] Implement virtual `umask`, `PIPESTATUS`, `RANDOM`, and Bash printf time
-      formatting.
+- [x] Support dynamic, capability-safe `RANDOM` reads in the Bash range
+      `0..32767` without exporting the special variable.
+- [ ] Support Bash-compatible `RANDOM` assignment/seeding semantics.
+- [ ] Implement virtual `umask`, `PIPESTATUS`, and Bash printf time formatting.
 - [ ] Complete function/alias-aware `command` and `type` discovery.
 - [ ] Complete background-job IDs and per-job `wait` status semantics.
 - [ ] Complete background-job, trap, signal, and cancellation semantics,

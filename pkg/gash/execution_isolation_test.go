@@ -2,6 +2,7 @@ package gash
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -177,6 +178,42 @@ func TestUnsupportedFileDescriptorRejectedBeforeInterpreter(t *testing.T) {
 	result := b.Exec(context.Background(), `echo hi 3>&1`, ExecOptions{})
 	if result.ExitCode != 2 || !strings.Contains(result.Stderr, `file descriptor "3" is not supported`) || strings.Contains(result.Stderr, "interpreter failure") {
 		t.Fatalf("%+v", result)
+	}
+}
+
+func TestUnsupportedInterpreterFeaturesHaveCompatibilityDiagnostics(t *testing.T) {
+	b := newTestBash(t)
+	cases := []struct {
+		script     string
+		diagnostic string
+	}{
+		{`printf -v x '%s' value`, "printf -v is not supported"},
+		{`coproc CAT { cat; }`, "coproc is not supported"},
+		{`echo "${PIPESTATUS[*]}"`, "PIPESTATUS is not supported"},
+	}
+	for _, test := range cases {
+		result := b.Exec(context.Background(), test.script, ExecOptions{})
+		if result.ExitCode != 2 || !strings.Contains(result.Stderr, test.diagnostic) || strings.Contains(result.Stderr, "interpreter failure") {
+			t.Fatalf("script=%q result=%+v", test.script, result)
+		}
+	}
+}
+
+func TestRandomUsesInterpreterSpecialVariable(t *testing.T) {
+	b := newTestBash(t)
+	result := b.Exec(context.Background(), `printf '%s\n' "$RANDOM" "$RANDOM"`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+	lines := strings.Fields(result.Stdout)
+	if len(lines) != 2 {
+		t.Fatalf("RANDOM output=%q", result.Stdout)
+	}
+	for _, line := range lines {
+		value, err := strconv.Atoi(line)
+		if err != nil || value < 0 || value > 32767 {
+			t.Fatalf("invalid RANDOM value %q", line)
+		}
 	}
 }
 

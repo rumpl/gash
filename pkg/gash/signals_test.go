@@ -25,6 +25,14 @@ func TestVirtualTrapPrintsSelectedDefinitions(t *testing.T) {
 	}
 }
 
+func TestVirtualTrapPrintsExitDefinition(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `trap 'echo trapped' EXIT; trap -p EXIT`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "trap -- \"echo trapped\" EXIT\ntrapped\n" || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestExitTrapStillUsesInterpreterBehavior(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(context.Background(), `trap 'echo exiting' EXIT; echo body`, ExecOptions{})

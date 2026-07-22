@@ -100,7 +100,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	ctx, shellOptions := withShellOptionState(ctx)
 	positionals := newPositionalState(len(args))
 	runner, err := interp.New(
-		interp.Env(expand.ListEnviron(pairs...)),
+		interp.Env(specialVariableEnviron{base: expand.ListEnviron(pairs...)}),
 		interp.Params(args...),
 		interp.StdIO(strings.NewReader(stdin), stdout, stderr),
 		interp.OpenHandler(b.openHandler),
@@ -111,6 +111,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 				fmt.Fprintf(interp.HandlerCtx(callCtx).Stderr, "bash: %v\n", err)
 				return argv, interp.NewExitStatus(126)
 			}
+			observeExitTrap(argv, scope)
 			if replacement, handled := virtualShiftFailure(argv, positionals); handled {
 				return replacement, nil
 			}
