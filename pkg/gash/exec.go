@@ -71,6 +71,8 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 		return 2, env
 	}
 	virtualizeHostParameters(program)
+	normalizeArithmeticBases(program)
+	rewriteVirtualSignalBuiltins(program)
 	if err := rejectHostBackedSyntax(program); err != nil {
 		fmt.Fprintf(stderr, "bash: %v\n", err)
 		return 2, env
@@ -167,16 +169,24 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 		}
 		return nil
 	}
-	cmd, ok := b.commands[name]
-	if !ok {
-		fmt.Fprintf(h.Stderr, "bash: %s: command not found\n", name)
-		return interp.NewExitStatus(127)
-	}
 	commandCtx := &CommandContext{FS: b.FS, Cwd: &cwd, Env: env, Stdin: h.Stdin, Stdout: h.Stdout, Stderr: h.Stderr, Commands: b.commandNames(), Now: b.now}
 	commandCtx.RunCommand = func(runCtx context.Context, argv []string, child *CommandContext) int {
 		return b.runCommandFromContext(runCtx, argv, child, depth, scope)
 	}
-	code := cmd.Run(ctx, args[1:], commandCtx)
+	var code int
+	switch name {
+	case internalTrapCommand:
+		code = b.runVirtualTrap(ctx, args[1:], commandCtx, scope)
+	case internalKillCommand:
+		code = b.runVirtualKill(ctx, args[1:], commandCtx, depth, scope)
+	default:
+		cmd, ok := b.commands[name]
+		if !ok {
+			fmt.Fprintf(h.Stderr, "bash: %s: command not found\n", name)
+			return interp.NewExitStatus(127)
+		}
+		code = cmd.Run(ctx, args[1:], commandCtx)
+	}
 	if code != 0 {
 		return interp.NewExitStatus(uint8(code))
 	}

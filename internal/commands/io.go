@@ -27,24 +27,6 @@ func commandEcho(ctx context.Context, args []string, c *CommandContext) int {
 	return 0
 }
 
-func commandPrintf(ctx context.Context, args []string, c *CommandContext) int {
-	select {
-	case <-ctx.Done():
-		return 124
-	default:
-	}
-	if len(args) == 0 {
-		return 0
-	}
-	format := strings.ReplaceAll(strings.ReplaceAll(args[0], "\\n", "\n"), "\\t", "\t")
-	vals := make([]any, len(args)-1)
-	for i, v := range args[1:] {
-		vals[i] = v
-	}
-	fmt.Fprintf(c.Stdout, format, vals...)
-	return 0
-}
-
 func commandPwd(_ context.Context, _ []string, c *CommandContext) int {
 	fmt.Fprintln(c.Stdout, *c.Cwd)
 	return 0

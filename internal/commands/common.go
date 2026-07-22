@@ -46,7 +46,6 @@ func readInputs(args []string, c *CommandContext) ([]byte, error) {
 	return commandutil.ReadInputs(args, c)
 }
 
-func report(c *CommandContext, name string, e error) int {
-	fmt.Fprintf(c.Stderr, "%s: %v\n", name, e)
-	return 1
+func report(c *CommandContext, name string, err error) int {
+	return commandutil.Report(c, name, err)
 }

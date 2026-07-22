@@ -2,6 +2,7 @@ package gash
 
 import (
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -91,6 +92,28 @@ type executionScope struct {
 	limits   Limits
 	commands atomic.Int64
 	input    atomic.Int64
+	trapsMu  sync.RWMutex
+	traps    map[string]string
+}
+
+func (s *executionScope) setTrap(signal, callback string) {
+	s.trapsMu.Lock()
+	defer s.trapsMu.Unlock()
+	if s.traps == nil {
+		s.traps = map[string]string{}
+	}
+	if callback == "" {
+		delete(s.traps, signal)
+		return
+	}
+	s.traps[signal] = callback
+}
+
+func (s *executionScope) trap(signal string) (string, bool) {
+	s.trapsMu.RLock()
+	defer s.trapsMu.RUnlock()
+	callback, ok := s.traps[signal]
+	return callback, ok
 }
 
 func (s *executionScope) chargeCommand() error {

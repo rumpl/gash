@@ -59,6 +59,8 @@ substantial work.
 - [x] Reject process substitution because the interpreter implementation would
       otherwise require a host-backed mechanism.
 - [x] Replace `$$` and `PPID` with virtual values.
+- [x] Support virtual `HUP`, `INT`, `QUIT`, and `TERM` traps triggered by a
+      capability-scoped `kill` command; no host process is signaled.
 - [x] Share source, input, command-count, nesting, timeout, and aggregate-output
       budgets across an execution.
 - [x] Provide normal and hardened limit profiles.
@@ -187,7 +189,8 @@ assumption:
 - [ ] Alias expansion order and function/local-variable call-frame behavior.
 - [ ] `[[ ... ]]`, regex, arithmetic-test, and pattern-matching differences.
 - [ ] File-descriptor duplication/closing and uncommon redirection ordering.
-- [ ] Background jobs, traps, signals, and cancellation semantics.
+- [ ] Complete background-job, trap, signal, and cancellation semantics,
+      including external context-to-trap delivery and exact default signal termination.
 - [ ] Exact nested `bash`/`sh`, script-file, and executable virtual-script behavior.
 - [ ] Exact command-not-found, not-executable, and directory-as-command diagnostics.
 - [ ] Audit and virtualize `BASHPID` and any remaining host-derived shell metadata.

@@ -9,6 +9,18 @@ import (
 	"github.com/rumpl/gash/internal/commandhelp"
 )
 
+func allDecimalDigits(value string) bool {
+	if value == "" {
+		return false
+	}
+	for _, digit := range value {
+		if digit < '0' || digit > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 func commandHead(_ context.Context, args []string, c *CommandContext) int {
 	n := 10
 	bytesMode := false
@@ -21,6 +33,8 @@ func commandHead(_ context.Context, args []string, c *CommandContext) int {
 			n, _ = strconv.Atoi(args[i])
 		case strings.HasPrefix(arg, "-n") && len(arg) > 2:
 			n, _ = strconv.Atoi(arg[2:])
+		case len(arg) > 1 && arg[0] == '-' && allDecimalDigits(arg[1:]):
+			n, _ = strconv.Atoi(arg[1:])
 		case strings.HasPrefix(arg, "--lines="):
 			n, _ = strconv.Atoi(strings.TrimPrefix(arg, "--lines="))
 		case arg == "-c" && i+1 < len(args):

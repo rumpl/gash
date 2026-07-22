@@ -44,6 +44,12 @@ func (b *Bash) runCommandFromContext(ctx context.Context, argv []string, c *Comm
 		fmt.Fprintf(c.Stderr, "%s: only -c execution is supported here\n", name)
 		return 1
 	}
+	if name == "trap" || name == internalTrapCommand {
+		return b.runVirtualTrap(ctx, argv[1:], c, scope)
+	}
+	if name == "kill" || name == internalKillCommand {
+		return b.runVirtualKill(ctx, argv[1:], c, depth, scope)
+	}
 	cmd, ok := b.commands[name]
 	if !ok {
 		fmt.Fprintf(c.Stderr, "bash: %s: command not found\n", name)

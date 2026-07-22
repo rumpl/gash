@@ -41,7 +41,11 @@ func (r *Rooted) Open(name string) (iofs.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	return os.Open(host)
+	file, err := os.Open(host)
+	if err != nil {
+		return nil, rootedPathError("open", name, err)
+	}
+	return file, nil
 }
 
 func (r *Rooted) ReadFile(name string) ([]byte, error) {
@@ -49,7 +53,11 @@ func (r *Rooted) ReadFile(name string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return os.ReadFile(host)
+	data, err := os.ReadFile(host)
+	if err != nil {
+		return nil, rootedPathError("read", name, err)
+	}
+	return data, nil
 }
 
 func (r *Rooted) ReadDir(name string) ([]iofs.DirEntry, error) {
@@ -57,7 +65,11 @@ func (r *Rooted) ReadDir(name string) ([]iofs.DirEntry, error) {
 	if err != nil {
 		return nil, err
 	}
-	return os.ReadDir(host)
+	entries, err := os.ReadDir(host)
+	if err != nil {
+		return nil, rootedPathError("readdir", name, err)
+	}
+	return entries, nil
 }
 
 func (r *Rooted) Stat(name string) (iofs.FileInfo, error) {
@@ -65,7 +77,11 @@ func (r *Rooted) Stat(name string) (iofs.FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return os.Stat(host)
+	info, err := os.Stat(host)
+	if err != nil {
+		return nil, rootedPathError("stat", name, err)
+	}
+	return info, nil
 }
 
 func (r *Rooted) Lstat(name string) (iofs.FileInfo, error) {
@@ -73,7 +89,11 @@ func (r *Rooted) Lstat(name string) (iofs.FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return os.Lstat(host)
+	info, err := os.Lstat(host)
+	if err != nil {
+		return nil, rootedPathError("lstat", name, err)
+	}
+	return info, nil
 }
 
 func (r *Rooted) Readlink(name string) (string, error) {
@@ -83,7 +103,7 @@ func (r *Rooted) Readlink(name string) (string, error) {
 	}
 	target, err := os.Readlink(host)
 	if err != nil {
-		return "", err
+		return "", rootedPathError("readlink", name, err)
 	}
 	if filepath.IsAbs(target) {
 		resolved, err := filepath.EvalSymlinks(filepath.Clean(target))
@@ -102,7 +122,10 @@ func (r *Rooted) WriteFile(name string, data []byte, perm iofs.FileMode) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(host, data, perm)
+	if err := os.WriteFile(host, data, perm); err != nil {
+		return rootedPathError("write", name, err)
+	}
+	return nil
 }
 
 func (r *Rooted) AppendFile(name string, data []byte, perm iofs.FileMode) error {
@@ -112,11 +135,14 @@ func (r *Rooted) AppendFile(name string, data []byte, perm iofs.FileMode) error 
 	}
 	file, err := os.OpenFile(host, os.O_CREATE|os.O_WRONLY|os.O_APPEND, perm)
 	if err != nil {
-		return err
+		return rootedPathError("append", name, err)
 	}
 	defer file.Close()
 	_, err = file.Write(data)
-	return err
+	if err != nil {
+		return rootedPathError("append", name, err)
+	}
+	return nil
 }
 
 func (r *Rooted) Mkdir(name string, perm iofs.FileMode) error {
@@ -124,7 +150,10 @@ func (r *Rooted) Mkdir(name string, perm iofs.FileMode) error {
 	if err != nil {
 		return err
 	}
-	return os.Mkdir(host, perm)
+	if err := os.Mkdir(host, perm); err != nil {
+		return rootedPathError("mkdir", name, err)
+	}
+	return nil
 }
 
 func (r *Rooted) MkdirAll(name string, perm iofs.FileMode) error {
@@ -153,7 +182,10 @@ func (r *Rooted) Remove(name string) error {
 	if err != nil {
 		return err
 	}
-	return os.Remove(host)
+	if err := os.Remove(host); err != nil {
+		return rootedPathError("remove", name, err)
+	}
+	return nil
 }
 
 func (r *Rooted) RemoveAll(name string) error {
@@ -165,7 +197,10 @@ func (r *Rooted) RemoveAll(name string) error {
 	if err != nil {
 		return err
 	}
-	return os.RemoveAll(host)
+	if err := os.RemoveAll(host); err != nil {
+		return rootedPathError("removeall", name, err)
+	}
+	return nil
 }
 
 func (r *Rooted) Rename(oldName, newName string) error {
@@ -177,7 +212,10 @@ func (r *Rooted) Rename(oldName, newName string) error {
 	if err != nil {
 		return err
 	}
-	return os.Rename(oldHost, newHost)
+	if err := os.Rename(oldHost, newHost); err != nil {
+		return rootedPathError("rename", oldName, err)
+	}
+	return nil
 }
 
 func (r *Rooted) Symlink(target, name string) error {
@@ -191,7 +229,10 @@ func (r *Rooted) Symlink(target, name string) error {
 			return iofs.ErrPermission
 		}
 	}
-	return os.Symlink(target, newHost)
+	if err := os.Symlink(target, newHost); err != nil {
+		return rootedPathError("symlink", name, err)
+	}
+	return nil
 }
 
 func (r *Rooted) Link(oldName, newName string) error {
@@ -203,7 +244,10 @@ func (r *Rooted) Link(oldName, newName string) error {
 	if err != nil {
 		return err
 	}
-	return os.Link(oldHost, newHost)
+	if err := os.Link(oldHost, newHost); err != nil {
+		return rootedPathError("link", oldName, err)
+	}
+	return nil
 }
 
 func (r *Rooted) Chmod(name string, mode iofs.FileMode) error {
@@ -211,7 +255,10 @@ func (r *Rooted) Chmod(name string, mode iofs.FileMode) error {
 	if err != nil {
 		return err
 	}
-	return os.Chmod(host, mode)
+	if err := os.Chmod(host, mode); err != nil {
+		return rootedPathError("chmod", name, err)
+	}
+	return nil
 }
 
 func (r *Rooted) Chtimes(name string, atime, mtime time.Time) error {
@@ -219,7 +266,10 @@ func (r *Rooted) Chtimes(name string, atime, mtime time.Time) error {
 	if err != nil {
 		return err
 	}
-	return os.Chtimes(host, atime, mtime)
+	if err := os.Chtimes(host, atime, mtime); err != nil {
+		return rootedPathError("chtimes", name, err)
+	}
+	return nil
 }
 
 func (r *Rooted) hostWritePath(name string) (string, error) {
@@ -261,12 +311,27 @@ func (r *Rooted) hostPath(name string, followFinal bool) (string, error) {
 		}
 	}
 	if err != nil {
-		return "", err
+		return "", rootedPathError("resolve", name, err)
 	}
 	if !r.inside(resolved) {
 		return "", iofs.ErrPermission
 	}
 	return resolved, nil
+}
+
+func rootedPathError(op, name string, err error) error {
+	if err == nil {
+		return nil
+	}
+	var pathError *iofs.PathError
+	if errors.As(err, &pathError) {
+		err = pathError.Err
+	}
+	var linkError *os.LinkError
+	if errors.As(err, &linkError) {
+		err = linkError.Err
+	}
+	return &iofs.PathError{Op: op, Path: Name(name), Err: err}
 }
 
 func (r *Rooted) lexicalHostPath(name string) (string, error) {

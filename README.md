@@ -83,6 +83,7 @@ Shell syntax is parsed as Bash into an AST by `mvdan.cc/sh/v3`. It includes:
 - test expressions, shell options, arrays, and positional parameters
 - redirections, heredocs, and process substitution supported by the interpreter
 - nested `bash -c`, `sh -c`, and virtual shell script execution
+- virtual `HUP`, `INT`, `QUIT`, and `TERM` traps through a host-isolated `kill` command
 
 Built-in commands are summarized in the product-oriented
 [feature support manifest](docs/status/feature-support.json), which is seeded

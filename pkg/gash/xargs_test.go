@@ -46,6 +46,18 @@ func TestXargsReplacementPreservesUTF8(t *testing.T) {
 	}
 }
 
+func TestXargsPrintfUsesShellCompatibleMissingArguments(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(
+		context.Background(),
+		`printf '%s\n' a b c | xargs -n 2 printf '<%s> <%s>\n'`,
+		ExecOptions{},
+	)
+	if result.ExitCode != 0 || result.Stdout != "<a> <b>\n<c> <>\n" || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestXargsPropagatesChildFailure(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(context.Background(), `printf 'missing.txt\n' | xargs cat`, ExecOptions{})

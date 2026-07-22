@@ -2,8 +2,10 @@
 package commandutil
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	iofs "io/fs"
 	"path"
 	"strings"
 
@@ -23,8 +25,22 @@ func Abs(ctx *command.Context, name string) string {
 }
 
 func Report(ctx *command.Context, name string, err error) int {
-	fmt.Fprintf(ctx.Stderr, "%s: %v\n", name, err)
+	fmt.Fprintf(ctx.Stderr, "%s: %s\n", name, ErrorText(err))
 	return 1
+}
+
+func ErrorText(err error) string {
+	switch {
+	case errors.Is(err, iofs.ErrNotExist):
+		return "No such file or directory"
+	case errors.Is(err, iofs.ErrPermission):
+		return "Permission denied"
+	}
+	var pathError *iofs.PathError
+	if errors.As(err, &pathError) {
+		return pathError.Err.Error()
+	}
+	return err.Error()
 }
 
 func ReadInputs(args []string, ctx *command.Context) ([]byte, error) {

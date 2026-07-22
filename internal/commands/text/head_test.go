@@ -4,6 +4,7 @@ import "testing"
 
 func TestHead(t *testing.T) {
 	assertCommand(t, commandHead, []string{"-n", "1"}, "a\nb\n", "a\n", nil)
+	assertCommand(t, commandHead, []string{"-1"}, "a\nb\n", "a\n", nil)
 }
 
 func TestHeadCommonWorkflows(t *testing.T) {
