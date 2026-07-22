@@ -824,13 +824,14 @@
         },
         {
             "name": "xargs",
-            "status": "deferred",
+            "status": "partial",
             "category": "priority-search-text",
             "sources": [
+                "gash",
                 "just-bash:pinned"
             ],
             "nearTermPriority": true,
-            "notes": "High-priority missing utility for search/text workflows; should be implemented as stdin-to-argv batching inside gash."
+            "notes": "Implemented in-process with whitespace, custom, and NUL delimiters; replacement and argument batching; bounded parallel execution; verbose output; UTF-8 input; and safe virtual command dispatch. Full GNU quoting semantics and additional flags remain deferred."
         },
         {
             "name": "yq",

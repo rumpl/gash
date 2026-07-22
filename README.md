@@ -2,7 +2,7 @@
 
 A Go rewrite of [vercel-labs/just-bash](https://github.com/vercel-labs/just-bash): a Bash interpreter with a capability-based virtual filesystem. It is intended for agents and applications that need useful shell workflows without exposing the host filesystem or launching host processes.
 
-> **Status:** active practical rewrite work. Bash parsing/execution now uses a full AST interpreter, and near-term work prioritizes missing search/text commands such as `fgrep`, `sed`, `find`, `xargs`, `diff`, `expr`, `rg`, and `awk`. Gash uses pinned just-bash behavior as guidance for selected tasks while documenting intentional deferrals. See [remaining work](REMAINING_WORK.md) and [porting notes](PORTING.md).
+> **Status:** active practical rewrite work. Bash parsing/execution uses a full AST interpreter, and common search/text workflows now include in-process `awk`, `sed`, `find`, `xargs`, `diff`, `expr`, and `rg` implementations with documented parity gaps. Gash uses pinned just-bash behavior as guidance while documenting intentional deferrals. See [remaining work](REMAINING_WORK.md) and [porting notes](PORTING.md).
 
 ## Install
 
@@ -98,9 +98,9 @@ statuses mean:
 
 Current registered built-ins include:
 
-`awk`, `alias`, `base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `curl` (opt-in network only), `cut`, `date`, `diff`, `dirname`, `du`, `echo`, `egrep`, `env`, `expand`, `expr`, `false`, `fgrep`, `file`, `fold`, `grep`, `head`, `help`, `history`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rg`, `rm`, `rmdir`, `sed`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `time`, `timeout`, `touch`, `tr`, `tree`, `true`, `unalias`, `unexpand`, `uniq`, `wc`, `which`, and `whoami`.
+`awk`, `alias`, `base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `curl` (opt-in network only), `cut`, `date`, `diff`, `dirname`, `du`, `echo`, `egrep`, `env`, `expand`, `expr`, `false`, `fgrep`, `file`, `find`, `fold`, `grep`, `gunzip`, `gzip`, `head`, `help`, `history`, `hostname`, `html-to-markdown`, `join`, `jq`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rg`, `rm`, `rmdir`, `sed`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `sqlite3`, `stat`, `strings`, `tac`, `tail`, `tar`, `tee`, `time`, `timeout`, `touch`, `tr`, `tree`, `true`, `unalias`, `unexpand`, `uniq`, `wc`, `which`, `whoami`, `xan`, `xargs`, `yq`, and `zcat`.
 
-Command flags and edge cases are still being ported from the upstream command test suites for selected tasks. Overlay filesystems, transforms, data runtimes, and optional language runtimes are intentional deferrals unless explicitly enabled by a future task. `curl`/network support is opt-in: library users must pass `Options.Network`, and the CLI must pass `--network-allow scheme://host[:port][/path]`; allowed redirects are rechecked and private/loopback/link-local DNS targets are blocked by default. A mountable `io/fs` implementation is available as `fs.Mountable`.
+Command flags and edge cases are still being ported from the upstream command test suites for selected tasks. Transform support and optional language runtimes remain intentional deferrals unless explicitly enabled by a future task. `curl`/network support is opt-in: library users must pass `Options.Network`, and the CLI must pass `--network-allow scheme://host[:port][/path]`; allowed redirects are rechecked and private/loopback/link-local DNS targets are blocked by default. A mountable `io/fs` implementation is available as `fs.Mountable`.
 
 ## Filesystems
 

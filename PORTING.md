@@ -78,7 +78,7 @@ Near-term search/text priorities:
 - [ ] `fgrep` — verify fixed-string alias behavior against `grep` and document gaps
 - [ ] `sed`
 - [ ] `find` — expand the existing baseline around common predicates/actions
-- [ ] `xargs`
+- [x] `xargs` — in-process batching, replacement, delimiters, parallel execution, and virtual command dispatch; additional flags remain deferred
 - [x] `diff` — just-bash-inspired file/stdin comparison with `-u`, `-q`, `-s`, and `-i`; Go-native unified hunk grouping may differ from upstream jsdiff output for larger files.
 - [ ] `expr`
 - [ ] `rg`

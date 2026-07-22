@@ -24,6 +24,7 @@ internal/commands/     registry and command-family packages
                        with an adjacent `<command>_test.go`
   text/                text command package; one command per source file
                        with an adjacent `<command>_test.go`
+  utilities/           command-execution utilities such as `xargs`
 ```
 
 Tests live beside their packages. Commands are implemented one per source file with an adjacent command test. `public_test.go` compiles as an external consumer so internal types cannot accidentally leak through the public API.

@@ -779,7 +779,21 @@ var catalog = map[string]Info{
 			"    --help       display this help and exit",
 		},
 	},
-
+	"xargs": {
+		Name:    "xargs",
+		Summary: "build and execute command lines from standard input",
+		Usage:   "xargs [OPTION]... [COMMAND [INITIAL-ARGS]]",
+		Options: []string{
+			"-I REPLACE   replace occurrences of REPLACE with input",
+			"-d DELIM     use DELIM as input delimiter (e.g., -d '\\n' for newline)",
+			"-n NUM       use at most NUM arguments per command line",
+			"-P NUM       run at most NUM processes at a time",
+			"-0, --null   items are separated by null, not whitespace",
+			"-t, --verbose  print commands before executing",
+			"-r, --no-run-if-empty  do not run command if input is empty",
+			"    --help   display this help and exit",
+		},
+	},
 	"yq": {
 		Name:    "yq",
 		Summary: "process YAML with jq-style filters",

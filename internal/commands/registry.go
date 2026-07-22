@@ -11,6 +11,7 @@ import (
 	filecommands "github.com/rumpl/gash/internal/commands/files"
 	sqlitecommands "github.com/rumpl/gash/internal/commands/sqlite"
 	textcommands "github.com/rumpl/gash/internal/commands/text"
+	utilitycommands "github.com/rumpl/gash/internal/commands/utilities"
 	"github.com/rumpl/gash/pkg/network"
 )
 
@@ -55,6 +56,7 @@ func BuiltinsWithNetwork(policy *network.Policy) []Command {
 	commands = append(commands, sqlitecommands.Commands()...)
 	commands = append(commands, dataCommands.Commands()...)
 	commands = append(commands, archivecommands.Commands()...)
+	commands = append(commands, utilitycommands.Commands()...)
 	if policy != nil {
 		commands = append(commands, curlcommands.Commands(*policy)...)
 	}

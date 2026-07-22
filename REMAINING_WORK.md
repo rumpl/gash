@@ -38,7 +38,7 @@ not as one large bucket:
 | `fgrep` | Ensure the fixed-string grep alias/behavior is registered, documented, and tested against the current `grep` implementation. | [`commands/registry.ts`](https://github.com/vercel-labs/just-bash/blob/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands/registry.ts), upstream grep command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
 | `sed` | Add the common stream-editing subset needed by scripts, with clear unsupported-expression errors. | upstream `sed` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
 | `find` | Expand the existing baseline around predicates/actions used by agent workflows. | upstream `find` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
-| `xargs` | Implement stdin-to-argv batching with safe limits and virtual command execution. | upstream `xargs` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
+| `xargs` | Implemented with stdin-to-argv batching, replacement, delimiters, bounded parallelism, and virtual command execution; additional GNU flags and quoting semantics remain deferred. | upstream `xargs` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
 | `diff` | Implemented just-bash-inspired file/stdin comparison, status handling, brief/identical/ignore-case flags, and unified diff output. Large-file hunk grouping may differ from upstream jsdiff formatting. | upstream `diff` command source/tests under [`commands/diff`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands/diff) |
 | `expr` | Implement expression evaluation commonly used by shell scripts. | upstream `expr` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
 | `rg` | Provide a practical ripgrep-like search command over the virtual filesystem. | upstream `rg` command source/tests under [`commands/`](https://github.com/vercel-labs/just-bash/tree/2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4/packages/just-bash/src/commands) |
@@ -70,7 +70,7 @@ Implemented or partially implemented command families include:
   `chmod`, `stat`, `file`, `tree`, `du`, `split`
 - text baseline: `head`, `tail`, `wc`, `grep`/`egrep`/`fgrep`, `sort`, `uniq`,
   `tee`, `cut`, `paste`, `comm`, `diff`, `join`, `tr`, `rev`, `tac`, `nl`, `fold`,
-  `expand`, `unexpand`, `strings`, `column`, `od`
+  `expand`, `unexpand`, `strings`, `column`, `od`, `xargs`
 - environment/path: `env`, `printenv`, `basename`, `dirname`
 - utility subset: `true`, `false`, `sleep`, `seq`, `base64`, checksums,
   `hostname`, `whoami`, `clear`
