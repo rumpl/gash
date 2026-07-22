@@ -237,6 +237,19 @@ func decodePrintfEscapes(value string) (string, bool) {
 			output.WriteByte('\v')
 		case '\\':
 			output.WriteByte('\\')
+		case 'x':
+			start := index + 1
+			end := start
+			for end < len(value) && end < start+2 && isPrintfHexDigit(value[end]) {
+				end++
+			}
+			if end == start {
+				output.WriteString(`\x`)
+				continue
+			}
+			number, _ := strconv.ParseUint(value[start:end], 16, 8)
+			output.WriteByte(byte(number))
+			index = end - 1
 		case '0':
 			start := index + 1
 			end := start
@@ -256,4 +269,8 @@ func decodePrintfEscapes(value string) (string, bool) {
 		}
 	}
 	return output.String(), false
+}
+
+func isPrintfHexDigit(value byte) bool {
+	return value >= '0' && value <= '9' || value >= 'a' && value <= 'f' || value >= 'A' && value <= 'F'
 }

@@ -1,6 +1,7 @@
 package gash
 
 import (
+	"fmt"
 	iofs "io/fs"
 	"path"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/rumpl/gash/internal/command"
 	"github.com/rumpl/gash/internal/commands"
+	"github.com/rumpl/gash/internal/commandutil"
 	gfs "github.com/rumpl/gash/pkg/fs"
 	"github.com/rumpl/gash/pkg/network"
 )
@@ -59,16 +61,26 @@ func New(options Options) (*Bash, error) {
 		return nil, err
 	}
 	filesystem := options.FS
-	if filesystem == nil {
+	ownsFilesystem := filesystem == nil
+	if ownsFilesystem {
 		filesystem = gfs.NewMemory(limits.MaxFileSystemBytes)
 	}
 	cwd := options.Cwd
+	if cwd != "" && !path.IsAbs(cwd) {
+		return nil, fmt.Errorf("cwd must be absolute: %q", cwd)
+	}
 	if cwd == "" {
-		cwd = "/home/user"
+		if ownsFilesystem {
+			cwd = "/home/user"
+		} else {
+			cwd = "/"
+		}
 	}
 	cwd = canonicalDirectory(cwd)
-	for _, dir := range []string{"/home/user", "/tmp", "/bin", "/usr/bin"} {
-		_ = gfs.MkdirAll(filesystem, dir, 0o755)
+	if ownsFilesystem {
+		for _, dir := range []string{"/home/user", "/tmp", "/bin", "/usr/bin"} {
+			_ = gfs.MkdirAll(filesystem, dir, 0o755)
+		}
 	}
 	for p, data := range options.Files {
 		abs := resolve("/", p)
@@ -77,7 +89,11 @@ func New(options Options) (*Bash, error) {
 			return nil, err
 		}
 	}
+	if err := validateWorkingDirectory(filesystem, cwd); err != nil {
+		return nil, &workingDirectoryError{directory: cwd, err: err}
+	}
 	env := map[string]string{}
+	env["HOME"] = "/"
 	env["PWD"] = cwd
 	env["OLDPWD"] = cwd
 	for k, v := range options.Env {
@@ -95,6 +111,30 @@ func New(options Options) (*Bash, error) {
 		b.RegisterCommand(c)
 	}
 	return b, nil
+}
+
+type workingDirectoryError struct {
+	directory string
+	err       error
+}
+
+func (err *workingDirectoryError) Error() string {
+	return fmt.Sprintf("cwd %q: %s", err.directory, commandutil.ErrorText(err.err))
+}
+
+func (err *workingDirectoryError) Unwrap() error {
+	return err.err
+}
+
+func validateWorkingDirectory(filesystem iofs.FS, directory string) error {
+	info, err := gfs.Stat(filesystem, directory)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return gfs.ErrNotDir
+	}
+	return nil
 }
 
 func canonicalDirectory(directory string) string {

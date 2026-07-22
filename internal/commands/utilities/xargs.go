@@ -115,6 +115,44 @@ func parseXargsOptions(args []string, commandCtx *command.Context) (xargsOptions
 			}
 			options.maxProcesses = value
 			commandStart = index + 1
+		case strings.HasPrefix(arg, "-n") && len(arg) > 2:
+			value := strings.TrimPrefix(arg, "-n")
+			number, err := positiveXargsNumber(value)
+			if err != nil {
+				fmt.Fprintf(commandCtx.Stderr, "xargs: invalid number for -n: '%s'\n", value)
+				return options, 1
+			}
+			options.maxArgs = number
+			commandStart = index + 1
+		case strings.HasPrefix(arg, "--max-args="):
+			value := strings.TrimPrefix(arg, "--max-args=")
+			number, err := positiveXargsNumber(value)
+			if err != nil {
+				fmt.Fprintf(commandCtx.Stderr, "xargs: invalid number for --max-args: '%s'\n", value)
+				return options, 1
+			}
+			options.maxArgs = number
+			commandStart = index + 1
+		case strings.HasPrefix(arg, "-P") && len(arg) > 2:
+			value := strings.TrimPrefix(arg, "-P")
+			number, err := nonnegativeXargsNumber(value)
+			if err != nil {
+				fmt.Fprintf(commandCtx.Stderr, "xargs: invalid number for -P: '%s'\n", value)
+				return options, 1
+			}
+			options.maxProcesses = number
+			commandStart = index + 1
+		case strings.HasPrefix(arg, "-I") && len(arg) > 2:
+			value := strings.TrimPrefix(arg, "-I")
+			options.replacement = &value
+			commandStart = index + 1
+		case strings.HasPrefix(arg, "-d") && len(arg) > 2:
+			value := decodeXargsDelimiter(strings.TrimPrefix(arg, "-d"))
+			options.delimiter = &value
+			commandStart = index + 1
+		case arg == "--":
+			commandStart = index + 1
+			index = len(args)
 		case arg == "-0" || arg == "--null":
 			options.null = true
 			commandStart = index + 1

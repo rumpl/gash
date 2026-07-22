@@ -33,6 +33,53 @@ func TestWorkingDirectoryIsCanonicalizedInsideVirtualRoot(t *testing.T) {
 	}
 }
 
+func TestInvalidWorkingDirectoriesAreRejectedBeforeExecution(t *testing.T) {
+	for _, options := range []Options{
+		{Cwd: "/missing"},
+		{Cwd: "relative/path"},
+		{Cwd: "/README.md", Files: map[string]string{"/README.md": "file"}},
+	} {
+		if shell, err := New(options); err == nil {
+			t.Fatalf("New(%+v) unexpectedly succeeded: %+v", options, shell)
+		}
+	}
+
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `echo SHOULD_NOT_RUN`, ExecOptions{Cwd: "/missing"})
+	if result.ExitCode != 1 || result.Stdout != "" || !strings.Contains(result.Stderr, "No such file or directory") {
+		t.Fatalf("missing cwd result=%+v", result)
+	}
+	result = shell.Exec(context.Background(), `echo SHOULD_NOT_RUN`, ExecOptions{Cwd: "relative/path"})
+	if result.ExitCode != 1 || result.Stdout != "" || !strings.Contains(result.Stderr, "must be absolute") {
+		t.Fatalf("relative cwd result=%+v", result)
+	}
+	if result = shell.Exec(context.Background(), `printf file > /cwd-file`, ExecOptions{}); result.ExitCode != 0 {
+		t.Fatalf("seed file result=%+v", result)
+	}
+	result = shell.Exec(context.Background(), `echo SHOULD_NOT_RUN`, ExecOptions{Cwd: "/cwd-file"})
+	if result.ExitCode != 1 || result.Stdout != "" || !strings.Contains(result.Stderr, "not a directory") {
+		t.Fatalf("file cwd result=%+v", result)
+	}
+}
+
+func TestDefaultHomeIsVirtualRoot(t *testing.T) {
+	memoryShell := newTestBash(t)
+	result := memoryShell.Exec(context.Background(), `printf '%s\n' "$HOME"; cd ~; pwd`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "/\n/\n" || result.Stderr != "" {
+		t.Fatalf("memory result=%+v", result)
+	}
+
+	filesystem := fstest.MapFS{".": {Mode: 0o555 | 0x80000000}}
+	shell, err := New(Options{FS: filesystem})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result = shell.Exec(context.Background(), `printf '%s:%s\n' "$HOME" "$PWD"; cd ~; pwd`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "/:/\n/\n" || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestCDFailureReportsDiagnosticAndContinues(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(context.Background(), `cd /does-not-exist; echo status=$?`, ExecOptions{})

@@ -5,8 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path"
 	"strings"
 
+	"github.com/rumpl/gash/internal/commandutil"
 	gfs "github.com/rumpl/gash/pkg/fs"
 	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/interp"
@@ -26,7 +28,16 @@ func (b *Bash) Exec(parent context.Context, script string, options ExecOptions) 
 	enforceInternalEnv(env)
 	cwd := b.cwd
 	if options.Cwd != "" {
+		if !path.IsAbs(options.Cwd) {
+			return Result{Stderr: fmt.Sprintf("bash: cwd must be absolute: %q\n", options.Cwd), ExitCode: 1, Env: env}
+		}
 		cwd = canonicalDirectory(options.Cwd)
+	}
+	if err := validateWorkingDirectory(b.FS, cwd); err != nil {
+		return Result{Stderr: fmt.Sprintf("bash: cwd: %s: %s\n", cwd, commandutil.ErrorText(err)), ExitCode: 1, Env: env}
+	}
+	if _, ok := env["HOME"]; !ok {
+		env["HOME"] = "/"
 	}
 	env["PWD"] = cwd
 	ctx, cancelTimeout := context.WithTimeout(parent, b.limits.MaxExecutionTime)

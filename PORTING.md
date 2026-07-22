@@ -67,7 +67,9 @@ substantial work.
 - [x] Return 127 for unknown commands; never fall back to `os/exec`.
 - [x] Resolve `command -v` from shell built-ins and the capability-scoped gash
       registry rather than consulting the host PATH.
-- [x] Canonicalize configured and per-execution working directories inside `/`.
+- [x] Canonicalize configured and per-execution working directories inside `/`,
+      and reject relative, missing, or non-directory cwd values before execution.
+- [x] Default `HOME` to the always-representable virtual root `/`.
 - [x] Reject process substitution because the interpreter implementation would
       otherwise require a host-backed mechanism.
 - [x] Replace `$$` and `PPID` with virtual values.
@@ -158,8 +160,9 @@ These commands work for documented subsets and remain priority parity areas:
   dispatch; full expression truth propagation and traversal behavior remains.
 - `rg` — bounded virtual-filesystem search; not complete ripgrep compatibility.
 - `sed` — sandboxed stream-editor subset; shell-execution commands are rejected.
-- `xargs` — whitespace/custom/NUL delimiters, replacement, batching, parallel
-  execution, verbose output, UTF-8, and safe command dispatch are present;
+- `xargs` — whitespace/custom/NUL delimiters, replacement, batching (including
+  attached forms such as `-n1`), parallel execution, verbose output, UTF-8, and
+  safe command dispatch are present;
   complete GNU quoting and additional flags remain.
 - `help` — lists registered commands and catalog help; full interactive Bash help differs.
 - `history` — registered, but persistent interactive history is not implemented.

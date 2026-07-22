@@ -10,52 +10,71 @@ import (
 )
 
 func commandWC(_ context.Context, args []string, c *CommandContext) int {
-	mode := ""
+	selected := map[rune]bool{}
 	var files []string
-	for _, arg := range args {
-		switch {
-		case arg == "-c" || arg == "--bytes":
-			mode = "c"
-		case arg == "-m" || arg == "--chars":
-			mode = "m"
-		case arg == "-l" || arg == "--lines":
-			mode = "l"
-		case arg == "-w" || arg == "--words":
-			mode = "w"
-		case strings.HasPrefix(arg, "-") && arg != "-":
-			flags := strings.TrimPrefix(arg, "-")
-			for _, flag := range flags {
-				switch flag {
-				case 'c', 'm', 'l', 'w':
-					mode = string(flag)
-				default:
-					return commandhelp.UnknownOption(c, "wc", "-"+string(flag))
-				}
-			}
-		default:
-			files = append(files, arg)
+	options := true
+	for _, argument := range args {
+		if options && argument == "--" {
+			options = false
+			continue
 		}
+		if options {
+			var flag rune
+			switch argument {
+			case "--bytes":
+				flag = 'c'
+			case "--chars":
+				flag = 'm'
+			case "--lines":
+				flag = 'l'
+			case "--words":
+				flag = 'w'
+			}
+			if flag != 0 {
+				selected[flag] = true
+				continue
+			}
+			if strings.HasPrefix(argument, "-") && argument != "-" {
+				for _, short := range strings.TrimPrefix(argument, "-") {
+					switch short {
+					case 'c', 'm', 'l', 'w':
+						selected[short] = true
+					default:
+						return commandhelp.UnknownOption(c, "wc", "-"+string(short))
+					}
+				}
+				continue
+			}
+		}
+		files = append(files, argument)
 	}
-	d, e := readInputs(files, c)
-	if e != nil {
-		return report(c, "wc", e)
+	data, err := readInputs(files, c)
+	if err != nil {
+		return report(c, "wc", err)
 	}
-	lines := bytesCount(d, '\n')
-	words := len(strings.Fields(string(d)))
-	bytesN := len(d)
-	chars := utf8.RuneCount(d)
-	switch mode {
-	case "c":
-		fmt.Fprintf(c.Stdout, "%d\n", bytesN)
-	case "m":
-		fmt.Fprintf(c.Stdout, "%d\n", chars)
-	case "l":
-		fmt.Fprintf(c.Stdout, "%d\n", lines)
-	case "w":
-		fmt.Fprintf(c.Stdout, "%d\n", words)
-	default:
-		fmt.Fprintf(c.Stdout, "%d %d %d\n", lines, words, bytesN)
+	if len(selected) == 0 {
+		selected['l'] = true
+		selected['w'] = true
+		selected['c'] = true
 	}
+	counts := map[rune]int{
+		'l': bytesCount(data, '\n'),
+		'w': len(strings.Fields(string(data))),
+		'm': utf8.RuneCount(data),
+		'c': len(data),
+	}
+	first := true
+	for _, flag := range []rune{'l', 'w', 'm', 'c'} {
+		if !selected[flag] {
+			continue
+		}
+		if !first {
+			fmt.Fprint(c.Stdout, " ")
+		}
+		fmt.Fprint(c.Stdout, counts[flag])
+		first = false
+	}
+	fmt.Fprintln(c.Stdout)
 	return 0
 }
 

@@ -22,6 +22,17 @@ func TestXargsBatchesArguments(t *testing.T) {
 	}
 }
 
+func TestXargsAcceptsAttachedOptionArguments(t *testing.T) {
+	result := runXargsTest(t, []string{"-n1", "echo"}, "a b c", echoRunner)
+	if result.exitCode != 0 || result.stdout != "a\nb\nc\n" || result.stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+	result = runXargsTest(t, []string{"-d:", "-I{}", "echo", "item={}"}, "a:b", echoRunner)
+	if result.exitCode != 0 || result.stdout != "item=a\nitem=b\n" || result.stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestXargsReplacementAndDelimiter(t *testing.T) {
 	result := runXargsTest(t, []string{"-d", ":", "-I", "{}", "echo", "item: {}"}, "x:y:z\n", echoRunner)
 	if result.exitCode != 0 || result.stdout != "item: x\nitem: y\nitem: z\n" {

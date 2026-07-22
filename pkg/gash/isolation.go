@@ -12,7 +12,6 @@ const (
 )
 
 var internalEnv = map[string]string{
-	"HOME":      "/home/user",
 	"PATH":      "/usr/bin:/bin",
 	"IFS":       " \t\n",
 	"OSTYPE":    "linux-gnu",

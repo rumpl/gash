@@ -488,7 +488,7 @@
                 "gash",
                 "just-bash:pinned"
             ],
-            "notes": "Shell-oriented formatting includes Bash %q quoting; printf -v remains delegated to the shell interpreter."
+            "notes": "Shell-oriented formatting includes Bash %q quoting and hexadecimal/octal %b escapes; printf -v remains delegated to the shell interpreter."
         },
         {
             "name": "pwd",
@@ -795,7 +795,8 @@
             "sources": [
                 "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Separate and clustered counter options accumulate and print in conventional line, word, character, byte order."
         },
         {
             "name": "which",
@@ -835,7 +836,7 @@
                 "just-bash:pinned"
             ],
             "nearTermPriority": true,
-            "notes": "Implemented in-process with whitespace, custom, and NUL delimiters; replacement and argument batching; bounded parallel execution; verbose output; UTF-8 input; and safe virtual command dispatch. Full GNU quoting semantics and additional flags remain deferred."
+            "notes": "Implemented in-process with whitespace, custom, and NUL delimiters; replacement and argument batching, including attached -n1/-P2/-Ivalue/-dvalue forms; bounded parallel execution; verbose output; UTF-8 input; and safe virtual command dispatch. Full GNU quoting semantics and additional flags remain deferred."
         },
         {
             "name": "yq",

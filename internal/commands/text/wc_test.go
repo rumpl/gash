@@ -15,6 +15,9 @@ func TestWcCommonWorkflows(t *testing.T) {
 		"b.txt": "b\n",
 	})
 	assertCommand(t, commandWC, nil, "a\nb\n", "2 2 4\n", nil)
+	assertCommand(t, commandWC, []string{"-l", "-w", "-c"}, "one two\nthree\n", "2 3 14\n", nil)
+	assertCommand(t, commandWC, []string{"-lwc"}, "one two\nthree\n", "2 3 14\n", nil)
+	assertCommand(t, commandWC, []string{"-clw"}, "one two\nthree\n", "2 3 14\n", nil)
 
 	code, stdout, stderr, _ := runTextCommandBytes(t, commandWC, []string{"--bogus"}, nil, nil)
 	if code == 0 || len(stdout) != 0 || stderr == "" {

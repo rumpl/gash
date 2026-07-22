@@ -34,6 +34,14 @@ func TestXargsDispatchesVirtualFileCommands(t *testing.T) {
 	}
 }
 
+func TestXargsAttachedMaxArgs(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `seq 3 | xargs -n1 printf 'n=%s\n'`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "n=1\nn=2\nn=3\n" || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestXargsReplacementPreservesUTF8(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(

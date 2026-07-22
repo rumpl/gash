@@ -30,6 +30,17 @@ func TestPrintfQProducesReusableShellWords(t *testing.T) {
 	}
 }
 
+func TestPrintfBDecodesHexadecimalAndOctalEscapes(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cwd := "/"
+	ctx := &command.Context{Cwd: &cwd, Stdin: &bytes.Buffer{}, Stdout: &stdout, Stderr: &stderr}
+	exitCode := commandPrintf(context.Background(), []string{"%b\\n", `hex=\x41 oct=\0101`}, ctx)
+	if exitCode != 0 || stdout.String() != "hex=A oct=A\n" || stderr.String() != "" {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+	}
+}
+
 func TestPrintfReusesFormatForRemainingArguments(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
