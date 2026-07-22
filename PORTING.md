@@ -156,7 +156,7 @@ status does not certify exhaustive upstream edge-case parity:
 These commands have practical in-process implementations with known unported
 flags or edge cases:
 
-`chmod`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `file`, `fold`, `head`,
+`chmod`, `cmp`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `file`, `fold`, `head`,
 `join`, `ln`, `ls`, `mkdir`, `mv`, `nl`, `od`, `paste`, `readlink`, `rev`, `rm`,
 `rmdir`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`,
 `tree`, `unexpand`, `uniq`, `wc`, `yes`.

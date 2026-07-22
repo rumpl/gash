@@ -92,6 +92,15 @@
             "notes": "Reports underlying virtual filesystem capability errors instead of rewriting all failures as missing files."
         },
         {
+            "name": "cmp",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash"
+            ],
+            "notes": "In-process byte comparison with silent, verbose, byte-limit, initial-skip, positional skip, stdin, difference-location, and EOF behavior."
+        },
+        {
             "name": "clear",
             "status": "core",
             "category": "utility",

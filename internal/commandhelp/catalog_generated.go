@@ -68,6 +68,18 @@ var catalog = map[string]Info{
 			"    --help display this help and exit",
 		},
 	},
+	"cmp": {
+		Name:    "cmp",
+		Summary: "compare two files byte by byte",
+		Usage:   "cmp [OPTION]... FILE1 [FILE2 [SKIP1 [SKIP2]]]",
+		Options: []string{
+			"-s, --silent, --quiet       suppress all normal output",
+			"-l, --verbose               output byte numbers and differing byte values",
+			"-n, --bytes=LIMIT           compare at most LIMIT bytes",
+			"-i, --ignore-initial=SKIP   skip initial bytes; use SKIP1:SKIP2 for separate values",
+			"    --help                  display this help and exit",
+		},
+	},
 	"clear": {
 		Name:    "clear",
 		Summary: "clear the terminal screen",

@@ -10,6 +10,7 @@ func Commands() []command.Command {
 		{Name: "rm", Run: commandRM},
 		{Name: "rmdir", Run: commandRmdir},
 		{Name: "cp", Run: commandCPParity},
+		{Name: "cmp", Run: commandCmp},
 		{Name: "mv", Run: commandMV},
 		{Name: "ln", Run: commandLNParity},
 		{Name: "chmod", Run: commandChmod},
