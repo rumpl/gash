@@ -69,6 +69,9 @@ substantial work.
       unexported by default.
 - [x] Support `export -p`, `declare -p`, and `readonly -p` with deterministic,
       shell-reusable declaration output.
+- [x] Evaluate simple `test -r`, `[ -r ... ]`, and `[[ -r ... ]]` predicates
+      through the injected filesystem's actual read capability, including
+      least-authority read-only wrappers.
 - [x] Persist the configured virtual filesystem between calls.
 - [x] Return 127 for unknown commands; never fall back to `os/exec`.
 - [x] Resolve `command -v` from shell built-ins and the capability-scoped gash

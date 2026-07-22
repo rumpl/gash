@@ -88,6 +88,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	normalizeSubshellSemantics(program)
 	rewriteWaitBuiltin(program)
 	rewritePrintfBuiltin(program)
+	rewriteReadableTestClauses(program)
 	rewriteVirtualSignalBuiltins(program)
 	if err := rejectHostBackedSyntax(program); err != nil {
 		fmt.Fprintf(stderr, "bash: %v\n", err)
@@ -112,6 +113,9 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 				return argv, interp.NewExitStatus(126)
 			}
 			observeExitTrap(argv, scope)
+			if replacement, handled := b.virtualReadablePredicate(callCtx, argv); handled {
+				return replacement, nil
+			}
 			if replacement, handled := virtualShiftFailure(argv, positionals); handled {
 				return replacement, nil
 			}
@@ -235,6 +239,12 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 		code = b.runVirtualKill(ctx, args[1:], commandCtx, depth, scope)
 	case internalDeclarationPrintCommand:
 		code = runDeclarationPrint(args[1:], h)
+	case internalReadablePredicateCommand:
+		if len(args) == 2 && b.pathIsReadable(cwd, args[1]) {
+			code = 0
+		} else {
+			code = 1
+		}
 	default:
 		cmd, ok := b.commands[name]
 		if !ok {
