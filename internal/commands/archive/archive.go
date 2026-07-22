@@ -66,7 +66,7 @@ func abs(ctx *CommandContext, name string) string {
 }
 
 func writeFile(ctx *CommandContext, name string, data []byte, perm iofs.FileMode) error {
-	if err := gfs.MkdirAll(ctx.FS, path.Dir(name), 0o755); err != nil {
+	if err := gfs.MkdirAll(ctx.FS, path.Dir(name), ctx.CreationMode(0o777)); err != nil {
 		return err
 	}
 	return gfs.WriteFile(ctx.FS, name, data, perm)
@@ -600,7 +600,7 @@ func tarExtract(ctx *CommandContext, opts tarOptions) int {
 					continue
 				}
 			}
-			if err := gfs.MkdirAll(ctx.FS, path.Dir(dest), 0o755); err != nil {
+			if err := gfs.MkdirAll(ctx.FS, path.Dir(dest), ctx.CreationMode(0o777)); err != nil {
 				return report(ctx, "tar", err)
 			}
 			if err := gfs.Symlink(ctx.FS, hdr.Linkname, dest); err != nil {

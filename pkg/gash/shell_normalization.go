@@ -6,7 +6,11 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 )
 
-const internalDeclarationPrintCommand = "__gash_declaration_print"
+const (
+	internalDeclarationPrintCommand = "__gash_declaration_print"
+	internalUmaskPushCommand        = "__gash_umask_push"
+	internalUmaskPopCommand         = "__gash_umask_pop"
+)
 
 func rewriteDeclarationPrinting(program syntax.Node) {
 	syntax.Walk(program, func(node syntax.Node) bool {
@@ -49,6 +53,17 @@ func normalizeClobberRedirects(program syntax.Node) {
 			[]syntax.WordPart{&syntax.Lit{Value: forceClobberPrefix}},
 			redirect.Word.Parts...,
 		)
+		return true
+	})
+}
+
+func rewriteUmaskBuiltin(program syntax.Node) {
+	syntax.Walk(program, func(node syntax.Node) bool {
+		call, ok := node.(*syntax.CallExpr)
+		if !ok || len(call.Args) == 0 || call.Args[0].Lit() != "umask" {
+			return true
+		}
+		call.Args[0].Parts = []syntax.WordPart{&syntax.Lit{Value: "/bin/umask"}}
 		return true
 	})
 }
@@ -114,18 +129,33 @@ func normalizeSubshellSemantics(program syntax.Node) {
 	})
 
 	// mvdan's explicit subshell and command-substitution paths execute statement
-	// lists directly rather than calling Runner.Run, so their EXIT callback is
-	// otherwise skipped. An implicit final exit preserves the previous status
-	// through Runner.lastExit and invokes a trap installed inside that scope.
+	// lists directly rather than calling Runner.Run. Bracket their process-local
+	// umask state and add an implicit final exit so EXIT callbacks still run.
 	syntax.Walk(program, func(node syntax.Node) bool {
+		var statements *[]*syntax.Stmt
 		switch scope := node.(type) {
 		case *syntax.Subshell:
-			scope.Stmts = append(scope.Stmts, literalStatement("exit"))
+			statements = &scope.Stmts
 		case *syntax.CmdSubst:
-			scope.Stmts = append(scope.Stmts, literalStatement("exit"))
+			statements = &scope.Stmts
+		}
+		if statements != nil {
+			*statements = append([]*syntax.Stmt{literalStatement(internalUmaskPushCommand)}, *statements...)
+			*statements = append(*statements, umaskScopeRestoreStatements()...)
 		}
 		return true
 	})
+}
+
+func umaskScopeRestoreStatements() []*syntax.Stmt {
+	parsed, err := syntax.NewParser(syntax.Variant(syntax.LangBash)).Parse(
+		strings.NewReader("__gash_umask_status=$?; "+internalUmaskPopCommand+"; exit \"$__gash_umask_status\""),
+		"umask-scope",
+	)
+	if err != nil {
+		panic(err) // static internal syntax
+	}
+	return parsed.Stmts
 }
 
 func literalStatement(name string) *syntax.Stmt {

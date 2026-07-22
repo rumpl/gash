@@ -101,7 +101,7 @@ func commandSplit(_ context.Context, args []string, c *CommandContext) int {
 	}
 	for i, chunk := range chunks {
 		suffix := splitSuffix(i, numeric, suffixLen)
-		if err := gfs.WriteFile(c.FS, abs(c, prefix+suffix+additional), chunk, 0o644); err != nil {
+		if err := gfs.WriteFile(c.FS, abs(c, prefix+suffix+additional), chunk, c.CreationMode(0o666)); err != nil {
 			return report(c, "split", err)
 		}
 	}

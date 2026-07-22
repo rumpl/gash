@@ -745,6 +745,18 @@ var catalog = map[string]Info{
 			"    --help  display this help and exit",
 		},
 	},
+	"umask": {
+		Name:    "umask",
+		Summary: "set or display the file creation mask",
+		Usage:   "umask [-pS] [MODE]",
+		Options: []string{
+			"-p          display the mask as a reusable command",
+			"-S          display the mask symbolically",
+		},
+		Notes: []string{
+			"MODE may be an octal mask or a symbolic rwx permission mode.",
+		},
+	},
 	"unexpand": {
 		Name:    "unexpand",
 		Summary: "convert spaces to tabs",

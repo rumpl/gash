@@ -207,7 +207,7 @@ func commandSed(_ context.Context, args []string, c *CommandContext) int {
 				}
 				return exitCode
 			}
-			if err := gfs.WriteFile(c.FS, abs(c, file), []byte(out), 0o644); err != nil {
+			if err := gfs.WriteFile(c.FS, abs(c, file), []byte(out), c.CreationMode(0o666)); err != nil {
 				return report(c, "sed: "+file, err)
 			}
 		}
@@ -891,7 +891,7 @@ func processSedContent(content string, commands []sedCommandDef, silent bool, op
 	}
 	if opts.ctx != nil {
 		for filePath, content := range fileWrites {
-			_ = gfs.WriteFile(opts.ctx.FS, filePath, []byte(content), 0o644)
+			_ = gfs.WriteFile(opts.ctx.FS, filePath, []byte(content), opts.ctx.CreationMode(0o666))
 		}
 	}
 	out := output.String()

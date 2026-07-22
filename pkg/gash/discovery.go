@@ -18,7 +18,7 @@ var discoverableShellBuiltins = map[string]bool{
 	"popd": true, "printf": true, "pushd": true, "pwd": true,
 	"read": true, "readarray": true, "return": true, "set": true,
 	"shift": true, "shopt": true, "source": true, "test": true,
-	"trap": true, "true": true, "type": true,
+	"trap": true, "true": true, "type": true, "umask": true,
 	"unalias": true, "unset": true, "wait": true,
 }
 

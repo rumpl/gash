@@ -9,9 +9,12 @@ import (
 )
 
 type Context struct {
-	FS             iofs.FS
-	Cwd            *string
-	Env            map[string]string
+	FS  iofs.FS
+	Cwd *string
+	Env map[string]string
+	// Umask is the current file creation mask. Commands that create filesystem
+	// entries should apply CreationMode to their requested mode.
+	Umask          *iofs.FileMode
 	Stdin          io.Reader
 	Stdout, Stderr io.Writer
 
@@ -25,6 +28,14 @@ type Context struct {
 	// Now returns the current time for date-like commands. A nil value means
 	// time.Now.
 	Now func() time.Time
+}
+
+func (c *Context) CreationMode(mode iofs.FileMode) iofs.FileMode {
+	mask := iofs.FileMode(0o022)
+	if c != nil && c.Umask != nil {
+		mask = *c.Umask
+	}
+	return mode &^ mask
 }
 
 type Func func(context.Context, []string, *Context) int

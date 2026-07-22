@@ -16,9 +16,9 @@ func commandMkdir(_ context.Context, args []string, c *CommandContext) int {
 		}
 		var e error
 		if recursive {
-			e = gfs.MkdirAll(c.FS, abs(c, a), 0o755)
+			e = gfs.MkdirAll(c.FS, abs(c, a), c.CreationMode(0o777))
 		} else {
-			e = gfs.Mkdir(c.FS, abs(c, a), 0o755)
+			e = gfs.Mkdir(c.FS, abs(c, a), c.CreationMode(0o777))
 		}
 		if e != nil {
 			code = report(c, "mkdir: "+a, e)

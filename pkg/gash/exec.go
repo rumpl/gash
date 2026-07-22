@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	iofs "io/fs"
 	"path"
 	"strings"
 
@@ -63,6 +64,11 @@ func (b *Bash) Exec(parent context.Context, script string, options ExecOptions) 
 }
 
 func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[string]string, args []string, scriptName string, stdout, stderr io.Writer, depth int, scope *executionScope, stdinAccounted bool) (int, map[string]string) {
+	mask := iofs.FileMode(0o022)
+	if inherited := umaskFromContext(ctx); inherited != nil {
+		mask = *inherited
+	}
+	ctx = context.WithValue(ctx, umaskContextKey{}, &umaskState{mask: mask})
 	if depth > b.limits.MaxExecDepth {
 		fmt.Fprintf(stderr, "bash: maximum nested execution depth (%d) exceeded\n", b.limits.MaxExecDepth)
 		return 126, env
@@ -94,6 +100,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	normalizeClobberRedirects(program)
 	normalizeSubshellSemantics(program)
 	rewritePrintfBuiltin(program)
+	rewriteUmaskBuiltin(program)
 	rewriteReadableTestClauses(program)
 	rewriteVirtualSignalBuiltins(program)
 	if err := rejectHostBackedSyntax(program); err != nil {
@@ -236,7 +243,7 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 		}
 		return nil
 	}
-	commandCtx := &CommandContext{FS: b.FS, Cwd: &cwd, Env: env, Stdin: h.Stdin, Stdout: h.Stdout, Stderr: h.Stderr, Commands: b.commandNames(), Now: b.now}
+	commandCtx := &CommandContext{FS: b.FS, Cwd: &cwd, Env: env, Umask: umaskFromContext(ctx), Stdin: h.Stdin, Stdout: h.Stdout, Stderr: h.Stderr, Commands: b.commandNames(), Now: b.now}
 	commandCtx.RunCommand = func(runCtx context.Context, argv []string, child *CommandContext) int {
 		return b.runCommandFromContext(runCtx, argv, child, depth, scope)
 	}
@@ -260,6 +267,15 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 		code = b.runWaitJob(args[1:], commandCtx.Stderr, scope)
 	case internalJobsCommand:
 		code = b.runJobs(args[1:], commandCtx.Stdout, commandCtx.Stderr, scope)
+	case internalUmaskPushCommand:
+		state := umaskStateFromContext(ctx)
+		state.stack = append(state.stack, state.mask)
+	case internalUmaskPopCommand:
+		state := umaskStateFromContext(ctx)
+		if last := len(state.stack) - 1; last >= 0 {
+			state.mask = state.stack[last]
+			state.stack = state.stack[:last]
+		}
 	default:
 		cmd, ok := b.commands[name]
 		if !ok {

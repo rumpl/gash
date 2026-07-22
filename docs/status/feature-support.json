@@ -784,6 +784,15 @@
             "notes": "Implemented by mvdan shell built-ins and scoped to a single Exec."
         },
         {
+            "name": "umask",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash"
+            ],
+            "notes": "Supports octal and rwx symbolic masks, -S/-p display, shell redirections, and in-process file creation."
+        },
+        {
             "name": "unexpand",
             "status": "useful",
             "category": "text",

@@ -223,11 +223,11 @@ func commandSQLite3(ctx context.Context, args []string, c *command.Context) int 
 			fmt.Fprintf(c.Stderr, "sqlite3: failed to write database: %v\n", err)
 			return 1
 		}
-		if err := gfs.MkdirAll(c.FS, path.Dir(dbPath), 0o755); err != nil && !errors.Is(err, gfs.ErrReadOnly) {
+		if err := gfs.MkdirAll(c.FS, path.Dir(dbPath), c.CreationMode(0o777)); err != nil && !errors.Is(err, gfs.ErrReadOnly) {
 			fmt.Fprintf(c.Stderr, "sqlite3: failed to write database: %v\n", err)
 			return 1
 		}
-		if err := gfs.WriteFile(c.FS, dbPath, serialized, 0o644); err != nil {
+		if err := gfs.WriteFile(c.FS, dbPath, serialized, c.CreationMode(0o666)); err != nil {
 			fmt.Fprintf(c.Stderr, "sqlite3: failed to write database: %v\n", err)
 			return 1
 		}

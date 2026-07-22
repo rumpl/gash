@@ -422,10 +422,10 @@ func readVirtualOrStdin(c *CommandContext, name string) ([]byte, error) {
 
 func writeVirtualFile(c *CommandContext, name string, data []byte) error {
 	abs := resolve(*c.Cwd, name)
-	if err := gfs.MkdirAll(c.FS, path.Dir(abs), 0o755); err != nil {
+	if err := gfs.MkdirAll(c.FS, path.Dir(abs), c.CreationMode(0o777)); err != nil {
 		return err
 	}
-	return gfs.WriteFile(c.FS, abs, data, 0o644)
+	return gfs.WriteFile(c.FS, abs, data, c.CreationMode(0o666))
 }
 
 func writeStatusAndHeaders(w io.Writer, resp *http.Response) {

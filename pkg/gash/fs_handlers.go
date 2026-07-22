@@ -13,6 +13,26 @@ import (
 	"mvdan.cc/sh/v3/interp"
 )
 
+type umaskContextKey struct{}
+
+type umaskState struct {
+	mask  iofs.FileMode
+	stack []iofs.FileMode
+}
+
+func umaskStateFromContext(ctx context.Context) *umaskState {
+	state, _ := ctx.Value(umaskContextKey{}).(*umaskState)
+	return state
+}
+
+func umaskFromContext(ctx context.Context) *iofs.FileMode {
+	state := umaskStateFromContext(ctx)
+	if state == nil {
+		return nil
+	}
+	return &state.mask
+}
+
 func (b *Bash) openHandler(ctx context.Context, name string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
 	forceClobber := strings.HasPrefix(name, forceClobberPrefix)
 	name = strings.TrimPrefix(name, forceClobberPrefix)
@@ -39,10 +59,15 @@ func (b *Bash) openHandler(ctx context.Context, name string, flag int, perm os.F
 			return nil, err
 		}
 	}
-	if flag&os.O_EXCL != 0 {
-		if _, err := gfs.Stat(b.FS, name); err == nil {
-			return nil, iofs.ErrExist
-		}
+	info, statErr := gfs.Stat(b.FS, name)
+	if flag&os.O_EXCL != 0 && statErr == nil {
+		return nil, iofs.ErrExist
+	}
+	if statErr == nil {
+		// Opening an existing file never changes its permissions.
+		perm = info.Mode().Perm()
+	} else if mask := umaskFromContext(ctx); mask != nil {
+		perm &^= *mask
 	}
 	vf := &virtualFile{fs: b.FS, name: name, perm: perm, write: flag&(os.O_WRONLY|os.O_RDWR) != 0, appendMode: flag&os.O_APPEND != 0, data: append([]byte(nil), initial...)}
 	if flag&os.O_TRUNC != 0 {

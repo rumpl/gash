@@ -24,6 +24,7 @@ func BuiltinsWithNetwork(policy *network.Policy) []Command {
 		{Name: "echo", Run: commandEcho},
 		{Name: "printf", Run: commandPrintf},
 		{Name: "pwd", Run: commandPwd},
+		{Name: "umask", Run: commandUmask},
 		{Name: "cat", Run: commandCat},
 		{Name: "basename", Run: commandBasename},
 		{Name: "dirname", Run: commandDirname},

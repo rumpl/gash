@@ -15,7 +15,7 @@ func commandTee(_ context.Context, args []string, c *CommandContext) int {
 	c.Stdout.Write(d)
 	code := 0
 	for _, a := range args {
-		if e := gfs.WriteFile(c.FS, abs(c, a), d, 0o644); e != nil {
+		if e := gfs.WriteFile(c.FS, abs(c, a), d, c.CreationMode(0o666)); e != nil {
 			code = report(c, "tee", e)
 		}
 	}

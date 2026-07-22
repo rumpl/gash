@@ -120,7 +120,7 @@ func commandSort(_ context.Context, args []string, c *CommandContext) int {
 		fmt.Fprintln(&builder, l)
 	}
 	if output != "" {
-		if err := gfs.WriteFile(c.FS, abs(c, output), []byte(builder.String()), 0o644); err != nil {
+		if err := gfs.WriteFile(c.FS, abs(c, output), []byte(builder.String()), c.CreationMode(0o666)); err != nil {
 			return report(c, "sort", err)
 		}
 		return 0

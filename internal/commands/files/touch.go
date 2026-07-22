@@ -26,7 +26,7 @@ func commandTouch(_ context.Context, args []string, c *CommandContext) int {
 			code = report(c, "touch: "+name, err)
 			continue
 		}
-		if err := gfs.WriteFile(c.FS, full, nil, 0o644); err != nil {
+		if err := gfs.WriteFile(c.FS, full, nil, c.CreationMode(0o666)); err != nil {
 			code = report(c, "touch: "+name, err)
 		}
 	}
