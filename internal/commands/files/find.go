@@ -646,6 +646,10 @@ func findWalk(c *CommandContext, absPath, displayPath, start string, depth, maxD
 			childDisplay := child.Name()
 			if displayPath == "/" {
 				childDisplay = "/" + child.Name()
+			} else if displayPath == "." || strings.HasPrefix(displayPath, "./") {
+				// path.Join cleans a leading "./", but find preserves the spelling
+				// of its starting point in paths emitted for descendants.
+				childDisplay = displayPath + "/" + child.Name()
 			} else {
 				childDisplay = path.Join(displayPath, child.Name())
 			}

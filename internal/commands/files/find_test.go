@@ -36,6 +36,18 @@ func TestFindBasicPredicatesAndDepth(t *testing.T) {
 	}
 }
 
+func TestFindPreservesDotSlashStartingPoint(t *testing.T) {
+	fsys := gfs.NewMemory(0)
+	mustMkdirAll(t, fsys, "work/sub")
+	mustWrite(t, fsys, "work/README.md", "docs", 0o644)
+	mustWrite(t, fsys, "work/sub/nested.txt", "nested", 0o644)
+
+	result := runCommandWithFS(t, commandFind, []string{".", "-maxdepth", "2", "-type", "f", "-print"}, fsys)
+	if result.exitCode != 0 || result.stdout != "./README.md\n./sub/nested.txt\n" {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", result.exitCode, result.stdout, result.stderr)
+	}
+}
+
 func TestFindOperatorsPruneAndPrintf(t *testing.T) {
 	fsys := gfs.NewMemory(0)
 	mustMkdirAll(t, fsys, "work/project/vendor")
