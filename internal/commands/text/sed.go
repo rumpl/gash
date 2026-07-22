@@ -660,6 +660,7 @@ func (p *sedParser) skipInlineSpace() {
 		p.pos++
 	}
 }
+
 func (p *sedParser) skipSeparators() {
 	for !p.eof() {
 		if p.peek() == ';' || p.peek() == '\n' || p.peek() == ' ' || p.peek() == '\t' {
@@ -669,6 +670,7 @@ func (p *sedParser) skipSeparators() {
 		break
 	}
 }
+
 func (p *sedParser) readNumber() string {
 	start := p.pos
 	for !p.eof() && p.peek() >= '0' && p.peek() <= '9' {
@@ -676,6 +678,7 @@ func (p *sedParser) readNumber() string {
 	}
 	return p.s[start:p.pos]
 }
+
 func (p *sedParser) readDelimited(delim byte) (string, bool) {
 	var b strings.Builder
 	esc := false
@@ -701,6 +704,7 @@ func (p *sedParser) readDelimited(delim byte) (string, bool) {
 	}
 	return b.String(), false
 }
+
 func (p *sedParser) readFlags() string {
 	start := p.pos
 	for !p.eof() && p.peek() != ';' && p.peek() != '\n' && p.peek() != '}' {
@@ -708,6 +712,7 @@ func (p *sedParser) readFlags() string {
 	}
 	return strings.TrimSpace(p.s[start:p.pos])
 }
+
 func (p *sedParser) readToCommandEnd() string {
 	start := p.pos
 	for !p.eof() && p.peek() != ';' && p.peek() != '\n' && p.peek() != '}' {
@@ -715,6 +720,7 @@ func (p *sedParser) readToCommandEnd() string {
 	}
 	return p.s[start:p.pos]
 }
+
 func (p *sedParser) readLineText() string {
 	start := p.pos
 	for !p.eof() && p.peek() != '\n' {
@@ -1318,6 +1324,7 @@ func sedAddressLineNumber(a *sedAddress, total int) int {
 func sedRangeKey(r *sedAddressRange) string {
 	return sedAddressKey(r.start) + "," + sedAddressKey(r.end)
 }
+
 func sedAddressKey(a *sedAddress) string {
 	if a == nil {
 		return "nil"

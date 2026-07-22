@@ -804,6 +804,7 @@ func rgReadNamedInput(name string, c *CommandContext) ([]byte, error) {
 	}
 	return gfs.ReadFile(c.FS, abs(c, name))
 }
+
 func parseRgFilesize(v string) (int64, bool) {
 	m := regexp.MustCompile(`^(\d+)([KMGkmg])?$`).FindStringSubmatch(v)
 	if m == nil {
@@ -820,6 +821,7 @@ func parseRgFilesize(v string) (int64, bool) {
 	}
 	return n, true
 }
+
 func validateRgGlob(g string) string {
 	in := false
 	for _, r := range g {
@@ -834,6 +836,7 @@ func validateRgGlob(g string) string {
 	}
 	return ""
 }
+
 func handleRgUnrestricted(o *rgOptions) {
 	if o.hidden {
 		o.searchBinary = true
@@ -843,6 +846,7 @@ func handleRgUnrestricted(o *rgOptions) {
 		o.noIgnore = true
 	}
 }
+
 func hasUpperASCII(s string) bool {
 	for _, r := range s {
 		if 'A' <= r && r <= 'Z' {
@@ -851,6 +855,7 @@ func hasUpperASCII(s string) bool {
 	}
 	return false
 }
+
 func isRgBinary(data []byte) bool {
 	sample := data
 	if len(sample) > 8192 {
@@ -863,36 +868,42 @@ func isRgBinary(data []byte) bool {
 	}
 	return false
 }
+
 func rgSep(o rgOptions) string {
 	if o.nullSeparator {
 		return "\x00"
 	}
 	return "\n"
 }
+
 func filenameIf(cond bool, s string) string {
 	if cond {
 		return s
 	}
 	return ""
 }
+
 func ifNonneg(n int) int {
 	if n < 0 {
 		return 0
 	}
 	return n
 }
+
 func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}
 	return b
 }
+
 func minInt(a, b int) int {
 	if a < b {
 		return a
 	}
 	return b
 }
+
 func lineByteOffset(lines []string, idx int) int {
 	off := 0
 	for i := 0; i < idx; i++ {
@@ -921,6 +932,7 @@ func rgPrefix(filename string, showFilename bool, lineNo int, showLine, showColu
 	}
 	return b.String()
 }
+
 func rgContextPrefix(filename string, showFilename bool, lineNo int, showLine bool, sep rune) string {
 	var b strings.Builder
 	if showFilename && filename != "" {
@@ -1035,6 +1047,7 @@ func rgIgnored(rel string, isDir bool, patterns []rgIgnorePattern) bool {
 	}
 	return ignored
 }
+
 func rgWhitelisted(rel string, isDir bool, patterns []rgIgnorePattern) bool {
 	ok := false
 	for _, p := range patterns {
@@ -1044,6 +1057,7 @@ func rgWhitelisted(rel string, isDir bool, patterns []rgIgnorePattern) bool {
 	}
 	return ok
 }
+
 func rgGitignoreMatch(rel string, p rgIgnorePattern) bool {
 	rel = strings.TrimPrefix(rel, "./")
 	if p.rooted {
@@ -1052,6 +1066,7 @@ func rgGitignoreMatch(rel string, p rgIgnorePattern) bool {
 	base := path.Base(rel)
 	return matchRgGlob(base, p.pattern, false) || matchRgGlob(rel, p.pattern, false)
 }
+
 func commonRgIgnored(name string) bool {
 	switch name {
 	case ".git", ".hg", ".svn", "node_modules", "vendor":
@@ -1146,8 +1161,10 @@ func matchRgGlob(s, pattern string, ignoreCase bool) bool {
 	return ok
 }
 
-type rgTypeRegistry map[string]rgType
-type rgType struct{ exts, globs []string }
+type (
+	rgTypeRegistry map[string]rgType
+	rgType         struct{ exts, globs []string }
+)
 
 func newRgTypeRegistry(opts rgOptions) rgTypeRegistry {
 	r := rgBuiltinTypes()
@@ -1159,11 +1176,13 @@ func newRgTypeRegistry(opts rgOptions) rgTypeRegistry {
 	}
 	return r
 }
+
 func rgBuiltinTypes() rgTypeRegistry {
 	return rgTypeRegistry{
 		"js": {[]string{".js", ".mjs", ".cjs", ".jsx"}, nil}, "ts": {[]string{".ts", ".tsx", ".mts", ".cts"}, nil}, "go": {[]string{".go"}, nil}, "py": {[]string{".py", ".pyi", ".pyw"}, nil}, "rs": {[]string{".rs"}, nil}, "rust": {[]string{".rs"}, nil}, "json": {[]string{".json", ".jsonc", ".json5"}, nil}, "md": {[]string{".md", ".mdx", ".markdown", ".mdown", ".mkd"}, nil}, "markdown": {[]string{".md", ".mdx", ".markdown", ".mdown", ".mkd"}, nil}, "txt": {[]string{".txt", ".text"}, nil}, "sh": {[]string{".sh", ".bash", ".zsh", ".fish"}, []string{".bashrc", ".zshrc", ".profile"}}, "yaml": {[]string{".yaml", ".yml"}, nil}, "toml": {[]string{".toml"}, []string{"Cargo.toml", "pyproject.toml"}}, "html": {[]string{".html", ".htm", ".xhtml"}, nil}, "css": {[]string{".css", ".scss", ".sass", ".less"}, nil}, "c": {[]string{".c", ".h"}, nil}, "cpp": {[]string{".cpp", ".cc", ".cxx", ".hpp", ".hh", ".hxx", ".h"}, nil}, "make": {[]string{".mk", ".mak"}, []string{"Makefile", "GNUmakefile", "makefile"}}, "docker": {nil, []string{"Dockerfile", "Dockerfile.*", "*.dockerfile"}},
 	}
 }
+
 func (r rgTypeRegistry) add(spec string) {
 	parts := strings.SplitN(spec, ":", 2)
 	if len(parts) != 2 {
@@ -1187,6 +1206,7 @@ func (r rgTypeRegistry) add(spec string) {
 	}
 	r[name] = cur
 }
+
 func (r rgTypeRegistry) matches(filename string, names []string) bool {
 	for _, n := range names {
 		if t, ok := r[n]; ok {
@@ -1225,6 +1245,7 @@ func appendRgJSON(lines *[]string, res rgFileResult, matcher rgMatcher, opts rgO
 	}
 	*lines = append(*lines, mustJSON(map[string]any{"type": "end", "data": map[string]any{"path": map[string]string{"text": res.file}, "binary_offset": nil, "stats": map[string]any{"elapsed": map[string]any{"secs": 0, "nanos": 0, "human": "0s"}, "searches": 1, "searches_with_match": 1, "bytes_searched": len(res.content), "bytes_printed": 0, "matched_lines": res.matchCount, "matches": res.matchCount}}}))
 }
+
 func rgSummaryJSON(searches, withMatch, bytes, matches int) string {
 	return mustJSON(map[string]any{"type": "summary", "data": map[string]any{"elapsed_total": map[string]any{"secs": 0, "nanos": 0, "human": "0s"}, "stats": map[string]any{"elapsed": map[string]any{"secs": 0, "nanos": 0, "human": "0s"}, "searches": searches, "searches_with_match": withMatch, "bytes_searched": bytes, "bytes_printed": 0, "matched_lines": matches, "matches": matches}}})
 }

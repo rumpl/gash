@@ -29,27 +29,33 @@ type findRegexExpr struct {
 	pattern    string
 	ignoreCase bool
 }
-type findTypeExpr struct{ fileType string }
-type findEmptyExpr struct{}
-type findMtimeExpr struct {
-	days       int
-	comparison string
-}
-type findNewerExpr struct{ refPath string }
-type findSizeExpr struct {
-	value      int64
-	unit       byte
-	comparison string
-}
+type (
+	findTypeExpr  struct{ fileType string }
+	findEmptyExpr struct{}
+	findMtimeExpr struct {
+		days       int
+		comparison string
+	}
+)
+type (
+	findNewerExpr struct{ refPath string }
+	findSizeExpr  struct {
+		value      int64
+		unit       byte
+		comparison string
+	}
+)
 type findPermExpr struct {
 	mode      iofs.FileMode
 	matchType string
 }
-type findPruneExpr struct{}
-type findActionExpr struct{ action findAction }
-type findNotExpr struct{ expr findExpr }
-type findAndExpr struct{ left, right findExpr }
-type findOrExpr struct{ left, right findExpr }
+type (
+	findPruneExpr  struct{}
+	findActionExpr struct{ action findAction }
+	findNotExpr    struct{ expr findExpr }
+	findAndExpr    struct{ left, right findExpr }
+	findOrExpr     struct{ left, right findExpr }
+)
 
 func (findNameExpr) isFindExpr()   {}
 func (findPathExpr) isFindExpr()   {}
@@ -754,6 +760,7 @@ func collectFindActions(expr findExpr) []findAction {
 	}
 	return nil
 }
+
 func collectFindNewerRefs(expr findExpr) []string {
 	if expr == nil {
 		return nil
@@ -770,6 +777,7 @@ func collectFindNewerRefs(expr findExpr) []string {
 	}
 	return nil
 }
+
 func expressionNeedsFindEmpty(expr findExpr) bool {
 	if expr == nil {
 		return false
@@ -786,6 +794,7 @@ func expressionNeedsFindEmpty(expr findExpr) bool {
 	}
 	return false
 }
+
 func expressionHasFindPrune(expr findExpr) bool {
 	if expr == nil {
 		return false
@@ -873,6 +882,7 @@ func findStripStartingPoint(p, sp string) string {
 	}
 	return p
 }
+
 func formatFindMode(mode iofs.FileMode) string {
 	b := []byte("-rwxrwxrwx")
 	if mode.IsDir() {
@@ -880,7 +890,7 @@ func formatFindMode(mode iofs.FileMode) string {
 	} else if mode&iofs.ModeSymlink != 0 {
 		b[0] = 'l'
 	}
-	perms := []iofs.FileMode{0400, 0200, 0100, 0040, 0020, 0010, 0004, 0002, 0001}
+	perms := []iofs.FileMode{0o400, 0o200, 0o100, 0o040, 0o020, 0o010, 0o004, 0o002, 0o001}
 	chars := []byte("rwxrwxrwx")
 	for i, p := range perms {
 		if mode&p == 0 {
@@ -891,6 +901,7 @@ func formatFindMode(mode iofs.FileMode) string {
 	}
 	return string(b)
 }
+
 func formatFindTime(t time.Time, d byte) string {
 	switch d {
 	case '@':

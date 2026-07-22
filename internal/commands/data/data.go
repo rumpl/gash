@@ -778,6 +778,7 @@ func csvValue(token string, row map[string]string) string {
 	}
 	return token
 }
+
 func splitCSVList(s string) []string {
 	var out []string
 	for _, p := range strings.Split(s, ",") {
@@ -788,6 +789,7 @@ func splitCSVList(s string) []string {
 	}
 	return out
 }
+
 func firstNonempty(vals ...string) string {
 	for _, v := range vals {
 		if strings.TrimSpace(v) != "" {
@@ -796,6 +798,7 @@ func firstNonempty(vals ...string) string {
 	}
 	return ""
 }
+
 func compareCSV(a, b string, numeric bool) int {
 	if numeric {
 		af, _ := strconv.ParseFloat(a, 64)
@@ -892,6 +895,7 @@ func xanView(t csvTable) []byte {
 	}
 	return []byte(b.String())
 }
+
 func pad(s string, n int) string {
 	if len(s) >= n {
 		return s
@@ -1006,6 +1010,7 @@ func renderList(n *nethtml.Node, ordered bool) string {
 	}
 	return b.String()
 }
+
 func textContent(n *nethtml.Node) string {
 	if n.Type == nethtml.TextNode {
 		return n.Data
@@ -1016,6 +1021,7 @@ func textContent(n *nethtml.Node) string {
 	}
 	return b.String()
 }
+
 func attr(n *nethtml.Node, key string) string {
 	for _, a := range n.Attr {
 		if strings.EqualFold(a.Key, key) {
@@ -1024,6 +1030,7 @@ func attr(n *nethtml.Node, key string) string {
 	}
 	return ""
 }
+
 func unsafeURL(s string) bool {
 	u, err := url.Parse(strings.TrimSpace(s))
 	if err != nil {
@@ -1031,6 +1038,7 @@ func unsafeURL(s string) bool {
 	}
 	return strings.EqualFold(u.Scheme, "javascript") || strings.EqualFold(u.Scheme, "data")
 }
+
 func prefixLines(s, p string) string {
 	lines := strings.Split(s, "\n")
 	for i := range lines {
@@ -1038,6 +1046,7 @@ func prefixLines(s, p string) string {
 	}
 	return strings.Join(lines, "\n")
 }
+
 func collapseText(s string) string {
 	if strings.TrimSpace(s) == "" {
 		return ""
@@ -1051,6 +1060,7 @@ func showHelp(c *CommandContext, name string) int {
 	}
 	return 0
 }
+
 func unknown(c *CommandContext, name, option string) int {
 	return commandhelp.UnknownOption(c, name, option)
 }

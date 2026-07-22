@@ -419,8 +419,10 @@ func execute(parent context.Context, dbBuffer []byte, sqlText string, opts optio
 	return results, modified, serialized, nil
 }
 
-type serializer interface{ Serialize() ([]byte, error) }
-type deserializer interface{ Deserialize([]byte) error }
+type (
+	serializer   interface{ Serialize() ([]byte, error) }
+	deserializer interface{ Deserialize([]byte) error }
+)
 
 func setupLimits(conn *sql.Conn) error {
 	limits := [][2]int{
