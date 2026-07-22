@@ -19,9 +19,10 @@ go run ./examples/basic
 | [`persistent-overlay`](persistent-overlay) | Saving the writable diff to disk and reusing it on later runs |
 | [`mounts`](mounts) | Combining independent filesystems under virtual mount points |
 | [`network`](network) | Opting into `curl` with an explicit origin/method policy |
+| [`security`](security) | Read-only filesystem, network allowlist, host-command denial, and hardened limits |
 | [`sqlite`](sqlite) | Creating and querying a SQLite database in the virtual filesystem |
 
-The network example performs a real HTTPS request. All other examples run locally without network access. Host filesystem access is explicit: gash uses an isolated in-memory filesystem unless an `io/fs.FS` is supplied.
+The network example performs a real HTTPS request. All other examples run locally without network access. The security example uses a deterministic mock HTTP transport after applying the real URL policy. Host filesystem access is explicit: gash uses an isolated in-memory filesystem unless an `io/fs.FS` is supplied.
 
 ## Persistent overlay
 

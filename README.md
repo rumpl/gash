@@ -140,11 +140,12 @@ The public libraries are `pkg/gash` and `pkg/fs`; implementation-only command co
 
 ## Examples
 
-Runnable programs for in-memory, seeded, custom-command, host filesystem, overlay, mount, network-policy, and SQLite setups are available in [`examples/`](examples/).
+Runnable programs for in-memory, seeded, custom-command, host filesystem, overlay, mount, network-policy, security-boundary, and SQLite setups are available in [`examples/`](examples/).
 
 ```sh
 go run ./examples/basic
 go run ./examples/host-readonly -- .
+go run ./examples/security
 go run ./examples/sqlite
 ```
 
