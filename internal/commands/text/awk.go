@@ -183,7 +183,9 @@ type awkLexer struct {
 	canRegex bool
 }
 
-func newAwkLexer(s string) *awkLexer { return &awkLexer{src: s, canRegex: true} }
+func newAwkLexer(s string) *awkLexer {
+	return &awkLexer{src: s, canRegex: true}
+}
 
 func (l *awkLexer) tokens() ([]awkToken, error) {
 	var out []awkToken
@@ -280,9 +282,17 @@ func (l *awkLexer) next() (awkToken, error) {
 	return awkToken{kind: awkOp, lit: lit, pos: start}, nil
 }
 
-func (l *awkLexer) starts(s string) bool        { return strings.HasPrefix(l.src[l.pos:], s) }
-func (l *awkLexer) scanString() (string, error) { return scanAwkQuoted(l.src, &l.pos, '"') }
-func (l *awkLexer) scanRegex() (string, error)  { return scanAwkQuoted(l.src, &l.pos, '/') }
+func (l *awkLexer) starts(s string) bool {
+	return strings.HasPrefix(l.src[l.pos:], s)
+}
+
+func (l *awkLexer) scanString() (string, error) {
+	return scanAwkQuoted(l.src, &l.pos, '"')
+}
+
+func (l *awkLexer) scanRegex() (string, error) {
+	return scanAwkQuoted(l.src, &l.pos, '/')
+}
 
 func scanAwkQuoted(src string, pos *int, quote byte) (string, error) {
 	(*pos)++
@@ -316,8 +326,14 @@ func scanAwkQuoted(src string, pos *int, quote byte) (string, error) {
 	}
 	return b.String(), fmt.Errorf("unterminated %q", quote)
 }
-func isAwkIdentStart(r rune) bool { return r == '_' || unicode.IsLetter(r) }
-func isAwkIdentPart(r rune) bool  { return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r) }
+
+func isAwkIdentStart(r rune) bool {
+	return r == '_' || unicode.IsLetter(r)
+}
+
+func isAwkIdentPart(r rune) bool {
+	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
+}
 
 type awkProgram struct {
 	funcs map[string]*awkFunction
@@ -343,6 +359,7 @@ type (
 		redirect string
 	}
 )
+
 type (
 	awkExprStmt struct{ expr awkExpr }
 	awkIfStmt   struct {
@@ -350,6 +367,7 @@ type (
 		thenStmts, elseStmts []awkStmt
 	}
 )
+
 type awkWhileStmt struct {
 	cond awkExpr
 	body []awkStmt
@@ -371,15 +389,32 @@ type (
 	awkNextStmt   struct{ file bool }
 )
 
-func (awkPrintStmt) awkStmt()  {}
-func (awkExprStmt) awkStmt()   {}
-func (awkIfStmt) awkStmt()     {}
-func (awkWhileStmt) awkStmt()  {}
-func (awkForStmt) awkStmt()    {}
-func (awkForInStmt) awkStmt()  {}
-func (awkDeleteStmt) awkStmt() {}
-func (awkReturnStmt) awkStmt() {}
-func (awkNextStmt) awkStmt()   {}
+func (awkPrintStmt) awkStmt() {
+}
+
+func (awkExprStmt) awkStmt() {
+}
+
+func (awkIfStmt) awkStmt() {
+}
+
+func (awkWhileStmt) awkStmt() {
+}
+
+func (awkForStmt) awkStmt() {
+}
+
+func (awkForInStmt) awkStmt() {
+}
+
+func (awkDeleteStmt) awkStmt() {
+}
+
+func (awkReturnStmt) awkStmt() {
+}
+
+func (awkNextStmt) awkStmt() {
+}
 
 type (
 	awkExpr        interface{ awkExpr() }
@@ -390,6 +425,7 @@ type (
 		index awkExpr
 	}
 )
+
 type (
 	awkFieldExpr  struct{ index awkExpr }
 	awkAssignExpr struct {
@@ -398,6 +434,7 @@ type (
 		right awkExpr
 	}
 )
+
 type awkBinaryExpr struct {
 	op          string
 	left, right awkExpr
@@ -419,24 +456,48 @@ type (
 	awkRegexExpr   struct{ pattern string }
 )
 
-func (awkLiteralExpr) awkExpr() {}
-func (awkVarExpr) awkExpr()     {}
-func (awkArrayExpr) awkExpr()   {}
-func (awkFieldExpr) awkExpr()   {}
-func (awkAssignExpr) awkExpr()  {}
-func (awkBinaryExpr) awkExpr()  {}
-func (awkUnaryExpr) awkExpr()   {}
-func (awkCallExpr) awkExpr()    {}
-func (awkPostExpr) awkExpr()    {}
-func (awkTernaryExpr) awkExpr() {}
-func (awkRegexExpr) awkExpr()   {}
+func (awkLiteralExpr) awkExpr() {
+}
+
+func (awkVarExpr) awkExpr() {
+}
+
+func (awkArrayExpr) awkExpr() {
+}
+
+func (awkFieldExpr) awkExpr() {
+}
+
+func (awkAssignExpr) awkExpr() {
+}
+
+func (awkBinaryExpr) awkExpr() {
+}
+
+func (awkUnaryExpr) awkExpr() {
+}
+
+func (awkCallExpr) awkExpr() {
+}
+
+func (awkPostExpr) awkExpr() {
+}
+
+func (awkTernaryExpr) awkExpr() {
+}
+
+func (awkRegexExpr) awkExpr() {
+}
 
 type awkParser struct {
 	toks []awkToken
 	pos  int
 }
 
-func newAwkParser(t []awkToken) *awkParser { return &awkParser{toks: t} }
+func newAwkParser(t []awkToken) *awkParser {
+	return &awkParser{toks: t}
+}
+
 func (p *awkParser) parseProgram() (*awkProgram, error) {
 	prog := &awkProgram{funcs: map[string]*awkFunction{}}
 	for {
@@ -712,7 +773,11 @@ func (p *awkParser) parseExprListUntilStmtEnd() []awkExpr {
 	}
 	return out
 }
-func (p *awkParser) parseExpr() (awkExpr, error) { return p.parseAssign() }
+
+func (p *awkParser) parseExpr() (awkExpr, error) {
+	return p.parseAssign()
+}
+
 func (p *awkParser) parseAssign() (awkExpr, error) {
 	left, err := p.parseTernary()
 	if err != nil {
@@ -747,8 +812,15 @@ func (p *awkParser) parseTernary() (awkExpr, error) {
 	}
 	return c, nil
 }
-func (p *awkParser) parseOr() (awkExpr, error)  { return p.parseLeft(p.parseAnd, "||") }
-func (p *awkParser) parseAnd() (awkExpr, error) { return p.parseLeft(p.parseCompare, "&&") }
+
+func (p *awkParser) parseOr() (awkExpr, error) {
+	return p.parseLeft(p.parseAnd, "||")
+}
+
+func (p *awkParser) parseAnd() (awkExpr, error) {
+	return p.parseLeft(p.parseCompare, "&&")
+}
+
 func (p *awkParser) parseCompare() (awkExpr, error) {
 	left, err := p.parseConcat()
 	if err != nil {
@@ -970,7 +1042,12 @@ func (p *awkParser) next() awkToken {
 	}
 	return t
 }
-func (p *awkParser) peekOp(op string) bool { t := p.peek(); return t.kind == awkOp && t.lit == op }
+
+func (p *awkParser) peekOp(op string) bool {
+	t := p.peek()
+	return t.kind == awkOp && t.lit == op
+}
+
 func (p *awkParser) matchOp(op string) bool {
 	if p.peekOp(op) {
 		p.pos++
@@ -1006,7 +1083,10 @@ type awkValue struct {
 	isStr bool
 }
 
-func awkNumberVal(f float64) awkValue { return awkValue{num: f} }
+func awkNumberVal(f float64) awkValue {
+	return awkValue{num: f}
+}
+
 func (v awkValue) String() string {
 	if v.isStr {
 		return v.str
@@ -1211,7 +1291,11 @@ func (vm *awkVM) splitFields() {
 	}
 	vm.setVar("NF", awkNumberVal(float64(len(vm.fields))))
 }
-func (vm *awkVM) rebuildRecord() { vm.record = strings.Join(vm.fields, vm.getVar("OFS").String()) }
+
+func (vm *awkVM) rebuildRecord() {
+	vm.record = strings.Join(vm.fields, vm.getVar("OFS").String())
+}
+
 func (vm *awkVM) evalPattern(r *awkRule) bool {
 	m := vm.eval(r.pat, nil).Bool()
 	if r.patEnd == nil {
@@ -1768,8 +1852,15 @@ func (vm *awkVM) array(name string) map[string]awkValue {
 	}
 	return vm.arrays[name]
 }
-func (vm *awkVM) getVar(name string) awkValue    { return vm.globals[name] }
-func (vm *awkVM) setVar(name string, v awkValue) { vm.globals[name] = v }
+
+func (vm *awkVM) getVar(name string) awkValue {
+	return vm.globals[name]
+}
+
+func (vm *awkVM) setVar(name string, v awkValue) {
+	vm.globals[name] = v
+}
+
 func (vm *awkVM) getVarScoped(name string, locals map[string]awkValue) awkValue {
 	if locals != nil {
 		if v, ok := locals[name]; ok {

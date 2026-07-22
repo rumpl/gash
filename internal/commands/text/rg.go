@@ -1249,9 +1249,16 @@ func appendRgJSON(lines *[]string, res rgFileResult, matcher rgMatcher, opts rgO
 func rgSummaryJSON(searches, withMatch, bytes, matches int) string {
 	return mustJSON(map[string]any{"type": "summary", "data": map[string]any{"elapsed_total": map[string]any{"secs": 0, "nanos": 0, "human": "0s"}, "stats": map[string]any{"elapsed": map[string]any{"secs": 0, "nanos": 0, "human": "0s"}, "searches": searches, "searches_with_match": withMatch, "bytes_searched": bytes, "bytes_printed": 0, "matched_lines": matches, "matches": matches}}})
 }
-func mustJSON(v any) string { b, _ := json.Marshal(v); return string(b) }
 
-func rgColumn(line string, byteStart int) int { return utf8.RuneCountInString(line[:byteStart]) + 1 }
+func mustJSON(v any) string {
+	b, _ := json.Marshal(v)
+	return string(b)
+}
+
+func rgColumn(line string, byteStart int) int {
+	return utf8.RuneCountInString(line[:byteStart]) + 1
+}
+
 func rgFirstColumn(line string, matches []rgLineMatch) int {
 	if len(matches) == 0 {
 		return 1

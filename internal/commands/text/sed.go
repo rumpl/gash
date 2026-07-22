@@ -647,14 +647,23 @@ func (p *sedParser) parseTextCommand(ch byte, addr *sedAddressRange) *sedCommand
 	return &sedCommandDef{typ: typ, address: addr, text: text}
 }
 
-func (p *sedParser) eof() bool { return p.pos >= len(p.s) }
+func (p *sedParser) eof() bool {
+	return p.pos >= len(p.s)
+}
+
 func (p *sedParser) peek() byte {
 	if p.eof() {
 		return 0
 	}
 	return p.s[p.pos]
 }
-func (p *sedParser) next() byte { ch := p.s[p.pos]; p.pos++; return ch }
+
+func (p *sedParser) next() byte {
+	ch := p.s[p.pos]
+	p.pos++
+	return ch
+}
+
 func (p *sedParser) skipInlineSpace() {
 	for !p.eof() && (p.peek() == ' ' || p.peek() == '\t') {
 		p.pos++

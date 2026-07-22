@@ -37,6 +37,7 @@ type (
 		comparison string
 	}
 )
+
 type (
 	findNewerExpr struct{ refPath string }
 	findSizeExpr  struct {
@@ -45,6 +46,7 @@ type (
 		comparison string
 	}
 )
+
 type findPermExpr struct {
 	mode      iofs.FileMode
 	matchType string
@@ -57,20 +59,47 @@ type (
 	findOrExpr     struct{ left, right findExpr }
 )
 
-func (findNameExpr) isFindExpr()   {}
-func (findPathExpr) isFindExpr()   {}
-func (findRegexExpr) isFindExpr()  {}
-func (findTypeExpr) isFindExpr()   {}
-func (findEmptyExpr) isFindExpr()  {}
-func (findMtimeExpr) isFindExpr()  {}
-func (findNewerExpr) isFindExpr()  {}
-func (findSizeExpr) isFindExpr()   {}
-func (findPermExpr) isFindExpr()   {}
-func (findPruneExpr) isFindExpr()  {}
-func (findActionExpr) isFindExpr() {}
-func (findNotExpr) isFindExpr()    {}
-func (findAndExpr) isFindExpr()    {}
-func (findOrExpr) isFindExpr()     {}
+func (findNameExpr) isFindExpr() {
+}
+
+func (findPathExpr) isFindExpr() {
+}
+
+func (findRegexExpr) isFindExpr() {
+}
+
+func (findTypeExpr) isFindExpr() {
+}
+
+func (findEmptyExpr) isFindExpr() {
+}
+
+func (findMtimeExpr) isFindExpr() {
+}
+
+func (findNewerExpr) isFindExpr() {
+}
+
+func (findSizeExpr) isFindExpr() {
+}
+
+func (findPermExpr) isFindExpr() {
+}
+
+func (findPruneExpr) isFindExpr() {
+}
+
+func (findActionExpr) isFindExpr() {
+}
+
+func (findNotExpr) isFindExpr() {
+}
+
+func (findAndExpr) isFindExpr() {
+}
+
+func (findOrExpr) isFindExpr() {
+}
 
 type findAction struct {
 	typ       string

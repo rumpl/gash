@@ -1041,4 +1041,6 @@ func (b *budgetBuilder) writeString(s string) error {
 	return nil
 }
 
-func (b *budgetBuilder) remaining() int { return b.limit - b.Len() }
+func (b *budgetBuilder) remaining() int {
+	return b.limit - b.Len()
+}
