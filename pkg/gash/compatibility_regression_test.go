@@ -96,18 +96,19 @@ func TestPipelineRightHandSideUsesSubshell(t *testing.T) {
 	}
 }
 
-func TestBackgroundExecutionIsRejectedInsteadOfSerialized(t *testing.T) {
+func TestBackgroundExecutionIsAsynchronousAndIsolated(t *testing.T) {
 	shell := newTestBash(t)
-	result := shell.Exec(context.Background(), `x=before; { sleep 0.1; x=background; echo child; } & echo SHOULD_NOT_RUN`, ExecOptions{})
-	if result.ExitCode != 2 || result.Stdout != "" || !strings.Contains(result.Stderr, "background execution is not supported") {
+	result := shell.Exec(context.Background(), `x=before; { sleep 0.05; x=background; echo child; } & p=$!; echo immediate-x=$x bang=$p; wait "$p"; echo wait=$? final-x=$x`, ExecOptions{})
+	want := "immediate-x=before bang=2001\nchild\nwait=0 final-x=before\n"
+	if result.ExitCode != 0 || result.Stdout != want || result.Stderr != "" {
 		t.Fatalf("result=%+v", result)
 	}
 }
 
-func TestWaitArgumentsDoNotPanic(t *testing.T) {
+func TestWaitReportsUnknownVirtualJob(t *testing.T) {
 	shell := newTestBash(t)
-	result := shell.Exec(context.Background(), `wait 123; echo done`, ExecOptions{})
-	if result.ExitCode != 0 || result.Stdout != "done\n" || result.Stderr != "" {
+	result := shell.Exec(context.Background(), `wait 123`, ExecOptions{})
+	if result.ExitCode != 127 || result.Stdout != "" || result.Stderr != "wait: 123: no such job\n" {
 		t.Fatalf("result=%+v", result)
 	}
 }

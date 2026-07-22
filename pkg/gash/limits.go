@@ -90,10 +90,11 @@ func resolveLimits(user Limits, profile LimitProfile) (Limits, error) {
 
 type executionScope struct {
 	limits   Limits
-	commands atomic.Int64
-	input    atomic.Int64
+	commands *atomic.Int64
+	input    *atomic.Int64
 	trapsMu  sync.RWMutex
 	traps    map[string]string
+	jobs     *jobState
 }
 
 func (s *executionScope) setTrap(signal, callback string) {

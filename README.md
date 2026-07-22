@@ -78,7 +78,7 @@ The CLI starts with a fresh in-memory filesystem by default. Pass `--root DIR` t
 Shell syntax is parsed as Bash into an AST by `mvdan.cc/sh/v3`. It includes:
 
 - quoting, parameter expansion, command substitution, and arithmetic expansion
-- pipelines, lists, subshells, `&&`, and `||`; background `&` jobs are rejected until they can be isolated safely
+- pipelines, lists, subshells, `&&`, `||`, isolated asynchronous background jobs, `$!`, `wait`, and `jobs`
 - functions, `if`, `case`, C-style and word `for` loops, `while`, and `until`
 - test expressions, shell options, arrays, and positional parameters
 - redirections, heredocs, and process substitution supported by the interpreter

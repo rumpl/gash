@@ -53,27 +53,6 @@ func normalizeClobberRedirects(program syntax.Node) {
 	})
 }
 
-func rewriteWaitBuiltin(program syntax.Node) {
-	syntax.Walk(program, func(node syntax.Node) bool {
-		call, ok := node.(*syntax.CallExpr)
-		if !ok || len(call.Args) < 2 {
-			return true
-		}
-		name := call.Args[0].Lit()
-		if (name == "command" || name == "builtin") && call.Args[1].Lit() == "wait" {
-			call.Args = call.Args[1:2]
-			return true
-		}
-		if name != "wait" {
-			return true
-		}
-		// mvdan v3.10 panics for argument-bearing wait calls. It does not expose
-		// individual virtual job IDs to handlers, so safely wait for all jobs.
-		call.Args = call.Args[:1]
-		return true
-	})
-}
-
 func rewritePrintfBuiltin(program syntax.Node) {
 	syntax.Walk(program, func(node syntax.Node) bool {
 		call, ok := node.(*syntax.CallExpr)

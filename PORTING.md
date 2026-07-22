@@ -58,11 +58,12 @@ substantial work.
       interpreter errors when `errexit` is disabled.
 - [x] Support `set -C`/`set -o noclobber`, their disabling forms, and `>|`
       forced-clobber redirection without exposing interpreter panics.
-- [x] Normalize argument-bearing `wait` calls to the supported wait-all form,
-      avoiding an upstream interpreter panic, and contain unexpected synchronous
-      interpreter panics at the embedding boundary.
-- [x] Reject background `&` statements before execution rather than silently
-      serializing them or sharing the parent environment.
+- [x] Route argument-bearing `wait` calls to virtual jobs without exposing the
+      upstream interpreter panic, and contain unexpected synchronous interpreter
+      panics at the embedding boundary.
+- [x] Run background `&` statements asynchronously in isolated interpreter
+      environments, with virtual PIDs, `$!`, `wait`, status propagation, and
+      deterministic `jobs` output.
 - [x] Isolate shell variables, functions, options, arguments, cwd, and environment
       between top-level `Exec` calls.
 - [x] Pass only exported variables to commands and nested shells; keep shell IFS
@@ -225,9 +226,11 @@ assumption:
 - [ ] Support Bash-compatible `RANDOM` assignment/seeding semantics.
 - [ ] Implement virtual `umask`, `PIPESTATUS`, and Bash printf time formatting.
 - [ ] Complete function/alias-aware `command` and `type` discovery.
-- [ ] Complete background-job IDs and per-job `wait` status semantics.
-- [ ] Complete background-job, trap, signal, and cancellation semantics,
-      including external context-to-trap delivery and exact default signal termination.
+- [ ] Complete background inheritance for shell functions, positional
+      parameters, and non-default shell options.
+- [ ] Complete background-job trap, signal, and cancellation semantics beyond
+      virtual `HUP`/`INT`/`QUIT`/`TERM` delivery, including external
+      context-to-trap delivery and exact default signal termination.
 - [ ] Exact nested `bash`/`sh`, script-file, and executable virtual-script behavior.
 - [ ] Exact command-not-found, not-executable, and directory-as-command diagnostics.
 - [ ] Audit and virtualize `BASHPID` and any remaining host-derived shell metadata.

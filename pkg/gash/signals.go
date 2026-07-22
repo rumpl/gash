@@ -196,11 +196,20 @@ func (b *Bash) runVirtualKill(ctx context.Context, args []string, commandCtx *Co
 		fmt.Fprintln(commandCtx.Stderr, "kill: usage: kill [-s signal | -signal] pid ...")
 		return 2
 	}
+	signalShell := false
 	for _, pid := range args[index:] {
-		if pid != virtualPID {
-			fmt.Fprintf(commandCtx.Stderr, "kill: (%s) - No such process\n", pid)
-			return 1
+		if pid == virtualPID {
+			signalShell = true
+			continue
 		}
+		if scope.signalJob(pid, 128+number) {
+			continue
+		}
+		fmt.Fprintf(commandCtx.Stderr, "kill: (%s) - No such process\n", pid)
+		return 1
+	}
+	if !signalShell {
+		return 0
 	}
 	callback, trapped := scope.trap(signal)
 	if !trapped {

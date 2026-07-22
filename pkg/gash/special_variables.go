@@ -10,11 +10,17 @@ import (
 
 type specialVariableEnviron struct {
 	base expand.Environ
+	jobs *jobState
 }
 
 var randomFallback atomic.Uint32
 
 func (e specialVariableEnviron) Get(name string) expand.Variable {
+	if name == lastBackgroundVariable && e.jobs != nil {
+		if pid := e.jobs.lastPID(); pid != "" {
+			return expand.Variable{Kind: expand.String, Str: pid}
+		}
+	}
 	if name != "RANDOM" {
 		return e.base.Get(name)
 	}

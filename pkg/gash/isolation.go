@@ -65,6 +65,8 @@ func virtualizeHostParameters(program syntax.Node) {
 			param.Param.Value = "GASH_PID"
 		case "PPID":
 			param.Param.Value = "GASH_PPID"
+		case "!":
+			param.Param.Value = lastBackgroundVariable
 		}
 		return true
 	})
@@ -74,10 +76,6 @@ func rejectHostBackedSyntax(program syntax.Node) error {
 	var err error
 	syntax.Walk(program, func(node syntax.Node) bool {
 		if err != nil || node == nil {
-			return false
-		}
-		if statement, ok := node.(*syntax.Stmt); ok && statement.Background {
-			err = fmt.Errorf("background execution is not supported; '&' requires isolated asynchronous jobs")
 			return false
 		}
 		if _, ok := node.(*syntax.CoprocClause); ok {

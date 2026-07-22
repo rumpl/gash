@@ -48,7 +48,9 @@ func (b *Bash) Exec(parent context.Context, script string, options ExecOptions) 
 	out := &boundedBuffer{budget: budget}
 	errout := &boundedBuffer{budget: budget}
 	scope := &executionScope{limits: b.limits}
+	ctx = scope.initializeJobs(ctx)
 	code, finalEnv := b.execute(ctx, script, options.Stdin, cwd, env, options.Args, options.ScriptName, out, errout, 0, scope, false)
+	scope.stopJobs()
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		fmt.Fprintln(errout, "bash: execution timed out")
 		code = 124
@@ -82,11 +84,15 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 		return 2, env
 	}
 	virtualizeHostParameters(program)
+	if err := rewriteBackgroundJobs(program); err != nil {
+		fmt.Fprintf(stderr, "bash: cannot prepare background job: %v\n", err)
+		return 2, env
+	}
+	rewriteJobBuiltins(program)
 	normalizeArithmeticBases(program)
 	rewriteDeclarationPrinting(program)
 	normalizeClobberRedirects(program)
 	normalizeSubshellSemantics(program)
-	rewriteWaitBuiltin(program)
 	rewritePrintfBuiltin(program)
 	rewriteReadableTestClauses(program)
 	rewriteVirtualSignalBuiltins(program)
@@ -101,7 +107,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	ctx, shellOptions := withShellOptionState(ctx)
 	positionals := newPositionalState(len(args))
 	runner, err := interp.New(
-		interp.Env(specialVariableEnviron{base: expand.ListEnviron(pairs...)}),
+		interp.Env(specialVariableEnviron{base: expand.ListEnviron(pairs...), jobs: scope.jobs}),
 		interp.Params(args...),
 		interp.StdIO(strings.NewReader(stdin), stdout, stderr),
 		interp.OpenHandler(b.openHandler),
@@ -113,6 +119,9 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 				return argv, interp.NewExitStatus(126)
 			}
 			observeExitTrap(argv, scope)
+			if replacement, handled := b.prepareJob(callCtx, argv, scope); handled {
+				return replacement, nil
+			}
 			if replacement, handled := b.virtualReadablePredicate(callCtx, argv); handled {
 				return replacement, nil
 			}
@@ -245,6 +254,12 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 		} else {
 			code = 1
 		}
+	case internalStartJobCommand:
+		code = b.runStartJob(ctx, args[1:], depth, scope)
+	case internalWaitJobCommand:
+		code = b.runWaitJob(args[1:], commandCtx.Stderr, scope)
+	case internalJobsCommand:
+		code = b.runJobs(args[1:], commandCtx.Stdout, commandCtx.Stderr, scope)
 	default:
 		cmd, ok := b.commands[name]
 		if !ok {

@@ -14,7 +14,7 @@ var discoverableShellBuiltins = map[string]bool{
 	":": true, "[": true, "alias": true, "break": true,
 	"builtin": true, "cd": true, "command": true, "continue": true,
 	"dirs": true, "echo": true, "eval": true, "exec": true, "exit": true,
-	"false": true, "getopts": true, "mapfile": true,
+	"false": true, "getopts": true, "jobs": true, "mapfile": true,
 	"popd": true, "printf": true, "pushd": true, "pwd": true,
 	"read": true, "readarray": true, "return": true, "set": true,
 	"shift": true, "shopt": true, "source": true, "test": true,
