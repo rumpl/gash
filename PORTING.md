@@ -82,9 +82,10 @@ substantial work.
 - [x] Default `HOME` to the always-representable virtual root `/`.
 - [x] Reject process substitution because the interpreter implementation would
       otherwise require a host-backed mechanism.
-- [x] Reject unsupported `coproc`, `printf -v`, and `PIPESTATUS` usage before
-      execution with compatibility diagnostics instead of internal failures or
-      silently incorrect values.
+- [x] Reject unsupported `coproc`, `printf -v`, `PIPESTATUS`, and `case`
+      fall-through operators (`;&`, `;;&`, and `;|`) before execution with
+      compatibility diagnostics instead of internal failures or silently
+      incorrect values.
 - [x] Replace `$$` and `PPID` with virtual values.
 - [x] Support virtual `HUP`, `INT`, `QUIT`, and `TERM` traps triggered by a
       capability-scoped `kill` command; no host process is signaled.

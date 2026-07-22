@@ -181,6 +181,14 @@ func TestUnsupportedFileDescriptorRejectedBeforeInterpreter(t *testing.T) {
 	}
 }
 
+func TestStandardCaseBreakStillExecutes(t *testing.T) {
+	b := newTestBash(t)
+	result := b.Exec(context.Background(), `case x in x) echo one;; z) echo two;; esac`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "one\n" || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestUnsupportedInterpreterFeaturesHaveCompatibilityDiagnostics(t *testing.T) {
 	b := newTestBash(t)
 	cases := []struct {
@@ -189,6 +197,8 @@ func TestUnsupportedInterpreterFeaturesHaveCompatibilityDiagnostics(t *testing.T
 	}{
 		{`printf -v x '%s' value`, "printf -v is not supported"},
 		{`coproc CAT { cat; }`, "coproc is not supported"},
+		{`case x in x) echo one ;& z) echo two;; esac`, `case fall-through operator ";&" is not supported`},
+		{`case x in x) echo one ;;& x) echo two;; esac`, `case fall-through operator ";;&" is not supported`},
 		{`echo "${PIPESTATUS[*]}"`, "PIPESTATUS is not supported"},
 	}
 	for _, test := range cases {

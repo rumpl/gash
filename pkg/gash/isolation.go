@@ -82,6 +82,10 @@ func rejectHostBackedSyntax(program syntax.Node) error {
 			err = fmt.Errorf("coproc is not supported in isolated execution")
 			return false
 		}
+		if item, ok := node.(*syntax.CaseItem); ok && item.Op != syntax.Break {
+			err = fmt.Errorf("case fall-through operator %q is not supported by the isolated interpreter", item.Op.String())
+			return false
+		}
 		if parameter, ok := node.(*syntax.ParamExp); ok && parameter.Param != nil {
 			switch parameter.Param.Value {
 			case "PIPESTATUS":
