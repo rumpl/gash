@@ -52,6 +52,15 @@ substantial work.
       pipelines, lists, logical operators, functions, conditionals, loops,
       subshells, arrays, heredocs, and redirections in process.
 - [x] Execute nested `bash` and `sh` scripts without host processes.
+- [x] Isolate every pipeline component by default, matching Bash without
+      `lastpipe`, and run EXIT traps installed in explicit subshells.
+- [x] Treat redirection-open failures as command failures rather than fatal
+      interpreter errors when `errexit` is disabled.
+- [x] Normalize argument-bearing `wait` calls to the supported wait-all form,
+      avoiding an upstream interpreter panic, and contain unexpected synchronous
+      interpreter panics at the embedding boundary.
+- [x] Serialize background statements until isolated job environments replace
+      the upstream interpreter's racy parent-environment overlay.
 - [x] Isolate shell variables, functions, options, arguments, cwd, and environment
       between top-level `Exec` calls.
 - [x] Persist the configured virtual filesystem between calls.
@@ -81,6 +90,9 @@ substantial work.
 - [x] Accept arbitrary standard read-only `io/fs` implementations.
 - [x] Fail writes when the supplied filesystem lacks mutation capabilities.
 - [x] Route shell redirections through the virtual filesystem.
+- [x] Provide `/dev/null` through virtual command and redirection I/O without a
+      host device dependency.
+- [x] Provide least-authority read-only views that strip mutation capabilities.
 
 ### Security boundaries
 
@@ -139,7 +151,8 @@ These commands work for documented subsets and remain priority parity areas:
 - `grep`, `egrep`, `fgrep` — practical regex/fixed-string behavior; flags and
   binary/locale cases remain.
 - `expr` — practical expression subset.
-- `find` — practical predicates/actions; full expression and traversal behavior remains.
+- `find` — practical predicates/actions and capability-scoped `-exec ... ;`/`+`
+  dispatch; full expression truth propagation and traversal behavior remains.
 - `rg` — bounded virtual-filesystem search; not complete ripgrep compatibility.
 - `sed` — sandboxed stream-editor subset; shell-execution commands are rejected.
 - `xargs` — whitespace/custom/NUL delimiters, replacement, batching, parallel
@@ -189,6 +202,7 @@ assumption:
 - [ ] Alias expansion order and function/local-variable call-frame behavior.
 - [ ] `[[ ... ]]`, regex, arithmetic-test, and pattern-matching differences.
 - [ ] File-descriptor duplication/closing and uncommon redirection ordering.
+- [ ] Complete background-job IDs and per-job `wait` status semantics.
 - [ ] Complete background-job, trap, signal, and cancellation semantics,
       including external context-to-trap delivery and exact default signal termination.
 - [ ] Exact nested `bash`/`sh`, script-file, and executable virtual-script behavior.

@@ -21,7 +21,7 @@ func (b *Bash) openHandler(ctx context.Context, name string, flag int, perm os.F
 	}
 	if flag&(os.O_WRONLY|os.O_RDWR) != 0 {
 		if _, ok := b.FS.(gfs.WriteFileFS); !ok {
-			return nil, gfs.ErrReadOnly
+			return nil, &os.PathError{Op: "bash:", Path: name, Err: gfs.ErrReadOnly}
 		}
 	}
 	var initial []byte

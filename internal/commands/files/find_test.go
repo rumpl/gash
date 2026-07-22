@@ -59,7 +59,7 @@ func TestFindOperatorsPruneAndPrintf(t *testing.T) {
 	}
 }
 
-func TestFindPermDeleteAndFailClosedExec(t *testing.T) {
+func TestFindPermDeleteAndExecRequiresDispatcher(t *testing.T) {
 	fsys := gfs.NewMemory(0)
 	mustMkdirAll(t, fsys, "work/project/tmp")
 	mustWrite(t, fsys, "work/project/run.sh", "#!/bin/sh\n", 0o755)
@@ -77,7 +77,7 @@ func TestFindPermDeleteAndFailClosedExec(t *testing.T) {
 	}
 
 	result = runCommandWithFS(t, commandFind, []string{"project", "-exec", "echo", "{}", ";"}, fsys)
-	if result.exitCode == 0 || !strings.Contains(result.stderr, "-exec is not supported") {
+	if result.exitCode == 0 || !strings.Contains(result.stderr, "cannot execute commands in this context") {
 		t.Fatalf("exit=%d stdout=%q stderr=%q", result.exitCode, result.stdout, result.stderr)
 	}
 }

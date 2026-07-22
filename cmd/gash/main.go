@@ -81,7 +81,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			fmt.Fprintln(stderr, "gash: root:", err)
 			return 1
 		}
-		options.FS = rootFS
+		options.FS = gfs.ReadOnly(rootFS)
 		if options.Cwd == "" {
 			options.Cwd = "/"
 		}

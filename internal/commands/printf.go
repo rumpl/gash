@@ -18,6 +18,13 @@ func commandPrintf(ctx context.Context, args []string, c *CommandContext) int {
 		fmt.Fprintln(c.Stderr, "printf: usage: printf format [arguments]")
 		return 2
 	}
+	if args[0] == "--" {
+		args = args[1:]
+		if len(args) == 0 {
+			fmt.Fprintln(c.Stderr, "printf: usage: printf format [arguments]")
+			return 2
+		}
+	}
 	format, stopped := decodePrintfEscapes(args[0])
 	if stopped {
 		return 0
@@ -119,10 +126,44 @@ func formatPrintfValue(specification string, conversion byte, value string) (str
 		decoded, _ := decodePrintfEscapes(value)
 		return decoded, nil
 	case 'q':
-		return strconv.Quote(value), nil
+		quoted := shellQuote(value)
+		return fmt.Sprintf(specification[:len(specification)-1]+"s", quoted), nil
 	default:
 		return "", fmt.Errorf("invalid format character %%%c", conversion)
 	}
+}
+
+func shellQuote(value string) string {
+	if value == "" {
+		return "''"
+	}
+	safe := true
+	printable := true
+	for _, character := range value {
+		if !strings.ContainsRune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@%+=:,./-", character) {
+			safe = false
+		}
+		if character < 0x20 || character == 0x7f {
+			printable = false
+		}
+	}
+	if safe {
+		return value
+	}
+	if printable {
+		var quoted strings.Builder
+		for _, character := range value {
+			if !strings.ContainsRune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@%+=:,./-", character) {
+				quoted.WriteByte('\\')
+			}
+			quoted.WriteRune(character)
+		}
+		return quoted.String()
+	}
+	escaped := strconv.Quote(value)
+	escaped = strings.TrimSuffix(strings.TrimPrefix(escaped, "\""), "\"")
+	escaped = strings.ReplaceAll(escaped, "'", "\\'")
+	return "$'" + escaped + "'"
 }
 
 func normalizeStringSpecification(specification string) string {

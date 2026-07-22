@@ -141,7 +141,7 @@ type findEffect struct {
 	node   findNode
 }
 
-func commandFind(_ context.Context, args []string, c *CommandContext) int {
+func commandFind(ctx context.Context, args []string, c *CommandContext) int {
 	searchPaths := []string{}
 	exprStart := len(args)
 	for i, arg := range args {
@@ -193,9 +193,13 @@ func commandFind(_ context.Context, args []string, c *CommandContext) int {
 	}
 	allActions := collectFindActions(expr)
 	hasAction := len(allActions) > 0
-	for _, a := range allActions {
-		if a.typ == "delete" {
+	for _, action := range allActions {
+		if action.typ == "delete" {
 			depthFirst = true
+		}
+		if action.typ == "exec" && c.RunCommand == nil {
+			fmt.Fprintln(c.Stderr, "find: cannot execute commands in this context")
+			return 1
 		}
 	}
 
@@ -229,6 +233,16 @@ func commandFind(_ context.Context, args []string, c *CommandContext) int {
 		effects = append(effects, walkEffects...)
 	}
 
+	batchPaths := map[string][]string{}
+	batchActions := map[string]findAction{}
+	for _, effect := range effects {
+		if effect.action.typ == "exec" && effect.action.batchMode {
+			key := strings.Join(effect.action.command, "\x00")
+			batchPaths[key] = append(batchPaths[key], effect.node.path)
+			batchActions[key] = effect.action
+		}
+	}
+	runBatches := map[string]bool{}
 	for _, effect := range effects {
 		switch effect.action.typ {
 		case "print":
@@ -243,14 +257,37 @@ func commandFind(_ context.Context, args []string, c *CommandContext) int {
 				code = 1
 			}
 		case "exec":
-			// just-bash delegates to its sandboxed runtime executor. gash's file
-			// command context intentionally has no command registry, so fail closed
-			// instead of invoking the host PATH.
-			fmt.Fprint(c.Stderr, "find: -exec is not supported by gash find (host PATH execution disabled)\n")
-			return 1
+			if effect.action.batchMode {
+				key := strings.Join(effect.action.command, "\x00")
+				if runBatches[key] {
+					continue
+				}
+				runBatches[key] = true
+				if runFindExec(ctx, c, batchActions[key], batchPaths[key]) != 0 {
+					code = 1
+				}
+				continue
+			}
+			runFindExec(ctx, c, effect.action, []string{effect.node.path})
 		}
 	}
 	return code
+}
+
+func runFindExec(ctx context.Context, c *CommandContext, action findAction, paths []string) int {
+	argv := make([]string, 0, len(action.command)+len(paths))
+	for _, argument := range action.command {
+		if action.batchMode && argument == "{}" {
+			argv = append(argv, paths...)
+			continue
+		}
+		if action.batchMode {
+			argv = append(argv, argument)
+			continue
+		}
+		argv = append(argv, strings.ReplaceAll(argument, "{}", paths[0]))
+	}
+	return c.RunCommand(ctx, argv, c)
 }
 
 func parseNonNegativeInt(s string) (int, error) {

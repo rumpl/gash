@@ -76,6 +76,9 @@ func Name(name string) string {
 }
 
 func ReadFile(fsys iofs.FS, name string) ([]byte, error) {
+	if Name(name) == "dev/null" {
+		return []byte{}, nil
+	}
 	return iofs.ReadFile(fsys, Name(name))
 }
 
@@ -84,11 +87,17 @@ func ReadDir(fsys iofs.FS, name string) ([]iofs.DirEntry, error) {
 }
 
 func Stat(fsys iofs.FS, name string) (iofs.FileInfo, error) {
+	if Name(name) == "dev/null" {
+		return nullFileInfo{}, nil
+	}
 	return iofs.Stat(fsys, Name(name))
 }
 
 func Lstat(fsys iofs.FS, name string) (iofs.FileInfo, error) {
 	name = Name(name)
+	if name == "dev/null" {
+		return nullFileInfo{}, nil
+	}
 	if f, ok := fsys.(LstatFS); ok {
 		return f.Lstat(name)
 	}
@@ -103,6 +112,9 @@ func Readlink(fsys iofs.FS, name string) (string, error) {
 }
 
 func WriteFile(fsys iofs.FS, name string, data []byte, perm iofs.FileMode) error {
+	if Name(name) == "dev/null" {
+		return nil
+	}
 	if f, ok := fsys.(WriteFileFS); ok {
 		return f.WriteFile(Name(name), data, perm)
 	}
@@ -110,6 +122,9 @@ func WriteFile(fsys iofs.FS, name string, data []byte, perm iofs.FileMode) error
 }
 
 func AppendFile(fsys iofs.FS, name string, data []byte, perm iofs.FileMode) error {
+	if Name(name) == "dev/null" {
+		return nil
+	}
 	if f, ok := fsys.(AppendFileFS); ok {
 		return f.AppendFile(Name(name), data, perm)
 	}

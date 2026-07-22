@@ -29,6 +29,24 @@ func TestRunWithHostRoot(t *testing.T) {
 	}
 }
 
+func TestRunWithHostRootDoesNotPermitWrites(t *testing.T) {
+	root := t.TempDir()
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := run(
+		[]string{"--root", root, "-c", "echo before; echo data > forbidden; echo after; exit 0"},
+		&bytes.Buffer{},
+		&stdout,
+		&stderr,
+	)
+	if exitCode != 0 || stdout.String() != "before\nafter\n" || !strings.Contains(stderr.String(), "filesystem is read-only") {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+	}
+	if _, err := os.Stat(filepath.Join(root, "forbidden")); !os.IsNotExist(err) {
+		t.Fatalf("host file was created: %v", err)
+	}
+}
+
 func TestRunForwardsScriptFileArgs(t *testing.T) {
 	root := t.TempDir()
 	script := filepath.Join(root, "script.sh")

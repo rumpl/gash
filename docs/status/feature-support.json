@@ -270,7 +270,7 @@
                 "just-bash:pinned"
             ],
             "nearTermPriority": true,
-            "notes": "First-class priority search command. Baseline exists and predicate/action coverage should expand with focused tasks."
+            "notes": "First-class priority search command with capability-scoped -exec dispatch. Predicate truth propagation and action/traversal parity should expand with focused tasks."
         },
         {
             "name": "fold",
@@ -466,7 +466,8 @@
             "sources": [
                 "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Registered in-process implementation with compatibility regression coverage."
         },
         {
             "name": "printenv",
@@ -484,7 +485,8 @@
             "sources": [
                 "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Shell-oriented formatting includes Bash %q quoting; printf -v remains delegated to the shell interpreter."
         },
         {
             "name": "pwd",
