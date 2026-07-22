@@ -15,11 +15,18 @@ import (
 )
 
 func (b *Bash) openHandler(ctx context.Context, name string, flag int, perm os.FileMode) (io.ReadWriteCloser, error) {
+	forceClobber := strings.HasPrefix(name, forceClobberPrefix)
+	name = strings.TrimPrefix(name, forceClobberPrefix)
 	name = handlerPath(ctx, name)
 	if name == "/dev/null" {
 		return &nullFile{}, nil
 	}
 	if flag&(os.O_WRONLY|os.O_RDWR) != 0 {
+		if options := shellOptionsFromContext(ctx); !forceClobber && flag&os.O_TRUNC != 0 && options != nil && options.noclobber.Load() {
+			if _, err := gfs.Stat(b.FS, name); err == nil {
+				return nil, &os.PathError{Op: "bash:", Path: name, Err: iofs.ErrExist}
+			}
+		}
 		if _, ok := b.FS.(gfs.WriteFileFS); !ok {
 			return nil, &os.PathError{Op: "bash:", Path: name, Err: gfs.ErrReadOnly}
 		}

@@ -553,7 +553,8 @@
             "sources": [
                 "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Force mode suppresses missing-file errors only; capability and deletion failures remain visible and nonzero."
         },
         {
             "name": "rmdir",
@@ -731,7 +732,8 @@
             "sources": [
                 "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Existing files require timestamp mutation capability; read-only filesystems return a nonzero error rather than a false success."
         },
         {
             "name": "tr",

@@ -35,6 +35,13 @@ func runCommand(t *testing.T, run commandFunc, args []string, files map[string]s
 
 func runCommandWithFS(t *testing.T, run commandFunc, args []string, filesystem *gfs.Memory) commandResult {
 	t.Helper()
+	result := runCommandWithStandardFS(t, run, args, filesystem)
+	result.filesystem = filesystem
+	return result
+}
+
+func runCommandWithStandardFS(t *testing.T, run commandFunc, args []string, filesystem fs.FS) commandResult {
+	t.Helper()
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cwd := "/work"
@@ -47,7 +54,11 @@ func runCommandWithFS(t *testing.T, run commandFunc, args []string, filesystem *
 		Stderr: &stderr,
 	}
 	exitCode := run(context.Background(), args, ctx)
-	return commandResult{filesystem: filesystem, stdout: stdout.String(), stderr: stderr.String(), exitCode: exitCode}
+	return commandResult{stdout: stdout.String(), stderr: stderr.String(), exitCode: exitCode}
+}
+
+type readOnlyTestFS struct {
+	fs.FS
 }
 
 func exists(filesystem *gfs.Memory, name string) bool {

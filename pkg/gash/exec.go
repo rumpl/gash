@@ -83,6 +83,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	}
 	virtualizeHostParameters(program)
 	normalizeArithmeticBases(program)
+	normalizeClobberRedirects(program)
 	normalizeSubshellSemantics(program)
 	serializeBackgroundStatements(program)
 	rewriteWaitBuiltin(program)
@@ -96,6 +97,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	for k, v := range env {
 		pairs = append(pairs, k+"="+v)
 	}
+	ctx, shellOptions := withShellOptionState(ctx)
 	runner, err := interp.New(
 		interp.Env(expand.ListEnviron(pairs...)),
 		interp.Params(args...),
@@ -108,6 +110,9 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 			if err := scope.chargeCommand(); err != nil {
 				fmt.Fprintf(interp.HandlerCtx(callCtx).Stderr, "bash: %v\n", err)
 				return argv, interp.NewExitStatus(126)
+			}
+			if replacement, handled := virtualSetOptions(argv, shellOptions); handled {
+				return replacement, nil
 			}
 			if replacement, handled := b.virtualCommandDiscovery(callCtx, argv); handled {
 				return replacement, nil

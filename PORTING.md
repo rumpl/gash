@@ -56,6 +56,8 @@ substantial work.
       `lastpipe`, and run EXIT traps installed in explicit subshells.
 - [x] Treat redirection-open failures as command failures rather than fatal
       interpreter errors when `errexit` is disabled.
+- [x] Support `set -C`/`set -o noclobber`, their disabling forms, and `>|`
+      forced-clobber redirection without exposing interpreter panics.
 - [x] Normalize argument-bearing `wait` calls to the supported wait-all form,
       avoiding an upstream interpreter panic, and contain unexpected synchronous
       interpreter panics at the embedding boundary.

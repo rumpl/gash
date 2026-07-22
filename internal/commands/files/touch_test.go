@@ -11,3 +11,11 @@ func TestTouch(t *testing.T) {
 		t.Fatalf("exit=%d stdout=%q stderr=%q", result.exitCode, result.stdout, result.stderr)
 	}
 }
+
+func TestTouchExistingReadOnlyFileFails(t *testing.T) {
+	filesystem := runCommand(t, commandTouch, nil, map[string]string{"README.md": "docs"}).filesystem
+	result := runCommandWithStandardFS(t, commandTouch, []string{"README.md"}, readOnlyTestFS{FS: filesystem})
+	if result.exitCode != 1 || result.stdout != "" || result.stderr == "" {
+		t.Fatalf("result=%+v", result)
+	}
+}

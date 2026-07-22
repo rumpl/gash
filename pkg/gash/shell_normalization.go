@@ -6,6 +6,21 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 )
 
+func normalizeClobberRedirects(program syntax.Node) {
+	syntax.Walk(program, func(node syntax.Node) bool {
+		redirect, ok := node.(*syntax.Redirect)
+		if !ok || redirect.Op != syntax.ClbOut || redirect.Word == nil {
+			return true
+		}
+		redirect.Op = syntax.RdrOut
+		redirect.Word.Parts = append(
+			[]syntax.WordPart{&syntax.Lit{Value: forceClobberPrefix}},
+			redirect.Word.Parts...,
+		)
+		return true
+	})
+}
+
 func serializeBackgroundStatements(program syntax.Node) {
 	// mvdan v3.10 backgrounds a runner whose environment overlays the parent
 	// environment while the parent continues mutating it, which is racy. Until
