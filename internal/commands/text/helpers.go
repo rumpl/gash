@@ -3,10 +3,12 @@ package text
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/rumpl/gash/internal/command"
 	"github.com/rumpl/gash/internal/commandutil"
+	gfs "github.com/rumpl/gash/pkg/fs"
 )
 
 type CommandContext = command.Context
@@ -31,4 +33,31 @@ func ioReadAll(ctx *CommandContext) (string, error) {
 
 func missingOperand(ctx *CommandContext, name string) int {
 	return report(ctx, name, fmt.Errorf("missing operand"))
+}
+
+func readInputChunks(args []string, ctx *CommandContext) ([][]byte, error) {
+	if len(args) == 0 {
+		data, err := io.ReadAll(ctx.Stdin)
+		if err != nil {
+			return nil, err
+		}
+		return [][]byte{data}, nil
+	}
+	chunks := make([][]byte, 0, len(args))
+	for _, name := range args {
+		if name == "-" {
+			data, err := io.ReadAll(ctx.Stdin)
+			if err != nil {
+				return nil, err
+			}
+			chunks = append(chunks, data)
+			continue
+		}
+		data, err := gfs.ReadFile(ctx.FS, abs(ctx, name))
+		if err != nil {
+			return nil, err
+		}
+		chunks = append(chunks, data)
+	}
+	return chunks, nil
 }

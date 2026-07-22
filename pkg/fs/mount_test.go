@@ -102,13 +102,13 @@ func TestMountableCrossMountRename(t *testing.T) {
 	}
 }
 
-func TestMountableRejectsNestedMounts(t *testing.T) {
+func TestMountableAllowsNestedMounts(t *testing.T) {
 	m, _ := NewMountable(MountableOptions{})
 	if err := m.Mount("a", NewMemory(0)); err != nil {
 		t.Fatal(err)
 	}
-	if err := m.Mount("a/b", NewMemory(0)); err == nil {
-		t.Fatal("nested mount accepted")
+	if err := m.Mount("a/b", NewMemory(0)); err != nil {
+		t.Fatalf("nested mount rejected: %v", err)
 	}
 	if err := m.Mount(".", NewMemory(0)); err == nil {
 		t.Fatal("root mount accepted")

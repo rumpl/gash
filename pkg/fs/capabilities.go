@@ -10,14 +10,15 @@ import (
 )
 
 var (
-	ErrNotExist = iofs.ErrNotExist
-	ErrExist    = iofs.ErrExist
-	ErrNotDir   = errors.New("not a directory")
-	ErrIsDir    = errors.New("is a directory")
-	ErrNotEmpty = errors.New("directory not empty")
-	ErrReadOnly = errors.New("filesystem is read-only")
-	ErrQuota    = errors.New("filesystem quota exceeded")
-	ErrLoop     = errors.New("too many symbolic links")
+	ErrNotExist    = iofs.ErrNotExist
+	ErrExist       = iofs.ErrExist
+	ErrNotDir      = errors.New("not a directory")
+	ErrIsDir       = errors.New("is a directory")
+	ErrNotEmpty    = errors.New("directory not empty")
+	ErrReadOnly    = errors.New("filesystem is read-only")
+	ErrQuota       = errors.New("filesystem quota exceeded")
+	ErrLoop        = errors.New("too many symbolic links")
+	ErrCrossDevice = errors.New("cross-device operation")
 )
 
 // FileSystem is deliberately the standard library's minimal filesystem

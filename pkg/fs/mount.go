@@ -68,9 +68,6 @@ func (m *Mountable) Mount(point string, filesystem iofs.FS) error {
 		if existing == point {
 			continue
 		}
-		if strings.HasPrefix(point, existing+"/") || strings.HasPrefix(existing, point+"/") {
-			return errors.New("nested mount points are not allowed")
-		}
 	}
 	m.mounts[point] = mountEntry{point: point, fs: filesystem}
 	return nil

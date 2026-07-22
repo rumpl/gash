@@ -10,7 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	gfs "github.com/rumpl/gash/pkg/fs"
 	"github.com/rumpl/gash/pkg/gash"
+	"github.com/rumpl/gash/pkg/network"
 )
 
 type envFlags map[string]string
@@ -39,6 +41,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	jsonOutput := set.Bool("json", false, "print the result as JSON")
 	cwd := set.String("cwd", "", "virtual working directory (defaults to / with --root)")
 	root := set.String("root", "", "expose a host directory read-only as the virtual filesystem root")
+	networkAllow := set.String("network-allow", "", "enable curl for comma-separated allowed HTTP(S) origins (scheme://host[:port][/path])")
 	env := envFlags{}
 	set.Var(env, "e", "set an environment variable (repeatable)")
 	set.Usage = func() {
@@ -49,7 +52,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return 2
 	}
 
-	script, exitCode := readScript(*command, set.Args(), stdin, stderr)
+	script, scriptName, scriptArgs, exitCode := readScript(*command, set.Args(), stdin, stderr)
 	if exitCode != 0 {
 		return exitCode
 	}
@@ -73,10 +76,35 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "gash: root: %s is not a directory\n", *root)
 			return 1
 		}
-		options.FS = os.DirFS(absoluteRoot)
+		rootFS, err := gfs.NewRooted(absoluteRoot)
+		if err != nil {
+			fmt.Fprintln(stderr, "gash: root:", err)
+			return 1
+		}
+		options.FS = rootFS
 		if options.Cwd == "" {
 			options.Cwd = "/"
 		}
+	}
+	if *networkAllow != "" {
+		policy := network.NewPolicy()
+		for _, raw := range strings.Split(*networkAllow, ",") {
+			raw = strings.TrimSpace(raw)
+			if raw == "" {
+				continue
+			}
+			rule := network.AllowOrigin(raw)
+			if rule.Host == "" || rule.Scheme == "" {
+				fmt.Fprintf(stderr, "gash: invalid --network-allow origin %q\n", raw)
+				return 2
+			}
+			policy.Rules = append(policy.Rules, rule)
+		}
+		if len(policy.Rules) == 0 {
+			fmt.Fprintln(stderr, "gash: --network-allow requires at least one origin")
+			return 2
+		}
+		options.Network = &policy
 	}
 
 	bash, err := gash.New(options)
@@ -84,7 +112,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "gash:", err)
 		return 1
 	}
-	result := bash.Exec(context.Background(), script, gash.ExecOptions{})
+	result := bash.Exec(context.Background(), script, gash.ExecOptions{Args: scriptArgs, ScriptName: scriptName})
 	if *jsonOutput {
 		if err := json.NewEncoder(stdout).Encode(result); err != nil {
 			fmt.Fprintln(stderr, "gash:", err)
@@ -97,22 +125,22 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	return result.ExitCode
 }
 
-func readScript(command string, args []string, stdin io.Reader, stderr io.Writer) (string, int) {
+func readScript(command string, args []string, stdin io.Reader, stderr io.Writer) (script, scriptName string, scriptArgs []string, exitCode int) {
 	if command != "" {
-		return command, 0
+		return command, "", args, 0
 	}
 	if len(args) > 0 {
 		data, err := os.ReadFile(args[0])
 		if err != nil {
 			fmt.Fprintln(stderr, "gash:", err)
-			return "", 1
+			return "", "", nil, 1
 		}
-		return string(data), 0
+		return string(data), args[0], args[1:], 0
 	}
 	data, err := io.ReadAll(stdin)
 	if err != nil {
 		fmt.Fprintln(stderr, "gash:", err)
-		return "", 1
+		return "", "", nil, 1
 	}
-	return string(data), 0
+	return string(data), "", nil, 0
 }

@@ -2,7 +2,7 @@
 
 A Go rewrite of [vercel-labs/just-bash](https://github.com/vercel-labs/just-bash): a Bash interpreter with a capability-based virtual filesystem. It is intended for agents and applications that need useful shell workflows without exposing the host filesystem or launching host processes.
 
-> **Status:** active parity work. Bash parsing/execution now uses a full AST interpreter, but command implementations and the overlay, networking, transform, and optional-runtime layers are not yet at just-bash parity. See the comprehensive [remaining-work checklist](REMAINING_WORK.md) and [porting plan](PORTING.md).
+> **Status:** active practical rewrite work. Bash parsing/execution now uses a full AST interpreter, and near-term work prioritizes missing search/text commands such as `fgrep`, `sed`, `find`, `xargs`, `diff`, `expr`, `rg`, and `awk`. Gash uses pinned just-bash behavior as guidance for selected tasks while documenting intentional deferrals. See [remaining work](REMAINING_WORK.md) and [porting notes](PORTING.md).
 
 ## Install
 
@@ -84,11 +84,23 @@ Shell syntax is parsed as Bash into an AST by `mvdan.cc/sh/v3`. It includes:
 - redirections, heredocs, and process substitution supported by the interpreter
 - nested `bash -c`, `sh -c`, and virtual shell script execution
 
-Built-in commands:
+Built-in commands are summarized in the product-oriented
+[feature support manifest](docs/status/feature-support.json), which is seeded
+from the pinned just-bash command registry and checked by registry tests. Manifest
+statuses mean:
 
-`base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `cut`, `dirname`, `du`, `echo`, `env`, `expand`, `false`, `file`, `fold`, `grep`, `head`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rm`, `rmdir`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`, `tree`, `true`, `unexpand`, `uniq`, `wc`, and `whoami`.
+- `core`: implemented as dependable baseline shell/product surface;
+- `useful`: implemented as a practical in-process subset for common workflows;
+- `partial`: present, but intentionally limited enough to check help/tests/notes;
+- `optional`: only appropriate behind an explicit future capability or runtime policy;
+- `deferred`: tracked from upstream but not implemented yet;
+- `unsupported`: intentionally outside the current gash product surface.
 
-Command flags and edge cases are still being ported from the upstream command test suites. Overlay filesystems, transforms, network commands, data runtimes, and optional language runtimes remain to be implemented. A mountable `io/fs` implementation is available as `fs.Mountable`.
+Current registered built-ins include:
+
+`awk`, `alias`, `base64`, `basename`, `bash`, `cat`, `cd`, `chmod`, `clear`, `column`, `comm`, `cp`, `curl` (opt-in network only), `cut`, `date`, `diff`, `dirname`, `du`, `echo`, `egrep`, `env`, `expand`, `expr`, `false`, `fgrep`, `file`, `fold`, `grep`, `head`, `help`, `history`, `hostname`, `join`, `ln`, `ls`, `md5sum`, `mkdir`, `mv`, `nl`, `od`, `paste`, `printf`, `printenv`, `pwd`, `readlink`, `rev`, `rg`, `rm`, `rmdir`, `sed`, `seq`, `sha1sum`, `sha256sum`, `sh`, `sleep`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `time`, `timeout`, `touch`, `tr`, `tree`, `true`, `unalias`, `unexpand`, `uniq`, `wc`, `which`, and `whoami`.
+
+Command flags and edge cases are still being ported from the upstream command test suites for selected tasks. Overlay filesystems, transforms, data runtimes, and optional language runtimes are intentional deferrals unless explicitly enabled by a future task. `curl`/network support is opt-in: library users must pass `Options.Network`, and the CLI must pass `--network-allow scheme://host[:port][/path]`; allowed redirects are rechecked and private/loopback/link-local DNS targets are blocked by default. A mountable `io/fs` implementation is available as `fs.Mountable`.
 
 ## Filesystems
 
@@ -105,7 +117,7 @@ Writable implementations opt into small capability interfaces from `github.com/r
 
 Virtual absolute shell paths are translated to valid root-relative `io/fs` paths only at the filesystem boundary.
 
-The CLI's `--root DIR` option uses `os.DirFS` and is intended for trusted local use. It is read-only through gash, but it is not a secure containment boundary because symlinks in `DIR` may resolve outside that directory. A symlink-safe rooted host filesystem remains future work.
+The CLI's `--root DIR` option exposes a host directory as `/` through `fs.Rooted`. `fs.Rooted` resolves symlinks under the configured root and rejects lexical traversal or symlink escapes outside that directory. It implements write capabilities for gash commands, so scripts can mutate files inside `DIR`; use a read-only `Options.FS` implementation when mutation must be disallowed.
 
 ## Limits and security
 

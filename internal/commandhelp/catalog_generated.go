@@ -3,6 +3,23 @@
 package commandhelp
 
 var catalog = map[string]Info{
+	"awk": {
+		Name:    "awk",
+		Summary: "pattern scanning and text processing language",
+		Usage:   "awk [OPTION]... 'program' [FILE]...",
+		Description: []string{
+			"Runs an in-process AWK interpreter over stdin or virtual filesystem files. Supports BEGIN/END, pattern-action rules, fields, variables, associative arrays, user functions, print/printf, getline-style record reads, next/nextfile, and common string/math built-ins.",
+		},
+		Options: []string{
+			"-F SEP       use SEP as the input field separator",
+			"-v VAR=VAL   assign VAR before program execution",
+			"-f FILE      read the AWK program from FILE in the virtual filesystem",
+			"    --help   display this help and exit",
+		},
+		Notes: []string{
+			"Advanced awk features such as pipes/co-processes, system(), close(), fflush(), extension loading, locale-specific formatting, and full replacement back-reference semantics are intentionally deferred to keep execution inside gash capabilities.",
+		},
+	},
 	"base64": {
 		Name:    "base64",
 		Summary: "base64 encode/decode data and print to standard output",
@@ -114,6 +131,33 @@ var catalog = map[string]Info{
 			"    --help       display this help and exit",
 		},
 	},
+	"date": {
+		Name:    "date",
+		Summary: "print or set the system date and time",
+		Usage:   "date [OPTION]... [+FORMAT]",
+		Options: []string{
+			"-u, --utc        print or parse dates in UTC",
+			"-d, --date=TEXT  display time described by TEXT instead of now",
+		},
+		Notes: []string{
+			"Gash supports common GNU-style strftime directives and deterministic clock hooks; setting the system clock is intentionally unsupported.",
+		},
+	},
+	"diff": {
+		Name:    "diff",
+		Summary: "compare files line by line",
+		Usage:   "diff [OPTION]... FILE1 FILE2",
+		Options: []string{
+			"-u, --unified     output unified diff format (default)",
+			"-q, --brief       report only whether files differ",
+			"-s, --report-identical-files  report when files are the same",
+			"-i, --ignore-case  ignore case differences",
+			"    --help        display this help and exit",
+		},
+		Notes: []string{
+			"Uses gash's Go unified-diff formatter; large-file hunk grouping may differ from upstream jsdiff output.",
+		},
+	},
 	"du": {
 		Name:    "du",
 		Summary: "estimate file space usage",
@@ -137,6 +181,20 @@ var catalog = map[string]Info{
 			"    --help                display this help and exit",
 		},
 	},
+	"expr": {
+		Name:    "expr",
+		Summary: "evaluate expressions",
+		Usage:   "expr EXPRESSION",
+		Description: []string{
+			"Supports just-bash-compatible arithmetic, comparison, boolean, string, and regular expression operators.",
+		},
+		Options: []string{
+			"    --help       display this help and exit",
+		},
+		Notes: []string{
+			"Regular expressions use Go's linear-time regexp engine, so syntax and unsupported constructs may differ from upstream RE2JS diagnostics.",
+		},
+	},
 	"expand": {
 		Name:    "expand",
 		Summary: "convert tabs to spaces",
@@ -156,6 +214,68 @@ var catalog = map[string]Info{
 			"-i, --mime           output MIME type strings",
 			"-L, --dereference    follow symlinks",
 			"    --help           display this help and exit",
+		},
+	},
+	"find": {
+		Name:    "find",
+		Summary: "search for files in a directory hierarchy",
+		Usage:   "find [PATH...] [EXPRESSION]",
+		Options: []string{
+			"-name PATTERN    match file basename using a glob",
+			"-iname PATTERN   like -name, but case-insensitive",
+			"-path PATTERN    match the whole found path using a glob",
+			"-ipath PATTERN   like -path, but case-insensitive",
+			"-regex PATTERN   match the whole found path using a regular expression",
+			"-type [f|d]      match regular files or directories",
+			"-empty           match empty files or directories",
+			"-mtime N         match modification age in days (+N, -N supported)",
+			"-newer FILE      match files newer than FILE",
+			"-size N[c|k|M|G] match by size (default unit is 512-byte blocks)",
+			"-perm MODE       match permission bits (MODE, -MODE, /MODE)",
+			"-maxdepth N      descend at most N levels below each start point",
+			"-mindepth N      do not apply tests/actions above depth N",
+			"-depth           process directory contents before directory itself",
+			"-prune           do not descend into this directory",
+			"-not, !          negate the following expression",
+			"-a, -and         logical AND (default)",
+			"-o, -or          logical OR",
+			"-print           print the full file name (default action)",
+			"-print0          print the full file name followed by a null character",
+			"-printf FORMAT   print FORMAT directives: %f %h %p %P %s %d %m %M %t %T",
+			"-delete          delete found files/directories (implies -depth)",
+			"-exec CMD {} ;   unsupported in gash find; host PATH execution is disabled",
+			"    --help       display this help and exit",
+		},
+	},
+	"fgrep": {
+		Name:    "fgrep",
+		Summary: "print lines that match fixed strings",
+		Usage:   "fgrep [OPTION]... PATTERN [FILE]...",
+		Description: []string{
+			"Equivalent to grep -F: PATTERN is matched as literal text, not as a regular expression.",
+		},
+		Options: []string{
+			"-i, --ignore-case        ignore case distinctions",
+			"-v, --invert-match       select non-matching lines",
+			"-w, --word-regexp        match only whole words",
+			"-x, --line-regexp        match only whole lines",
+			"-c, --count              print only a count of matching lines",
+			"-l, --files-with-matches print only names of files with matches",
+			"-L, --files-without-match print names of files with no matches",
+			"-m NUM, --max-count=NUM  stop after NUM matches",
+			"-n, --line-number        print line number with output lines",
+			"-h, --no-filename        suppress the file name prefix on output",
+			"-o, --only-matching      show only nonempty parts of lines that match",
+			"-q, --quiet, --silent    suppress all normal output",
+			"-r, -R, --recursive      search directories recursively",
+			"-A NUM                   print NUM lines of trailing context",
+			"-B NUM                   print NUM lines of leading context",
+			"-C NUM                   print NUM lines of context",
+			"-e PATTERN               use PATTERN for matching",
+			"    --include=GLOB       search only files matching GLOB",
+			"    --exclude=GLOB       skip files matching GLOB",
+			"    --exclude-dir=DIR    skip directories matching DIR",
+			"    --help               display this help and exit",
 		},
 	},
 	"fold": {
@@ -199,6 +319,42 @@ var catalog = map[string]Info{
 			"    --help               display this help and exit",
 		},
 	},
+	"gunzip": {
+		Name:    "gunzip",
+		Summary: "expand gzip-compressed files",
+		Usage:   "gunzip [OPTION]... [FILE]...",
+		Options: []string{
+			"-c, --stdout      write on standard output",
+			"-t, --test        test compressed file integrity",
+			"    --help        display this help and exit",
+		},
+		Notes: []string{
+			"Alias-style gzip decompression implemented in-process; advanced gzip flags and source removal semantics are intentionally deferred.",
+		},
+	},
+	"gzip": {
+		Name:    "gzip",
+		Summary: "compress or expand files",
+		Usage:   "gzip [OPTION]... [FILE]...",
+		Options: []string{
+			"-c, --stdout      write on standard output, keep input files",
+			"-d, --decompress  decompress",
+			"-t, --test        test compressed file integrity",
+			"-1..-9            compression level",
+			"    --help        display this help and exit",
+		},
+		Notes: []string{
+			"Input and output stay inside gash streams and virtual files. Header-name preservation, input-file removal, and uncommon gzip flags are intentionally deferred.",
+		},
+	},
+	"history": {
+		Name:    "history",
+		Summary: "display the command history list",
+		Usage:   "history",
+		Notes: []string{
+			"Interactive history storage is intentionally deferred; non-interactive gash executions report an empty history.",
+		},
+	},
 	"head": {
 		Name:    "head",
 		Summary: "output the first part of files",
@@ -209,6 +365,29 @@ var catalog = map[string]Info{
 			"-q, --quiet        never print headers giving file names",
 			"-v, --verbose      always print headers giving file names",
 			"    --help         display this help and exit",
+		},
+	},
+	"help": {
+		Name:    "help",
+		Summary: "display information about gash built-in commands",
+		Usage:   "help [COMMAND...]",
+		Notes: []string{
+			"Standalone help is provided without inventing global --help semantics for commands that do not have registered help text.",
+		},
+	},
+
+	"html-to-markdown": {
+		Name:    "html-to-markdown",
+		Summary: "convert HTML documents to Markdown",
+		Usage:   "html-to-markdown [FILE]...",
+		Description: []string{
+			"Converts HTML from stdin or virtual filesystem files to Markdown using an in-process parser. Supports headings, paragraphs, emphasis, links, images, lists, blockquotes, and code blocks.",
+		},
+		Options: []string{
+			"    --help       display this help and exit",
+		},
+		Notes: []string{
+			"Script/style content is ignored and javascript:/data: links are not emitted. Advanced upstream conversion plugins and exact whitespace formatting are intentionally deferred.",
 		},
 	},
 	"join": {
@@ -322,6 +501,79 @@ var catalog = map[string]Info{
 		Summary: "reverse lines characterwise",
 		Usage:   "rev [file ...]",
 	},
+	"rg": {
+		Name:    "rg",
+		Summary: "recursively search for a pattern",
+		Usage:   "rg [OPTIONS] PATTERN [PATH ...]",
+		Description: []string{
+			"rg recursively searches directories for a regex pattern. Unlike grep, rg is recursive by default, skips hidden/binary files by default, and respects .gitignore-style filters.",
+		},
+		Options: []string{
+			"-e, --regexp PATTERN     search for PATTERN (can be used multiple times)",
+			"-f, --file FILE          read patterns from FILE, one per line",
+			"-i, --ignore-case        case-insensitive search",
+			"-s, --case-sensitive     case-sensitive search",
+			"-S, --smart-case         smart case (default)",
+			"-F, --fixed-strings      treat pattern as literal string",
+			"-w, --word-regexp        match whole words only",
+			"-x, --line-regexp        match whole lines only",
+			"-v, --invert-match       select non-matching lines",
+			"-c, --count              print count of matching lines per file",
+			"    --count-matches      print count of individual matches per file",
+			"-l, --files-with-matches print only file names with matches",
+			"    --files-without-match print file names without matches",
+			"    --files              list files that would be searched",
+			"-o, --only-matching      print only matching parts",
+			"-m, --max-count NUM      stop after NUM matches per file",
+			"-q, --quiet              suppress output, exit 0 on match",
+			"-n, --line-number        print line numbers",
+			"-N, --no-line-number     do not print line numbers",
+			"-I, --no-filename        suppress file name prefixes",
+			"-H, --with-filename      always print file name prefixes",
+			"-0, --null               use NUL as filename separator",
+			"-b, --byte-offset        show byte offset of each match",
+			"    --column             show column number of first match",
+			"    --vimgrep            show vimgrep-style line/column output",
+			"    --json               show JSON Lines output",
+			"-A NUM, -B NUM, -C NUM   print context around matches",
+			"-g, --glob GLOB          include/exclude files matching GLOB (!GLOB excludes)",
+			"    --iglob GLOB         case-insensitive glob",
+			"-t, --type TYPE          only search files of TYPE",
+			"-T, --type-not TYPE      exclude files of TYPE",
+			"    --type-add SPEC      add a type definition",
+			"    --type-clear TYPE    clear a type definition",
+			"-L, --follow             follow symbolic links",
+			"-u, --unrestricted       reduce filtering (-u ignore, -uu hidden, -uuu binary)",
+			"-a, --text               search binary files as text",
+			"    --hidden             search hidden files and directories",
+			"    --no-ignore          don't respect ignore files",
+			"    --ignore-file FILE   add a custom ignore file",
+			"-d, --max-depth NUM      descend at most NUM directories",
+			"    --max-filesize SIZE  skip files larger than SIZE (K/M/G supported)",
+			"    --stats              print basic search statistics",
+			"    --help               display this help and exit",
+		},
+		Notes: []string{
+			"Uses Go's regexp engine; PCRE2, gzip search, multiline matching, and external preprocessors are intentionally deferred.",
+		},
+	},
+	"sed": {
+		Name:    "sed",
+		Summary: "stream editor for filtering and transforming text",
+		Usage:   "sed [OPTION]... {script} [input-file]...",
+		Options: []string{
+			"-n, --quiet, --silent  suppress automatic printing of pattern space",
+			"-e script              add the script to commands to be executed",
+			"-f script-file         read script from file",
+			"-i, --in-place         edit files in place",
+			"-E, -r, --regexp-extended  use extended regular expressions",
+			"    --help             display this help and exit",
+		},
+		Description: []string{
+			"Commands: s/regexp/replacement/[flags], d, p, a\\ text, i\\ text, c\\ text, h, H, g, G, x, n, N, y/source/dest/, =, l, b, t, T, :label, q, Q.",
+			"Addresses: N, $, /regexp/, N,M, first~step, and /regexp/,+N ranges.",
+		},
+	},
 	"sleep": {
 		Name:    "sleep",
 		Summary: "delay for a specified amount of time",
@@ -365,6 +617,27 @@ var catalog = map[string]Info{
 			"--additional-suffix=SUFFIX  Append SUFFIX to file names",
 		},
 	},
+	"sqlite3": {
+		Name:    "sqlite3",
+		Summary: "SQLite database CLI",
+		Usage:   "sqlite3 [OPTIONS] DATABASE [SQL]",
+		Options: []string{
+			"-list, -csv, -json, -line, -column, -table, -markdown, -tabs, -box, -quote, -html, -ascii",
+			"-header, -noheader       show or hide column headers",
+			"-separator SEP           field separator for list mode",
+			"-newline SEP             row separator for list/tabs/quote modes",
+			"-nullvalue TEXT          text for NULL values",
+			"-readonly                execute without writing database changes back",
+			"-bail                    stop on the first SQL error",
+			"-echo                    print SQL before execution",
+			"-cmd SQL                 run SQL before the main SQL/stdin script",
+			"-version                 show SQLite version",
+			"    --help, -help        display this help and exit",
+		},
+		Notes: []string{
+			"Runs modernc.org/sqlite in-process without invoking host sqlite3. Database images are read from and written back to the gash virtual filesystem; extension loading, ATTACH, VACUUM INTO, and sqlite dot-commands are disabled. Gash uses Go context cancellation and SQLite limits instead of just-bash's sql.js worker protocol.",
+		},
+	},
 	"stat": {
 		Name:    "stat",
 		Summary: "display file or file system status",
@@ -398,6 +671,24 @@ var catalog = map[string]Info{
 			"    --help         display this help and exit",
 		},
 	},
+	"tar": {
+		Name:    "tar",
+		Summary: "create, list, and extract tar archives",
+		Usage:   "tar -cf ARCHIVE FILE...\ntar -tf ARCHIVE\ntar -xf ARCHIVE",
+		Options: []string{
+			"-c, -t, -x       create, list, or extract an archive",
+			"-f FILE          read/write archive FILE (- for stdin/stdout)",
+			"-z               filter archive through gzip",
+			"-C DIR           change virtual directory before operation",
+			"-v               list processed files on stderr",
+			"-O, --to-stdout  extract regular files to stdout",
+			"--strip-components=N strip leading path components while extracting",
+			"    --help       display this help and exit",
+		},
+		Notes: []string{
+			"Runs entirely against gash's virtual filesystem. Extraction rejects absolute/traversal paths, unsafe symlink and hardlink escapes, unsupported entry types/codecs, and oversized archives. Advanced GNU tar flags and non-gzip codecs are intentionally deferred.",
+		},
+	},
 	"tee": {
 		Name:    "tee",
 		Summary: "read from stdin and write to stdout and files",
@@ -416,6 +707,22 @@ var catalog = map[string]Info{
 			"-d, --delete           delete characters in SET1",
 			"-s, --squeeze-repeats  squeeze repeated characters",
 			"    --help             display this help and exit",
+		},
+	},
+	"time": {
+		Name:    "time",
+		Summary: "run a command and report elapsed time",
+		Usage:   "time COMMAND [ARG]...",
+		Notes: []string{
+			"Commands execute through the safe gash command path; CPU accounting is reported as zero rather than host process usage.",
+		},
+	},
+	"timeout": {
+		Name:    "timeout",
+		Summary: "run a command with a time limit",
+		Usage:   "timeout DURATION COMMAND [ARG]...",
+		Options: []string{
+			"DURATION accepts seconds by default, or s, m, h, d suffixes.",
 		},
 	},
 	"tree": {
@@ -452,6 +759,14 @@ var catalog = map[string]Info{
 			"    --help         display this help and exit",
 		},
 	},
+	"which": {
+		Name:    "which",
+		Summary: "locate a gash command",
+		Usage:   "which COMMAND...",
+		Notes: []string{
+			"Only gash built-ins and shell entry points are reported; host PATH executables are never resolved.",
+		},
+	},
 	"wc": {
 		Name:    "wc",
 		Summary: "print newline, word, and byte counts for each file",
@@ -462,6 +777,35 @@ var catalog = map[string]Info{
 			"-l, --lines      print the newline counts",
 			"-w, --words      print the word counts",
 			"    --help       display this help and exit",
+		},
+	},
+
+	"yq": {
+		Name:    "yq",
+		Summary: "process YAML with jq-style filters",
+		Usage:   "yq [OPTIONS] [FILTER] [FILE]...",
+		Description: []string{
+			"Parses YAML documents in-process, normalizes them to JSON-like values, applies gojq filters, and writes YAML by default or JSON with -o=json.",
+		},
+		Options: []string{
+			"-o=json, -j           output JSON instead of YAML",
+			"-r, --raw-output      print string results without quoting",
+			"-y, -P                output YAML (default)",
+			"    --help            display this help and exit",
+		},
+		Notes: []string{
+			"YAML anchors are resolved by gopkg.in/yaml.v3 without executing tags or constructing host objects. Round-trip comments/styles, update-in-place, XML/TOML formats, and full yq CLI parity are intentionally deferred.",
+		},
+	},
+	"zcat": {
+		Name:    "zcat",
+		Summary: "decompress gzip files to standard output",
+		Usage:   "zcat [FILE]...",
+		Options: []string{
+			"    --help        display this help and exit",
+		},
+		Notes: []string{
+			"Equivalent to gunzip -c for gzip streams inside gash.",
 		},
 	},
 }

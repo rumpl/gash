@@ -1,7 +1,6 @@
 package fs
 
 import (
-	"errors"
 	iofs "io/fs"
 	"path"
 	"time"
@@ -116,7 +115,7 @@ func (m *Mountable) Link(oldName, newName string) error {
 	oldFS, oldRelative, oldMount := m.route(oldName)
 	_, newRelative, newMount := m.route(newName)
 	if oldMount != newMount {
-		return errors.New("cross-device link")
+		return ErrCrossDevice
 	}
 	f, ok := oldFS.(LinkFS)
 	if !ok {

@@ -9,7 +9,12 @@ import (
 	gfs "github.com/rumpl/gash/pkg/fs"
 )
 
-func commandEcho(_ context.Context, args []string, c *CommandContext) int {
+func commandEcho(ctx context.Context, args []string, c *CommandContext) int {
+	select {
+	case <-ctx.Done():
+		return 124
+	default:
+	}
 	newline := true
 	if len(args) > 0 && args[0] == "-n" {
 		newline = false
@@ -22,7 +27,12 @@ func commandEcho(_ context.Context, args []string, c *CommandContext) int {
 	return 0
 }
 
-func commandPrintf(_ context.Context, args []string, c *CommandContext) int {
+func commandPrintf(ctx context.Context, args []string, c *CommandContext) int {
+	select {
+	case <-ctx.Done():
+		return 124
+	default:
+	}
 	if len(args) == 0 {
 		return 0
 	}

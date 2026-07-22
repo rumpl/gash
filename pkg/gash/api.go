@@ -5,10 +5,12 @@ import (
 	"path"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/rumpl/gash/internal/command"
 	"github.com/rumpl/gash/internal/commands"
 	gfs "github.com/rumpl/gash/pkg/fs"
+	"github.com/rumpl/gash/pkg/network"
 )
 
 type Result struct {
@@ -25,12 +27,15 @@ type Options struct {
 	Limits       Limits
 	LimitProfile LimitProfile
 	Commands     []Command
+	Network      *network.Policy
+	Now          func() time.Time
 }
 type ExecOptions struct {
 	Env        map[string]string
 	Cwd, Stdin string
 	ReplaceEnv bool
 	Args       []string
+	ScriptName string
 }
 type (
 	CommandFunc    = command.Func
@@ -44,6 +49,7 @@ type Bash struct {
 	cwd      string
 	commands map[string]Command
 	limits   Limits
+	now      func() time.Time
 	mu       sync.Mutex
 }
 
@@ -70,12 +76,18 @@ func New(options Options) (*Bash, error) {
 			return nil, err
 		}
 	}
-	env := map[string]string{"HOME": "/home/user", "PATH": "/usr/bin:/bin", "IFS": " \t\n", "OSTYPE": "linux-gnu", "MACHTYPE": "x86_64-pc-linux-gnu", "HOSTTYPE": "x86_64", "HOSTNAME": "localhost", "USER": "user", "UID": "1000", "EUID": "1000", "GID": "1000", "PWD": cwd, "OLDPWD": cwd}
+	env := map[string]string{}
+	env["PWD"] = cwd
+	env["OLDPWD"] = cwd
 	for k, v := range options.Env {
 		env[k] = v
 	}
-	b := &Bash{FS: filesystem, env: env, cwd: cwd, commands: map[string]Command{}, limits: limits}
-	for _, c := range commands.Builtins() {
+	enforcePublicInternalEnv(env)
+	if options.Now == nil {
+		options.Now = time.Now
+	}
+	b := &Bash{FS: filesystem, env: env, cwd: cwd, commands: map[string]Command{}, limits: limits, now: options.Now}
+	for _, c := range commands.BuiltinsWithNetwork(options.Network) {
 		b.RegisterCommand(c)
 	}
 	for _, c := range options.Commands {

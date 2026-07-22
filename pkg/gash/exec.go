@@ -16,25 +16,28 @@ import (
 func (b *Bash) Exec(parent context.Context, script string, options ExecOptions) Result {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	env := cloneMap(b.env)
+	env := executionEnv(b.env)
 	if options.ReplaceEnv {
-		env = map[string]string{}
+		env = executionEnv(nil)
 	}
 	for k, v := range options.Env {
 		env[k] = v
 	}
+	enforceInternalEnv(env)
 	cwd := b.cwd
 	if options.Cwd != "" {
 		cwd = options.Cwd
 	}
 	env["PWD"] = cwd
-	ctx, cancel := context.WithTimeout(parent, b.limits.MaxExecutionTime)
-	defer cancel()
-	budget := &outputBudget{maximum: int64(b.limits.MaxOutputBytes)}
+	ctx, cancelTimeout := context.WithTimeout(parent, b.limits.MaxExecutionTime)
+	defer cancelTimeout()
+	ctx, cancelOutput := context.WithCancel(ctx)
+	defer cancelOutput()
+	budget := &outputBudget{maximum: int64(b.limits.MaxOutputBytes), cancel: cancelOutput}
 	out := &boundedBuffer{budget: budget}
 	errout := &boundedBuffer{budget: budget}
 	scope := &executionScope{limits: b.limits}
-	code, finalEnv := b.execute(ctx, script, options.Stdin, cwd, env, options.Args, out, errout, 0, scope, false)
+	code, finalEnv := b.execute(ctx, script, options.Stdin, cwd, env, options.Args, options.ScriptName, out, errout, 0, scope, false)
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 		fmt.Fprintln(errout, "bash: execution timed out")
 		code = 124
@@ -46,7 +49,7 @@ func (b *Bash) Exec(parent context.Context, script string, options ExecOptions) 
 	return Result{Stdout: out.String(), Stderr: errout.String(), ExitCode: code, Env: finalEnv}
 }
 
-func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[string]string, args []string, stdout, stderr io.Writer, depth int, scope *executionScope, stdinAccounted bool) (int, map[string]string) {
+func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[string]string, args []string, scriptName string, stdout, stderr io.Writer, depth int, scope *executionScope, stdinAccounted bool) (int, map[string]string) {
 	if depth > b.limits.MaxExecDepth {
 		fmt.Fprintf(stderr, "bash: maximum nested execution depth (%d) exceeded\n", b.limits.MaxExecDepth)
 		return 126, env
@@ -62,8 +65,13 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 		}
 	}
 	parser := syntax.NewParser(syntax.Variant(syntax.LangBash))
-	program, err := parser.Parse(strings.NewReader(script), "")
+	program, err := parser.Parse(strings.NewReader(script), scriptName)
 	if err != nil {
+		fmt.Fprintf(stderr, "bash: %v\n", err)
+		return 2, env
+	}
+	virtualizeHostParameters(program)
+	if err := rejectHostBackedSyntax(program); err != nil {
 		fmt.Fprintf(stderr, "bash: %v\n", err)
 		return 2, env
 	}
@@ -71,7 +79,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	for k, v := range env {
 		pairs = append(pairs, k+"="+v)
 	}
-	runner, err := interp.New(interp.Env(expand.ListEnviron(pairs...)), interp.Params(args...), interp.StdIO(strings.NewReader(stdin), stdout, stderr), interp.OpenHandler(b.openHandler), interp.ReadDirHandler2(b.readDirHandler), interp.StatHandler(b.statHandler), interp.CallHandler(func(callCtx context.Context, argv []string) ([]string, error) {
+	runner, err := interp.New(interp.Env(expand.ListEnviron(pairs...)), interp.Params(args...), interp.Interactive(true), interp.StdIO(strings.NewReader(stdin), stdout, stderr), interp.OpenHandler(b.openHandler), interp.ReadDirHandler2(b.readDirHandler), interp.StatHandler(b.statHandler), interp.CallHandler(func(callCtx context.Context, argv []string) ([]string, error) {
 		if err := scope.chargeCommand(); err != nil {
 			fmt.Fprintf(interp.HandlerCtx(callCtx).Stderr, "bash: %v\n", err)
 			return argv, interp.NewExitStatus(126)
@@ -117,24 +125,27 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 	name := strings.TrimPrefix(strings.TrimPrefix(args[0], "/bin/"), "/usr/bin/")
 	env := map[string]string{}
 	h.Env.Each(func(k string, v expand.Variable) bool {
-		if v.IsSet() {
+		if v.IsSet() && !isHiddenInternalEnv(k) {
 			env[k] = v.String()
 		}
 		return true
 	})
+	enforcePublicInternalEnv(env)
 	cwd := h.Dir
 	if name == "bash" || name == "sh" {
-		if depth >= 50 {
+		if depth >= b.limits.MaxCallDepth {
 			fmt.Fprintln(h.Stderr, "bash: maximum call depth exceeded")
 			return interp.NewExitStatus(126)
 		}
 		argv := args[1:]
 		var script string
 		var params []string
+		scriptName := ""
 		if len(argv) >= 2 && argv[0] == "-c" {
 			script = argv[1]
 			if len(argv) > 2 {
-				params = argv[2:]
+				scriptName = argv[2]
+				params = argv[3:]
 			}
 		} else if len(argv) > 0 {
 			data, e := gfs.ReadFile(b.FS, resolve(cwd, argv[0]))
@@ -143,13 +154,14 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 				return interp.NewExitStatus(1)
 			}
 			script = string(data)
+			scriptName = argv[0]
 			params = argv[1:]
 		} else {
 			data, _ := io.ReadAll(h.Stdin)
 			script = string(data)
 		}
 		data, _ := io.ReadAll(h.Stdin)
-		code, _ := b.execute(ctx, script, string(data), cwd, env, params, h.Stdout, h.Stderr, depth+1, scope, true)
+		code, _ := b.execute(ctx, script, string(data), cwd, env, params, scriptName, h.Stdout, h.Stderr, depth+1, scope, true)
 		if code != 0 {
 			return interp.NewExitStatus(uint8(code))
 		}
@@ -160,7 +172,11 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 		fmt.Fprintf(h.Stderr, "bash: %s: command not found\n", name)
 		return interp.NewExitStatus(127)
 	}
-	code := cmd.Run(ctx, args[1:], &CommandContext{FS: b.FS, Cwd: &cwd, Env: env, Stdin: h.Stdin, Stdout: h.Stdout, Stderr: h.Stderr})
+	commandCtx := &CommandContext{FS: b.FS, Cwd: &cwd, Env: env, Stdin: h.Stdin, Stdout: h.Stdout, Stderr: h.Stderr, Commands: b.commandNames(), Now: b.now}
+	commandCtx.RunCommand = func(runCtx context.Context, argv []string, child *CommandContext) int {
+		return b.runCommandFromContext(runCtx, argv, child, depth, scope)
+	}
+	code := cmd.Run(ctx, args[1:], commandCtx)
 	if code != 0 {
 		return interp.NewExitStatus(uint8(code))
 	}
