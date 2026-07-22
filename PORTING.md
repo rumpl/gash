@@ -227,7 +227,9 @@ assumption:
 - [x] Support dynamic, capability-safe `RANDOM` reads in the Bash range
       `0..32767` without exporting the special variable.
 - [ ] Support Bash-compatible `RANDOM` assignment/seeding semantics.
-- [ ] Implement virtual `umask`, `PIPESTATUS`, and Bash printf time formatting.
+- [x] Implement virtual `umask` for file and directory creation, with isolated
+      subshell and nested-shell state; reject concurrent pipeline mutations.
+- [ ] Implement `PIPESTATUS` and Bash printf time formatting.
 - [ ] Complete function/alias-aware `command` and `type` discovery.
 - [ ] Complete background inheritance for shell functions, positional
       parameters, and non-default shell options.

@@ -54,6 +54,18 @@ func TestUmaskIsScopedInSubshellsAndChildShells(t *testing.T) {
 	}
 }
 
+func TestUmaskMutationInPipelineIsRejectedWithoutRacing(t *testing.T) {
+	shell, err := New(Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result := shell.Exec(context.Background(), `printf data | { umask 077; cat; }`, ExecOptions{})
+	if result.ExitCode != 2 || result.Stdout != "" || result.Stderr != "bash: changing umask inside a pipeline is not supported by the isolated interpreter\n" {
+		t.Fatalf("result = %#v", result)
+	}
+}
+
 func TestUmaskSymbolicMode(t *testing.T) {
 	shell, err := New(Options{})
 	if err != nil {

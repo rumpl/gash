@@ -86,6 +86,10 @@ func rejectHostBackedSyntax(program syntax.Node) error {
 			err = fmt.Errorf("case fall-through operator %q is not supported by the isolated interpreter", item.Op.String())
 			return false
 		}
+		if binary, ok := node.(*syntax.BinaryCmd); ok && (binary.Op == syntax.Pipe || binary.Op == syntax.PipeAll) && nodeMutatesUmask(binary) {
+			err = fmt.Errorf("changing umask inside a pipeline is not supported by the isolated interpreter")
+			return false
+		}
 		if parameter, ok := node.(*syntax.ParamExp); ok && parameter.Param != nil {
 			switch parameter.Param.Value {
 			case "PIPESTATUS":

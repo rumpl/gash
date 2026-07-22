@@ -129,8 +129,9 @@ func normalizeSubshellSemantics(program syntax.Node) {
 	})
 
 	// mvdan's explicit subshell and command-substitution paths execute statement
-	// lists directly rather than calling Runner.Run. Bracket their process-local
-	// umask state and add an implicit final exit so EXIT callbacks still run.
+	// lists directly rather than calling Runner.Run. Bracket process-local umask
+	// mutations and add an implicit final exit so EXIT callbacks still run. Do
+	// not touch umask state for ordinary pipeline subshells: those run concurrently.
 	syntax.Walk(program, func(node syntax.Node) bool {
 		var statements *[]*syntax.Stmt
 		switch scope := node.(type) {
@@ -139,12 +140,45 @@ func normalizeSubshellSemantics(program syntax.Node) {
 		case *syntax.CmdSubst:
 			statements = &scope.Stmts
 		}
-		if statements != nil {
+		if statements == nil {
+			return true
+		}
+		if statementsMutateUmask(*statements) {
 			*statements = append([]*syntax.Stmt{literalStatement(internalUmaskPushCommand)}, *statements...)
 			*statements = append(*statements, umaskScopeRestoreStatements()...)
+		} else {
+			*statements = append(*statements, literalStatement("exit"))
 		}
 		return true
 	})
+}
+
+func statementsMutateUmask(statements []*syntax.Stmt) bool {
+	for _, statement := range statements {
+		if nodeMutatesUmask(statement) {
+			return true
+		}
+	}
+	return false
+}
+
+func nodeMutatesUmask(root syntax.Node) bool {
+	mutates := false
+	syntax.Walk(root, func(node syntax.Node) bool {
+		call, ok := node.(*syntax.CallExpr)
+		if !ok || len(call.Args) < 2 || call.Args[0].Lit() != "/bin/umask" && call.Args[0].Lit() != "umask" {
+			return true
+		}
+		for _, argument := range call.Args[1:] {
+			value := argument.Lit()
+			if value != "-S" && value != "-p" && value != "--" {
+				mutates = true
+				return false
+			}
+		}
+		return true
+	})
+	return mutates
 }
 
 func umaskScopeRestoreStatements() []*syntax.Stmt {
