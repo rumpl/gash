@@ -2,7 +2,7 @@
 
 A Go rewrite of [vercel-labs/just-bash](https://github.com/vercel-labs/just-bash): a Bash interpreter with a capability-based virtual filesystem. It is intended for agents and applications that need useful shell workflows without exposing the host filesystem or launching host processes.
 
-> **Status:** active practical rewrite work. Bash parsing/execution uses a full AST interpreter, and common search/text workflows now include in-process `awk`, `sed`, `find`, `xargs`, `diff`, `expr`, and `rg` implementations with documented parity gaps. Gash uses pinned just-bash behavior as guidance while documenting intentional deferrals. See [remaining work](REMAINING_WORK.md) and [porting notes](PORTING.md).
+> **Status:** active practical rewrite work. Bash parsing/execution uses a full AST interpreter, and common search/text workflows now include in-process `awk`, `sed`, `find`, `xargs`, `diff`, `expr`, and `rg` implementations with documented parity gaps. Gash uses pinned just-bash behavior as guidance while documenting intentional deferrals. See the authoritative [porting status and backlog](PORTING.md).
 
 ## Install
 
