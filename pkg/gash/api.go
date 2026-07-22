@@ -66,6 +66,7 @@ func New(options Options) (*Bash, error) {
 	if cwd == "" {
 		cwd = "/home/user"
 	}
+	cwd = canonicalDirectory(cwd)
 	for _, dir := range []string{"/home/user", "/tmp", "/bin", "/usr/bin"} {
 		_ = gfs.MkdirAll(filesystem, dir, 0o755)
 	}
@@ -94,6 +95,10 @@ func New(options Options) (*Bash, error) {
 		b.RegisterCommand(c)
 	}
 	return b, nil
+}
+
+func canonicalDirectory(directory string) string {
+	return path.Clean("/" + strings.TrimPrefix(directory, "/"))
 }
 
 func resolve(base, name string) string {

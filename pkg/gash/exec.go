@@ -26,7 +26,7 @@ func (b *Bash) Exec(parent context.Context, script string, options ExecOptions) 
 	enforceInternalEnv(env)
 	cwd := b.cwd
 	if options.Cwd != "" {
-		cwd = options.Cwd
+		cwd = canonicalDirectory(options.Cwd)
 	}
 	env["PWD"] = cwd
 	ctx, cancelTimeout := context.WithTimeout(parent, b.limits.MaxExecutionTime)
@@ -97,6 +97,9 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 			if err := scope.chargeCommand(); err != nil {
 				fmt.Fprintf(interp.HandlerCtx(callCtx).Stderr, "bash: %v\n", err)
 				return argv, interp.NewExitStatus(126)
+			}
+			if replacement, handled := b.virtualCommandDiscovery(callCtx, argv); handled {
+				return replacement, nil
 			}
 			if len(argv) > 0 && argv[0] == "cd" {
 				b.reportCDDiagnostic(callCtx, argv)

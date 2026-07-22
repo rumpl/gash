@@ -65,6 +65,9 @@ substantial work.
       between top-level `Exec` calls.
 - [x] Persist the configured virtual filesystem between calls.
 - [x] Return 127 for unknown commands; never fall back to `os/exec`.
+- [x] Resolve `command -v` from shell built-ins and the capability-scoped gash
+      registry rather than consulting the host PATH.
+- [x] Canonicalize configured and per-execution working directories inside `/`.
 - [x] Reject process substitution because the interpreter implementation would
       otherwise require a host-backed mechanism.
 - [x] Replace `$$` and `PPID` with virtual values.

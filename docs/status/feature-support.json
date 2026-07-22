@@ -403,7 +403,8 @@
             "sources": [
                 "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Supports directory operands, metadata-derived long modes, and conventional . and .. entries with -a; unsupported options are rejected."
         },
         {
             "name": "md5sum",
@@ -457,7 +458,8 @@
             "sources": [
                 "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Supports -A address radices and c, o1, and x1 output types; unsupported options and types are rejected."
         },
         {
             "name": "paste",

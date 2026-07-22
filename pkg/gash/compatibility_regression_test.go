@@ -18,6 +18,21 @@ func TestFailedRedirectionDoesNotAbortCommandList(t *testing.T) {
 	}
 }
 
+func TestWorkingDirectoryIsCanonicalizedInsideVirtualRoot(t *testing.T) {
+	shell, err := New(Options{Cwd: "/../../../../"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := shell.Exec(context.Background(), `pwd; printf '%s\n' "$PWD"`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "/\n/\n" || result.Stderr != "" {
+		t.Fatalf("configured cwd result=%+v", result)
+	}
+	result = shell.Exec(context.Background(), `pwd`, ExecOptions{Cwd: "/work/../../../"})
+	if result.ExitCode != 0 || result.Stdout != "/\n" || result.Stderr != "" {
+		t.Fatalf("execution cwd result=%+v", result)
+	}
+}
+
 func TestCDFailureReportsDiagnosticAndContinues(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(context.Background(), `cd /does-not-exist; echo status=$?`, ExecOptions{})

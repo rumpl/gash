@@ -30,60 +30,135 @@ var lsHelp = commandhelp.Info{
 	},
 }
 
+type lsItem struct {
+	name            string
+	entry           iofs.DirEntry
+	explicitOperand bool
+}
+
 func commandLS(_ context.Context, args []string, c *CommandContext) int {
 	if commandhelp.Requested(args) {
 		return commandhelp.Show(c, lsHelp)
 	}
 
-	all, long := false, false
+	all, almostAll, directory, long := false, false, false, false
 	var names []string
-	for _, a := range args {
-		if strings.HasPrefix(a, "--") {
-			switch a {
+	options := true
+	for _, argument := range args {
+		if options && argument == "--" {
+			options = false
+			continue
+		}
+		if options && strings.HasPrefix(argument, "--") {
+			switch argument {
 			case "--all":
 				all = true
+			case "--almost-all":
+				almostAll = true
+			case "--directory":
+				directory = true
 			default:
-				return commandhelp.UnknownOption(c, "ls", a)
+				return commandhelp.UnknownOption(c, "ls", argument)
 			}
-		} else if strings.HasPrefix(a, "-") {
-			all = all || strings.Contains(a, "a")
-			long = long || strings.Contains(a, "l")
-		} else {
-			names = append(names, a)
+			continue
 		}
+		if options && strings.HasPrefix(argument, "-") && argument != "-" {
+			for _, option := range strings.TrimPrefix(argument, "-") {
+				switch option {
+				case 'a':
+					all = true
+				case 'A':
+					almostAll = true
+				case 'd':
+					directory = true
+				case 'l':
+					long = true
+				case '1':
+					// Gash already emits one item per line.
+				default:
+					return commandhelp.UnknownOption(c, "ls", "-"+string(option))
+				}
+			}
+			continue
+		}
+		names = append(names, argument)
 	}
 	if len(names) == 0 {
 		names = []string{"."}
 	}
+
 	code := 0
 	for _, name := range names {
-		entries, e := gfs.ReadDir(c.FS, abs(c, name))
-		if e != nil {
-			st, se := gfs.Stat(c.FS, abs(c, name))
-			if se != nil {
-				code = report(c, "ls: "+name, se)
-				continue
-			}
-			entries = []iofs.DirEntry{fileInfoEntry{st}}
+		items, err := lsItems(c, name, directory, all && !almostAll)
+		if err != nil {
+			code = report(c, "ls: "+name, err)
+			continue
 		}
-		for _, entry := range entries {
-			base := entry.Name()
-			if !all && strings.HasPrefix(base, ".") {
+		for _, item := range items {
+			if !item.explicitOperand && !all && !almostAll && strings.HasPrefix(item.name, ".") {
 				continue
 			}
 			if long {
-				info, _ := entry.Info()
-				kind := "-"
-				if entry.IsDir() {
-					kind = "d"
-				} else if entry.Type()&iofs.ModeSymlink != 0 {
-					kind = "l"
+				info, infoErr := item.entry.Info()
+				if infoErr != nil {
+					code = report(c, "ls: "+item.name, infoErr)
+					continue
 				}
-				fmt.Fprintf(c.Stdout, "%srwxr-xr-x %8d %s\n", kind, info.Size(), base)
-			} else {
-				fmt.Fprintln(c.Stdout, base)
+				fmt.Fprintf(c.Stdout, "%s %8d %s\n", lsMode(info), info.Size(), item.name)
+				continue
 			}
+			fmt.Fprintln(c.Stdout, item.name)
 		}
 	}
 	return code
+}
+
+func lsItems(c *CommandContext, name string, directory, includeDotEntries bool) ([]lsItem, error) {
+	full := abs(c, name)
+	if directory {
+		info, err := gfs.Lstat(c.FS, full)
+		if err != nil {
+			return nil, err
+		}
+		return []lsItem{{name: name, entry: fileInfoEntry{info}, explicitOperand: true}}, nil
+	}
+	entries, err := gfs.ReadDir(c.FS, full)
+	if err != nil {
+		info, statErr := gfs.Lstat(c.FS, full)
+		if statErr != nil {
+			return nil, statErr
+		}
+		return []lsItem{{name: name, entry: fileInfoEntry{info}, explicitOperand: true}}, nil
+	}
+	items := make([]lsItem, 0, len(entries)+2)
+	if includeDotEntries {
+		current, statErr := gfs.Stat(c.FS, full)
+		if statErr != nil {
+			return nil, statErr
+		}
+		parent, statErr := gfs.Stat(c.FS, abs(c, full+"/.."))
+		if statErr != nil {
+			return nil, statErr
+		}
+		items = append(items,
+			lsItem{name: ".", entry: fileInfoEntry{current}},
+			lsItem{name: "..", entry: fileInfoEntry{parent}},
+		)
+	}
+	for _, entry := range entries {
+		items = append(items, lsItem{name: entry.Name(), entry: entry})
+	}
+	return items, nil
+}
+
+func lsMode(info iofs.FileInfo) string {
+	kind := byte('-')
+	switch {
+	case info.IsDir():
+		kind = 'd'
+	case info.Mode()&iofs.ModeSymlink != 0:
+		kind = 'l'
+	}
+	permissions := info.Mode().Perm().String()
+	return string(kind) + permissions[1:]
 }
