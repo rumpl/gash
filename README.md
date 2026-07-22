@@ -138,6 +138,16 @@ Gash does not invoke `os/exec`, and its default filesystem does not touch disk. 
 
 The public libraries are `pkg/gash` and `pkg/fs`; implementation-only command contracts and built-ins live under `internal/`. See [ARCHITECTURE.md](ARCHITECTURE.md) for package responsibilities, dependency direction, and security boundaries.
 
+## Examples
+
+Runnable programs for in-memory, seeded, custom-command, host filesystem, overlay, mount, network-policy, and SQLite setups are available in [`examples/`](examples/).
+
+```sh
+go run ./examples/basic
+go run ./examples/host-readonly -- .
+go run ./examples/sqlite
+```
+
 ## Development
 
 ```sh
