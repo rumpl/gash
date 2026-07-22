@@ -1,0 +1,240 @@
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"flag"
+	"fmt"
+	iofs "io/fs"
+	"log"
+	"os/signal"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"time"
+
+	"github.com/docker/docker-agent/pkg/agent"
+	"github.com/docker/docker-agent/pkg/config/latest"
+	"github.com/docker/docker-agent/pkg/environment"
+	"github.com/docker/docker-agent/pkg/model/provider/openai"
+	"github.com/docker/docker-agent/pkg/runtime"
+	"github.com/docker/docker-agent/pkg/session"
+	"github.com/docker/docker-agent/pkg/team"
+	"github.com/docker/docker-agent/pkg/tools"
+	gashfs "github.com/rumpl/gash/pkg/fs"
+	"github.com/rumpl/gash/pkg/gash"
+	"github.com/rumpl/gash/pkg/network"
+)
+
+type options struct {
+	root         string
+	writable     bool
+	networkAllow string
+	model        string
+	prompt       string
+}
+
+type readOnlyFS struct {
+	filesystem iofs.FS
+}
+
+func (r readOnlyFS) Open(name string) (iofs.File, error) {
+	return r.filesystem.Open(name)
+}
+
+type shellArgs struct {
+	Cmd     string `json:"cmd" jsonschema:"Bash command to execute inside gash"`
+	Cwd     string `json:"cwd,omitempty" jsonschema:"Virtual working directory; defaults to /"`
+	Stdin   string `json:"stdin,omitempty" jsonschema:"Optional standard input for the command"`
+	Timeout int    `json:"timeout,omitempty" jsonschema:"Optional timeout in seconds"`
+}
+
+type shellOutput struct {
+	Stdout   string `json:"stdout"`
+	Stderr   string `json:"stderr"`
+	ExitCode int    `json:"exit_code"`
+}
+
+func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	configured := parseFlags()
+	if err := run(ctx, configured); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func parseFlags() options {
+	root := flag.String("root", ".", "host directory exposed as / inside gash")
+	writable := flag.Bool("writable", false, "allow shell commands to modify files under -root")
+	networkAllow := flag.String("network-allow", "", "comma-separated HTTP(S) origins allowed for curl")
+	model := flag.String("model", "gpt-4o", "OpenAI model used by docker-agent")
+	prompt := flag.String("prompt", "", "question or task for the agent; remaining arguments are also accepted")
+	flag.Parse()
+
+	question := strings.TrimSpace(*prompt)
+	if question == "" {
+		question = strings.TrimSpace(strings.Join(flag.Args(), " "))
+	}
+	if question == "" {
+		question = "Inspect the current directory with the shell tool and summarize what this project does."
+	}
+	return options{
+		root:         *root,
+		writable:     *writable,
+		networkAllow: *networkAllow,
+		model:        *model,
+		prompt:       question,
+	}
+}
+
+func run(ctx context.Context, configured options) error {
+	shell, root, err := newShell(configured)
+	if err != nil {
+		return err
+	}
+
+	llm, err := openai.NewClient(
+		ctx,
+		&latest.ModelConfig{
+			Provider: "openai",
+			Model:    configured.model,
+		},
+		environment.NewDefaultProvider(),
+	)
+	if err != nil {
+		return err
+	}
+
+	shellTool := tools.Tool{
+		Name:       "shell",
+		Category:   "shell",
+		Parameters: tools.MustSchemaFor[shellArgs](),
+		Description: "Execute Bash commands with gash. The host directory is mounted at / " +
+			"without host process execution. Files are read-only unless this program starts with -writable.",
+		Handler: shellHandler(shell),
+	}
+
+	filesystemMode := "read-only"
+	if configured.writable {
+		filesystemMode = "writable"
+	}
+	instructions := fmt.Sprintf(`You are a coding agent with a capability-scoped shell tool.
+Use the shell tool whenever filesystem inspection or command execution would help.
+The host directory %q is visible as / and is %s.
+Never claim a command succeeded without checking its exit_code and stderr.
+Host executables are unavailable. Network access is unavailable unless curl was explicitly enabled.`, root, filesystemMode)
+
+	worker := agent.New(
+		"root",
+		instructions,
+		agent.WithDescription("A coding agent using an isolated in-process gash shell."),
+		agent.WithModel(llm),
+		agent.WithTools(shellTool),
+	)
+	runtimeTeam := team.New(team.WithAgents(worker))
+	rt, err := runtime.New(ctx, runtimeTeam)
+	if err != nil {
+		return err
+	}
+
+	sess := session.New(
+		session.WithUserMessage(configured.prompt),
+		session.WithToolsApproved(true),
+	)
+	messages, err := rt.Run(ctx, sess)
+	if err != nil {
+		return err
+	}
+	if len(messages) == 0 {
+		return fmt.Errorf("docker-agent returned no messages")
+	}
+	fmt.Println(messages[len(messages)-1].Message.Content)
+	return nil
+}
+
+func newShell(configured options) (*gash.Bash, string, error) {
+	root, err := filepath.Abs(configured.root)
+	if err != nil {
+		return nil, "", fmt.Errorf("resolve root: %w", err)
+	}
+	rooted, err := gashfs.NewRooted(root)
+	if err != nil {
+		return nil, "", fmt.Errorf("open root: %w", err)
+	}
+
+	var filesystem iofs.FS = readOnlyFS{filesystem: rooted}
+	if configured.writable {
+		filesystem = rooted
+	}
+	gashOptions := gash.Options{
+		FS:           filesystem,
+		Cwd:          "/",
+		LimitProfile: gash.HardenedProfile,
+	}
+	if configured.networkAllow != "" {
+		policy, err := networkPolicy(configured.networkAllow)
+		if err != nil {
+			return nil, "", err
+		}
+		gashOptions.Network = &policy
+	}
+	shell, err := gash.New(gashOptions)
+	if err != nil {
+		return nil, "", err
+	}
+	return shell, root, nil
+}
+
+func networkPolicy(value string) (network.Policy, error) {
+	policy := network.NewPolicy()
+	for _, raw := range strings.Split(value, ",") {
+		raw = strings.TrimSpace(raw)
+		if raw == "" {
+			continue
+		}
+		rule := network.AllowOrigin(raw)
+		if rule.Scheme == "" || rule.Host == "" {
+			return network.Policy{}, fmt.Errorf("invalid network origin %q", raw)
+		}
+		policy.Rules = append(policy.Rules, rule)
+	}
+	if len(policy.Rules) == 0 {
+		return network.Policy{}, fmt.Errorf("network allowlist is empty")
+	}
+	return policy, nil
+}
+
+func shellHandler(shell *gash.Bash) tools.ToolHandler {
+	return func(ctx context.Context, toolCall tools.ToolCall, _ tools.Runtime) (*tools.ToolCallResult, error) {
+		var arguments shellArgs
+		if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &arguments); err != nil {
+			return tools.ResultError("invalid shell arguments: " + err.Error()), nil
+		}
+		if strings.TrimSpace(arguments.Cmd) == "" {
+			return tools.ResultError(`missing required "cmd" argument`), nil
+		}
+
+		commandCtx := ctx
+		cancel := func() {}
+		if arguments.Timeout > 0 {
+			commandCtx, cancel = context.WithTimeout(ctx, time.Duration(arguments.Timeout)*time.Second)
+		}
+		defer cancel()
+
+		result := shell.Exec(commandCtx, arguments.Cmd, gash.ExecOptions{
+			Cwd:   arguments.Cwd,
+			Stdin: arguments.Stdin,
+		})
+		encoded, err := json.Marshal(shellOutput{
+			Stdout:   result.Stdout,
+			Stderr:   result.Stderr,
+			ExitCode: result.ExitCode,
+		})
+		if err != nil {
+			return nil, err
+		}
+		return tools.ResultSuccess(string(encoded)), nil
+	}
+}

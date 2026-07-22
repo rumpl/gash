@@ -29,14 +29,14 @@ encoding, filesystem semantics, cancellation, and security behavior.
 
 Current command inventory:
 
-| Status | Count |
-| --- | ---: |
-| Core | 22 |
-| Useful | 35 |
-| Partial | 27 |
-| Optional | 5 |
-| Deferred | 0 |
-| Unsupported | 0 |
+| Status      | Count |
+| ----------- | ----: |
+| Core        |    22 |
+| Useful      |    35 |
+| Partial     |    27 |
+| Optional    |     5 |
+| Deferred    |     0 |
+| Unsupported |     0 |
 
 All ordinary command names in the pinned upstream registry now have a gash
 implementation or shell-native representation. The remaining command-name gaps
@@ -102,8 +102,9 @@ substantial work.
       environment overrides, JSON output, virtual cwd, rooted host access, and
       opt-in network origins.
 - [x] Provide runnable examples for memory, seeded state, custom commands,
-      read-only and writable host filesystems, overlays, persistent overlays,
-      mounts, network policy, SQLite, and security boundaries.
+      Docker Agent integration, read-only and writable host filesystems,
+      overlays, persistent overlays, mounts, network policy, SQLite, and
+      security boundaries.
 
 ## Command status
 

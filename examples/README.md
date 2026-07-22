@@ -13,6 +13,7 @@ go run ./examples/basic
 | [`basic`](basic) | Default bounded in-memory filesystem and a shell pipeline |
 | [`seeded`](seeded) | Initial files, environment variables, execution arguments, and hardened limits |
 | [`custom-command`](custom-command) | Registering a trusted Go command and using it in a pipeline |
+| [`docker-agent`](docker-agent) | A Docker Agent whose capability-scoped `shell` tool is gash |
 | [`host-readonly`](host-readonly) | Exposing a host directory read-only with `os.DirFS` |
 | [`host-rooted`](host-rooted) | Using the symlink-contained, writable `fs.Rooted` host filesystem |
 | [`overlay`](overlay) | Writable in-memory changes over a read-only lower filesystem |
@@ -22,7 +23,7 @@ go run ./examples/basic
 | [`security`](security) | Read-only filesystem, network allowlist, host-command denial, and hardened limits |
 | [`sqlite`](sqlite) | Creating and querying a SQLite database in the virtual filesystem |
 
-The network example performs a real HTTPS request. All other examples run locally without network access. The security example uses a deterministic mock HTTP transport after applying the real URL policy. Host filesystem access is explicit: gash uses an isolated in-memory filesystem unless an `io/fs.FS` is supplied.
+The network example performs a real HTTPS request. The Docker Agent example calls the configured model provider and may use only explicitly allowed network origins from its gash tool. All other examples run locally without network access. The security example uses a deterministic mock HTTP transport after applying the real URL policy. Host filesystem access is explicit: gash uses an isolated in-memory filesystem unless an `io/fs.FS` is supplied.
 
 ## Persistent overlay
 
