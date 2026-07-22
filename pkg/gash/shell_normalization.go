@@ -6,6 +6,38 @@ import (
 	"mvdan.cc/sh/v3/syntax"
 )
 
+const internalDeclarationPrintCommand = "__gash_declaration_print"
+
+func rewriteDeclarationPrinting(program syntax.Node) {
+	syntax.Walk(program, func(node syntax.Node) bool {
+		statement, ok := node.(*syntax.Stmt)
+		if !ok {
+			return true
+		}
+		declaration, ok := statement.Cmd.(*syntax.DeclClause)
+		if !ok || declaration.Variant == nil {
+			return true
+		}
+		variant := declaration.Variant.Value
+		if variant != "export" && variant != "declare" && variant != "readonly" {
+			return true
+		}
+		printRequested := false
+		if len(declaration.Args) == 1 {
+			argument := declaration.Args[0]
+			printRequested = argument.Name != nil && argument.Name.Value == "-p" || argument.Value != nil && argument.Value.Lit() == "-p"
+		}
+		if !printRequested {
+			return true
+		}
+		statement.Cmd = &syntax.CallExpr{Args: []*syntax.Word{
+			{Parts: []syntax.WordPart{&syntax.Lit{Value: internalDeclarationPrintCommand}}},
+			{Parts: []syntax.WordPart{&syntax.Lit{Value: variant}}},
+		}}
+		return true
+	})
+}
+
 func normalizeClobberRedirects(program syntax.Node) {
 	syntax.Walk(program, func(node syntax.Node) bool {
 		redirect, ok := node.(*syntax.Redirect)

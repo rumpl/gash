@@ -14,6 +14,8 @@ func TestSortCommonWorkflows(t *testing.T) {
 	assertCommand(t, commandSort, []string{"-n"}, "10\n2\n1\n", "1\n2\n10\n", nil)
 	assertCommand(t, commandSort, []string{"-nr"}, "3\n1\n2\n", "3\n2\n1\n", nil)
 	assertCommand(t, commandSort, []string{"-f", "-u"}, "b\nA\na\n", "A\nb\n", nil)
+	assertCommand(t, commandSort, []string{"-t:", "-k2,2n"}, "b:2\na:10\nc:1\n", "c:1\nb:2\na:10\n", nil)
+	assertCommand(t, commandSort, []string{"--field-separator=:", "--key=2,2n"}, "b:2\na:10\nc:1\n", "c:1\nb:2\na:10\n", nil)
 	assertCommand(t, commandSort, []string{"-o", "out.txt"}, "β\na\n", "", nil)
 
 	code, stdout, stderr, fsys := runTextCommandBytes(t, commandSort, []string{"-o", "out.txt"}, []byte("β\na\n"), nil)

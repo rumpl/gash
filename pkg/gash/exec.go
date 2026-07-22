@@ -83,6 +83,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	}
 	virtualizeHostParameters(program)
 	normalizeArithmeticBases(program)
+	rewriteDeclarationPrinting(program)
 	normalizeClobberRedirects(program)
 	normalizeSubshellSemantics(program)
 	serializeBackgroundStatements(program)
@@ -173,7 +174,7 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 	name := strings.TrimPrefix(strings.TrimPrefix(args[0], "/bin/"), "/usr/bin/")
 	env := map[string]string{}
 	h.Env.Each(func(k string, v expand.Variable) bool {
-		if v.IsSet() && !isHiddenInternalEnv(k) {
+		if v.IsSet() && v.Exported && !isHiddenInternalEnv(k) {
 			env[k] = v.String()
 		}
 		return true
@@ -225,6 +226,8 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 		code = b.runVirtualTrap(ctx, args[1:], commandCtx, scope)
 	case internalKillCommand:
 		code = b.runVirtualKill(ctx, args[1:], commandCtx, depth, scope)
+	case internalDeclarationPrintCommand:
+		code = runDeclarationPrint(args[1:], h)
 	default:
 		cmd, ok := b.commands[name]
 		if !ok {

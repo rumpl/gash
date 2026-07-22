@@ -630,7 +630,8 @@
             "sources": [
                 "gash",
                 "just-bash:pinned"
-            ]
+            ],
+            "notes": "Help lists only implemented options; common field separators and numeric key forms such as -t: -k2,2n are supported."
         },
         {
             "name": "split",

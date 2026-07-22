@@ -11,9 +11,15 @@ import (
 	gfs "github.com/rumpl/gash/pkg/fs"
 )
 
+type sortKey struct {
+	field   int
+	numeric bool
+}
+
 func commandSort(_ context.Context, args []string, c *CommandContext) int {
 	reverse, numeric, ignoreCase, unique := false, false, false, false
-	output := ""
+	output, separator := "", ""
+	var key *sortKey
 	var files []string
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
@@ -31,6 +37,35 @@ func commandSort(_ context.Context, args []string, c *CommandContext) int {
 			output = args[i]
 		case strings.HasPrefix(arg, "--output="):
 			output = strings.TrimPrefix(arg, "--output=")
+		case (arg == "-t" || arg == "--field-separator") && i+1 < len(args):
+			i++
+			separator = args[i]
+		case strings.HasPrefix(arg, "-t") && len(arg) > 2:
+			separator = strings.TrimPrefix(arg, "-t")
+		case strings.HasPrefix(arg, "--field-separator="):
+			separator = strings.TrimPrefix(arg, "--field-separator=")
+		case (arg == "-k" || arg == "--key") && i+1 < len(args):
+			i++
+			parsed, err := parseSortKey(args[i])
+			if err != nil {
+				fmt.Fprintf(c.Stderr, "sort: invalid key %q\n", args[i])
+				return 1
+			}
+			key = &parsed
+		case strings.HasPrefix(arg, "-k") && len(arg) > 2:
+			parsed, err := parseSortKey(strings.TrimPrefix(arg, "-k"))
+			if err != nil {
+				fmt.Fprintf(c.Stderr, "sort: invalid key %q\n", strings.TrimPrefix(arg, "-k"))
+				return 1
+			}
+			key = &parsed
+		case strings.HasPrefix(arg, "--key="):
+			parsed, err := parseSortKey(strings.TrimPrefix(arg, "--key="))
+			if err != nil {
+				fmt.Fprintf(c.Stderr, "sort: invalid key %q\n", strings.TrimPrefix(arg, "--key="))
+				return 1
+			}
+			key = &parsed
 		case strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") && arg != "-":
 			for _, option := range strings.TrimPrefix(arg, "-") {
 				switch option {
@@ -58,7 +93,7 @@ func commandSort(_ context.Context, args []string, c *CommandContext) int {
 	}
 	lines := strings.Split(strings.TrimSuffix(string(d), "\n"), "\n")
 	sort.SliceStable(lines, func(i, j int) bool {
-		cmp := compareSortLines(lines[i], lines[j], numeric, ignoreCase)
+		cmp := compareSortLinesByKey(lines[i], lines[j], numeric, ignoreCase, separator, key)
 		if reverse {
 			return cmp > 0
 		}
@@ -92,6 +127,44 @@ func commandSort(_ context.Context, args []string, c *CommandContext) int {
 	}
 	fmt.Fprint(c.Stdout, builder.String())
 	return 0
+}
+
+func parseSortKey(specification string) (sortKey, error) {
+	numeric := strings.ContainsRune(specification, 'n')
+	start := strings.SplitN(specification, ",", 2)[0]
+	start = strings.TrimRightFunc(start, func(character rune) bool {
+		return character < '0' || character > '9'
+	})
+	field, err := strconv.Atoi(start)
+	if err != nil || field < 1 {
+		return sortKey{}, fmt.Errorf("invalid key")
+	}
+	return sortKey{field: field, numeric: numeric}, nil
+}
+
+func compareSortLinesByKey(left, right string, numeric, ignoreCase bool, separator string, key *sortKey) int {
+	if key != nil {
+		leftKey := sortField(left, separator, key.field)
+		rightKey := sortField(right, separator, key.field)
+		comparison := compareSortLines(leftKey, rightKey, numeric || key.numeric, ignoreCase)
+		if comparison != 0 {
+			return comparison
+		}
+	}
+	return compareSortLines(left, right, numeric && key == nil, ignoreCase)
+}
+
+func sortField(line, separator string, field int) string {
+	var fields []string
+	if separator == "" {
+		fields = strings.Fields(line)
+	} else {
+		fields = strings.Split(line, separator)
+	}
+	if field > len(fields) {
+		return ""
+	}
+	return fields[field-1]
 }
 
 func compareSortLines(left, right string, numeric, ignoreCase bool) int {

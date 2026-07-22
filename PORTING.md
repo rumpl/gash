@@ -65,6 +65,10 @@ substantial work.
       the upstream interpreter's racy parent-environment overlay.
 - [x] Isolate shell variables, functions, options, arguments, cwd, and environment
       between top-level `Exec` calls.
+- [x] Pass only exported variables to commands and nested shells; keep shell IFS
+      unexported by default.
+- [x] Support `export -p`, `declare -p`, and `readonly -p` with deterministic,
+      shell-reusable declaration output.
 - [x] Persist the configured virtual filesystem between calls.
 - [x] Return 127 for unknown commands; never fall back to `os/exec`.
 - [x] Resolve `command -v` from shell built-ins and the capability-scoped gash

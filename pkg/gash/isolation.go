@@ -14,7 +14,6 @@ const (
 
 var internalEnv = map[string]string{
 	"PATH":      "/usr/bin:/bin",
-	"IFS":       " \t\n",
 	"OSTYPE":    "linux-gnu",
 	"MACHTYPE":  "x86_64-pc-linux-gnu",
 	"HOSTTYPE":  "x86_64",
