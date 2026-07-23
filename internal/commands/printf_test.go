@@ -41,6 +41,28 @@ func TestPrintfBDecodesHexadecimalAndOctalEscapes(t *testing.T) {
 	}
 }
 
+func TestPrintfDecodesUnicodeEscapesInFormatAndBConversion(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cwd := "/"
+	ctx := &command.Context{Cwd: &cwd, Stdin: &bytes.Buffer{}, Stdout: &stdout, Stderr: &stderr}
+	exitCode := commandPrintf(context.Background(), []string{`\u0041 \U0001F600 %b\n`, `\u0042 \U1F680`}, ctx)
+	if exitCode != 0 || stdout.String() != "A 😀 B 🚀\n" || stderr.String() != "" {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+	}
+}
+
+func TestPrintfPreservesInvalidUnicodeEscapes(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cwd := "/"
+	ctx := &command.Context{Cwd: &cwd, Stdin: &bytes.Buffer{}, Stdout: &stdout, Stderr: &stderr}
+	exitCode := commandPrintf(context.Background(), []string{`\uXYZ \U00110000\n`}, ctx)
+	if exitCode != 0 || stdout.String() != "\\uXYZ \\U00110000\n" || stderr.String() != "" {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+	}
+}
+
 func TestPrintfReusesFormatForRemainingArguments(t *testing.T) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer

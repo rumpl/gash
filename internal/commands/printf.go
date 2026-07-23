@@ -250,6 +250,29 @@ func decodePrintfEscapes(value string) (string, bool) {
 			number, _ := strconv.ParseUint(value[start:end], 16, 8)
 			output.WriteByte(byte(number))
 			index = end - 1
+		case 'u', 'U':
+			maximumDigits := 4
+			if value[index] == 'U' {
+				maximumDigits = 8
+			}
+			start := index + 1
+			end := start
+			for end < len(value) && end < start+maximumDigits && isPrintfHexDigit(value[end]) {
+				end++
+			}
+			if end == start {
+				output.WriteByte('\\')
+				output.WriteByte(value[index])
+				continue
+			}
+			number, _ := strconv.ParseUint(value[start:end], 16, 32)
+			character := rune(number)
+			if !utf8.ValidRune(character) {
+				output.WriteString(value[index-1 : end])
+			} else {
+				output.WriteRune(character)
+			}
+			index = end - 1
 		case '0':
 			start := index + 1
 			end := start

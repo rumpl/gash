@@ -498,7 +498,7 @@
                 "gash",
                 "just-bash:pinned"
             ],
-            "notes": "Shell-oriented formatting includes Bash %q quoting and hexadecimal/octal %b escapes; printf -v remains delegated to the shell interpreter."
+            "notes": "Shell-oriented formatting includes Bash %q quoting and hexadecimal, octal, and Unicode \\u/\\U escapes in format strings and %b arguments; unsupported printf -v is rejected before execution."
         },
         {
             "name": "pwd",
