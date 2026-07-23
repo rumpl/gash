@@ -66,6 +66,9 @@ substantial work.
       deterministic `jobs` output.
 - [x] Isolate shell variables, functions, options, arguments, cwd, and environment
       between top-level `Exec` calls.
+- [x] Treat arithmetic-expansion evaluation errors such as division or modulo
+      by zero as fatal status-1 shell errors instead of continuing subsequent
+      statements with a successful status.
 - [x] Pass only exported variables to commands and nested shells; keep shell IFS
       unexported by default.
 - [x] Support `export -p`, `declare -p`, and `readonly -p` with deterministic,

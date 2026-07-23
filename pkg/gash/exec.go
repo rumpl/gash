@@ -107,6 +107,15 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 		fmt.Fprintf(stderr, "bash: %v\n", err)
 		return 2, env
 	}
+	interpreterStderr := stderr
+	var arithmeticErrors *arithmeticErrorWriter
+	if containsArithmeticExpansion(program) {
+		var cancelArithmetic context.CancelFunc
+		ctx, cancelArithmetic = context.WithCancel(ctx)
+		defer cancelArithmetic()
+		arithmeticErrors = &arithmeticErrorWriter{target: stderr, cancel: cancelArithmetic}
+		interpreterStderr = arithmeticErrors
+	}
 	pairs := make([]string, 0, len(env))
 	for k, v := range env {
 		pairs = append(pairs, k+"="+v)
@@ -116,7 +125,7 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	runner, err := interp.New(
 		interp.Env(specialVariableEnviron{base: expand.ListEnviron(pairs...), jobs: scope.jobs}),
 		interp.Params(args...),
-		interp.StdIO(strings.NewReader(stdin), stdout, stderr),
+		interp.StdIO(strings.NewReader(stdin), stdout, interpreterStderr),
 		interp.OpenHandler(b.openHandler),
 		interp.ReadDirHandler2(b.readDirHandler),
 		interp.StatHandler(b.statHandler),
@@ -171,6 +180,9 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 			fmt.Fprintf(stderr, "bash: %v\n", err)
 			code = 1
 		}
+	}
+	if arithmeticErrors != nil && arithmeticErrors.seen.Load() {
+		code = 1
 	}
 	final := cloneMap(env)
 	for name, v := range runner.Vars {
