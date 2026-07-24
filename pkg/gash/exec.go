@@ -124,6 +124,12 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 	positionals := newPositionalState(len(args))
 	runner, err := interp.New(
 		interp.Env(specialVariableEnviron{base: expand.ListEnviron(pairs...), jobs: scope.jobs}),
+		// interp.Dir consults the host filesystem, and its default calls os.Getwd,
+		// which is unavailable under js/wasm. The cwd belongs to our virtual FS.
+		func(runner *interp.Runner) error {
+			runner.Dir = cwd
+			return nil
+		},
 		interp.Params(args...),
 		interp.StdIO(interpreterStdin(stdin), stdout, interpreterStderr),
 		interp.OpenHandler(b.openHandler),
@@ -166,9 +172,6 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 		fmt.Fprintf(stderr, "bash: %v\n", err)
 		return 1, env
 	}
-	// interp.Dir validates against the host filesystem. Setting the exported
-	// field keeps cwd validation and all later access inside our io/fs handlers.
-	runner.Dir = cwd
 	err = runInterpreter(ctx, runner, program)
 	code := 0
 	if status, ok := interp.IsExitStatus(err); ok {
