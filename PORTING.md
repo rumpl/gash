@@ -106,7 +106,8 @@ substantial work.
       rename, and recursive removal.
 - [x] Provide a mountable filesystem with virtual parent directories and
       cross-mount copy/move support.
-- [x] Provide a writable upper/read-only lower overlay filesystem.
+- [x] Provide a writable upper/read-only lower overlay filesystem with copy-up on
+      mutation and whiteout-backed deletion.
 - [x] Provide a writable rooted host filesystem that rejects lexical traversal
       and resolved symlink escapes.
 - [x] Accept arbitrary standard read-only `io/fs` implementations.
@@ -265,8 +266,13 @@ Upstream has finer-grained accounting still to port where applicable:
 
 ## Remaining filesystem work
 
-- [ ] Add true overlay copy-up when modifying a file that exists only in the lower layer.
-- [ ] Add overlay whiteouts so deleting a lower-layer entry remains hidden.
+- [x] Add true overlay copy-up when modifying a file that exists only in the lower layer.
+- [x] Add overlay whiteouts so deleting a lower-layer entry remains hidden, including
+      opaque directories so a recreated directory does not expose lower contents.
+- [ ] Resolve overlay symlinks across layers so an upper symlink can target a
+      lower-only path.
+- [ ] Define atomicity and concurrency guarantees for overlay copy-up and
+      whiteout sequences.
 - [ ] Define and test persistent overlay diff serialization/versioning if a portable
       artifact is needed beyond a persistent upper directory.
 - [ ] Complete stable inode/device/link-count semantics needed by `stat`, hard links,
