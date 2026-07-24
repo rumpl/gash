@@ -12,7 +12,8 @@ import (
 
 func main() {
 	lower := fstest.MapFS{
-		"config/app.conf": &fstest.MapFile{Data: []byte("mode=production\n")},
+		"config/app.conf":   &fstest.MapFile{Data: []byte("mode=production\n")},
+		"config/legacy.ini": &fstest.MapFile{Data: []byte("[legacy]\n")},
 	}
 	upper := gashfs.NewMemory(8 << 20)
 	filesystem, err := gashfs.NewOverlay(gashfs.OverlayOptions{
@@ -31,10 +32,20 @@ func main() {
 	}
 	result := shell.Exec(
 		context.Background(),
-		`cat /config/app.conf; mkdir -p /output; printf 'temporary\n' > /output/state.txt; cat /output/state.txt`,
+		`printf 'lower layer: '; cat /config/app.conf
+# Appending copies the lower-only file into the upper layer first.
+printf 'debug=true\n' >> /config/app.conf
+printf 'after copy-up: '; tr '\n' ' ' < /config/app.conf; echo
+# Deleting a lower-only file records a whiteout in the upper layer.
+rm /config/legacy.ini
+printf 'remaining config entries: '; ls /config
+mkdir -p /output; printf 'temporary\n' > /output/state.txt; cat /output/state.txt`,
 		gash.ExecOptions{},
 	)
 	fmt.Print(result.Stdout)
+	if data, err := lower.ReadFile("config/legacy.ini"); err == nil {
+		fmt.Printf("lower layer is untouched: config/legacy.ini still holds %q\n", data)
+	}
 	fmt.Fprint(os.Stderr, result.Stderr)
 	if result.ExitCode != 0 {
 		os.Exit(result.ExitCode)

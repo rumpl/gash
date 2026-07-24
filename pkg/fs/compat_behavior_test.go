@@ -135,8 +135,14 @@ func TestOverlayPrefersUpperMergesDirectoriesAndWritesUpper(t *testing.T) {
 	if string(got) != "new" {
 		t.Fatalf("upper new=%q", got)
 	}
-	if err := o.Remove("dir/lower"); !errors.Is(err, iofs.ErrNotExist) {
-		t.Fatalf("lower-only remove should not whiteout, got %v", err)
+	if err := o.Remove("dir/lower"); err != nil {
+		t.Fatalf("lower-only remove should record a whiteout, got %v", err)
+	}
+	if _, err := o.ReadFile("dir/lower"); !errors.Is(err, iofs.ErrNotExist) {
+		t.Fatalf("whited-out entry still readable: %v", err)
+	}
+	if _, err := lower.Open("dir/lower"); err != nil {
+		t.Fatalf("lower layer mutated by remove: %v", err)
 	}
 }
 

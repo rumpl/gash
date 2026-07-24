@@ -118,6 +118,8 @@ Writable implementations opt into small capability interfaces from `github.com/r
 
 Virtual absolute shell paths are translated to valid root-relative `io/fs` paths only at the filesystem boundary.
 
+`fs.Overlay` keeps a read-only lower filesystem intact while directing every mutation to the writable upper filesystem. Modifying an entry that exists only in the lower layer copies it up first, so appends, permission changes, timestamp changes, hard links, and renames observe the lower content. Removing a lower entry records a whiteout marker in the upper layer, so the deletion survives in a persisted upper directory and the lower entry stays hidden; removing a directory makes it opaque, so a directory recreated at the same path starts empty. Upper entries whose base name starts with `.wh.` are reserved for those markers: they are never listed and cannot be created or read through the overlay. Copy-up preserves the lower permission bits and adds owner access so a host-backed upper layer stays writable.
+
 The CLI's `--root DIR` option exposes a host directory as `/` through `fs.Rooted`. `fs.Rooted` resolves symlinks under the configured root and rejects lexical traversal or symlink escapes outside that directory. It implements write capabilities for gash commands, so scripts can mutate files inside `DIR`; use a read-only `Options.FS` implementation when mutation must be disallowed.
 
 ## Limits and security
