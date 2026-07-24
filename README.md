@@ -151,11 +151,25 @@ go run ./examples/security
 go run ./examples/sqlite
 ```
 
+## WebAssembly
+
+Gash can run in a browser through the `js/wasm` target. The JavaScript API exposes a persistent in-memory shell as `gash.exec(script, options)`, returning a Promise with `stdout`, `stderr`, `exitCode`, and `env`. The browser build excludes `sqlite3`, whose Go dependency does not support `js/wasm`; host filesystem and network capabilities are not enabled. Go’s browser port also lacks `os.Pipe`, so pipelines, heredocs, command substitution, and non-empty `stdin` are not available in this target; scripts using ordinary commands, control flow, and virtual-file redirections run normally.
+
+Build and open the included demo:
+
+```sh
+make serve-wasm
+# visit http://localhost:8080
+```
+
+`options` may contain `cwd`, `env`, `replaceEnv`, `args`, and `scriptName`. (`stdin` is reserved for parity with the Go API but must currently be empty.) Call `gash.reset()` to replace the persistent virtual filesystem with a fresh one.
+
 ## Development
 
 ```sh
 make test       # tests, race detector, and vet
 make build      # build ./bin/gash
+make wasm       # build web/gash.wasm and copy Go's WebAssembly runtime
 ```
 
 ## License

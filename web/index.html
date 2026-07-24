@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>gash · WebAssembly demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div><span class="prompt">$</span> <strong>gash</strong></div>
+      <span id="status">Loading WebAssembly…</span>
+    </header>
+    <p>A capability-scoped Bash interpreter running entirely in your browser.</p>
+    <label for="script">Script</label>
+    <textarea id="script" spellcheck="false">printf 'Names starting with G:\n'
+printf 'GRACE\n'
+mkdir -p /tmp/demo
+echo 'The virtual filesystem persists between runs.' > /tmp/demo/readme
+cat /tmp/demo/readme</textarea>
+    <div class="actions">
+      <button id="run" disabled>Run <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
+      <button id="reset" class="secondary" disabled>Reset filesystem</button>
+    </div>
+    <label>Output</label>
+    <pre id="output" aria-live="polite">Starting gash…</pre>
+  </main>
+  <script src="wasm_exec.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
