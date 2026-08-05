@@ -31,7 +31,7 @@ Current command inventory:
 
 | Status      | Count |
 | ----------- | ----: |
-| Core        |    24 |
+| Core        |    25 |
 | Useful      |    36 |
 | Partial     |    27 |
 | Optional    |     5 |
@@ -154,7 +154,7 @@ status does not certify exhaustive upstream edge-case parity:
 
 `base64`, `basename`, `bash`, `cat`, `cd`, `clear`, `dirname`, `echo`, `env`,
 `false`, `hostname`, `id`, `md5sum`, `printenv`, `printf`, `pwd`, `seq`, `sh`,
-`sha1sum`, `sha256sum`, `sleep`, `true`, `uname`, `whoami`.
+`sha1sum`, `sha256sum`, `sha512sum`, `sleep`, `true`, `uname`, `whoami`.
 
 `id` reports the fixed virtual user and primary group `user` with uid and gid `1000`; it does not consult host credentials, user databases, supplementary groups, or environment variables.
 

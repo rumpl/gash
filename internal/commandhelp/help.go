@@ -20,6 +20,9 @@ type Info struct {
 
 func Requested(args []string) bool {
 	for _, arg := range args {
+		if arg == "--" {
+			return false
+		}
 		if arg == "--help" {
 			return true
 		}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"path"
+	"strings"
 	"testing"
 
 	"github.com/rumpl/gash/internal/command"
@@ -80,7 +81,27 @@ func TestChecksumCommonWorkflows(t *testing.T) {
 		"b.txt": []byte("bye\n"),
 	})
 
-	code, stdout, stderr, _ := runCommand(t, checksum("md5"), []string{"missing.txt"}, nil, nil)
+	assertCommandBytes(t, checksum("sha512"), nil, []byte("abc"), []byte("ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f  -\n"), nil)
+	assertCommandBytes(t, checksum("sha512"), []string{"a.txt", "b.txt"}, nil, []byte("d78abb0542736865f94704521609c230dac03a2f369d043ac212d6933b91410e06399e37f9c5cc88436a31737330c1c8eccb2c2f9f374d62f716432a32d50fac  a.txt\ncca1d2b48540b6dddb7d341531b6ebc7dbda64445ebd8f8e50d4c672a15d9c5da1fd5039d48a9a12919b5644cbf445e50338366f6ef42185a509b2f81084273b  b.txt\n"), map[string][]byte{
+		"a.txt": []byte("hi\n"),
+		"b.txt": []byte("bye\n"),
+	})
+
+	code, stdout, stderr, _ := runCommand(t, checksum("sha512"), []string{"a.txt", "missing.txt", "b.txt"}, nil, map[string][]byte{
+		"a.txt": []byte("hi\n"),
+		"b.txt": []byte("bye\n"),
+	})
+	if code == 0 || !bytes.Contains(stdout, []byte("  a.txt\n")) || !bytes.Contains(stdout, []byte("  b.txt\n")) || !strings.Contains(stderr, "sha512sum: missing.txt") {
+		t.Fatalf("mixed operands exit=%d stdout=%q stderr=%q", code, stdout, stderr)
+	}
+
+	assertCommandBytes(t, checksum("sha512"), []string{"--", "-input"}, nil, []byte("cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e  -input\n"), map[string][]byte{"-input": {}})
+	code, stdout, stderr, _ = runCommand(t, checksum("sha512"), []string{"--bogus"}, nil, nil)
+	if code == 0 || len(stdout) != 0 || !strings.Contains(stderr, "sha512sum: unrecognized option") {
+		t.Fatalf("invalid option exit=%d stdout=%q stderr=%q", code, stdout, stderr)
+	}
+
+	code, stdout, stderr, _ = runCommand(t, checksum("md5"), []string{"missing.txt"}, nil, nil)
 	if code == 0 || len(stdout) != 0 || stderr == "" {
 		t.Fatalf("missing file exit=%d stdout=%q stderr=%q", code, stdout, stderr)
 	}
