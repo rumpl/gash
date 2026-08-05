@@ -92,15 +92,6 @@
             "notes": "Reports underlying virtual filesystem capability errors instead of rewriting all failures as missing files."
         },
         {
-            "name": "cmp",
-            "status": "useful",
-            "category": "files",
-            "sources": [
-                "gash"
-            ],
-            "notes": "In-process byte comparison with silent, verbose, byte-limit, initial-skip, positional skip, stdin, difference-location, and EOF behavior."
-        },
-        {
             "name": "cksum",
             "status": "useful",
             "category": "utility",
@@ -117,6 +108,15 @@
                 "gash",
                 "just-bash:pinned"
             ]
+        },
+        {
+            "name": "cmp",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash"
+            ],
+            "notes": "In-process byte comparison with silent, verbose, byte-limit, initial-skip, positional skip, stdin, difference-location, and EOF behavior."
         },
         {
             "name": "column",
@@ -250,6 +250,15 @@
             ],
             "nearTermPriority": true,
             "notes": "First-class priority utility used by shell scripts; implemented with a practical expression subset."
+        },
+        {
+            "name": "factor",
+            "status": "useful",
+            "category": "utility",
+            "sources": [
+                "gash"
+            ],
+            "notes": "In-process factorization of non-negative decimal integers up to 1000000000000. Reads argv or whitespace-separated stdin; zero and one are emitted with empty factor lists. Trial division is cancellation-aware."
         },
         {
             "name": "false",
@@ -828,6 +837,15 @@
             ]
         },
         {
+            "name": "umask",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash"
+            ],
+            "notes": "Supports octal and rwx symbolic masks, -S/-p display, shell redirections, and in-process file creation."
+        },
+        {
             "name": "unalias",
             "status": "partial",
             "category": "environment",
@@ -836,15 +854,6 @@
                 "just-bash:pinned"
             ],
             "notes": "Implemented by mvdan shell built-ins and scoped to a single Exec."
-        },
-        {
-            "name": "umask",
-            "status": "useful",
-            "category": "files",
-            "sources": [
-                "gash"
-            ],
-            "notes": "Supports octal and rwx symbolic masks, -S/-p display, shell redirections, and in-process file creation."
         },
         {
             "name": "uname",
