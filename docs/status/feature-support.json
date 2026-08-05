@@ -340,6 +340,15 @@
             "notes": "Implemented in-process for virtual filesystem and streams with gzip and ustar/pax tar create/list/extract support. Hostile extraction paths, unsafe links, and oversized archives are rejected; advanced tar/gzip flags and external codecs are intentionally deferred."
         },
         {
+            "name": "hash",
+            "status": "partial",
+            "category": "path",
+            "sources": [
+                "gash:shell-native"
+            ],
+            "notes": "Compatibility-only virtual command hash. hash -r resets an always-empty table as a no-op, and NAME resolution uses only shell built-ins and capability-scoped gash commands; host PATH entries are never resolved, cached, or reported."
+        },
+        {
             "name": "head",
             "status": "useful",
             "category": "text",

@@ -389,6 +389,21 @@ var catalog = map[string]Info{
 			"Input and output stay inside gash streams and virtual files. Header-name preservation, input-file removal, and uncommon gzip flags are intentionally deferred.",
 		},
 	},
+	"hash": {
+		Name:    "hash",
+		Summary: "validate virtual gash command names without caching host paths",
+		Usage:   "hash [-r] [NAME...]",
+		Description: []string{
+			"With no arguments, lists the always-empty virtual command hash table. NAME operands are validated against shell built-ins and capability-scoped gash commands.",
+		},
+		Options: []string{
+			"-r       reset the empty virtual command hash table (no-op)",
+			"--help   display this help and exit",
+		},
+		Notes: []string{
+			"No host PATH entries are resolved, cached, or reported.",
+		},
+	},
 	"history": {
 		Name:    "history",
 		Summary: "display the command history list",

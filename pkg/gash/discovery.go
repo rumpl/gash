@@ -14,7 +14,7 @@ var discoverableShellBuiltins = map[string]bool{
 	":": true, "[": true, "alias": true, "break": true,
 	"builtin": true, "cd": true, "command": true, "continue": true,
 	"dirs": true, "echo": true, "eval": true, "exec": true, "exit": true,
-	"false": true, "getopts": true, "jobs": true, "mapfile": true,
+	"false": true, "getopts": true, "hash": true, "jobs": true, "mapfile": true,
 	"popd": true, "printf": true, "pushd": true, "pwd": true,
 	"read": true, "readarray": true, "return": true, "set": true,
 	"shift": true, "shopt": true, "source": true, "test": true,
@@ -51,6 +51,42 @@ func (b *Bash) virtualCommandDiscovery(ctx context.Context, argv []string) ([]st
 		return []string{"true"}, true
 	}
 	return []string{"false"}, true
+}
+
+func (b *Bash) virtualHashDiscovery(ctx context.Context, argv []string) ([]string, bool) {
+	if len(argv) == 0 || argv[0] != "hash" {
+		return argv, false
+	}
+	handler := interp.HandlerCtx(ctx)
+	if len(argv) == 1 {
+		// Gash deliberately has no command hash table: discovery is always
+		// performed against the current capability-scoped virtual registry.
+		return []string{"true"}, true
+	}
+	if len(argv) == 2 && argv[1] == "-r" {
+		return []string{"true"}, true
+	}
+	if len(argv) == 2 && argv[1] == "--help" {
+		fmt.Fprint(handler.Stdout, "hash - validate virtual gash command names without caching host paths\n\nUsage: hash [-r] [NAME...]\n\nOptions:\n  -r       reset the empty virtual command hash table (no-op)\n  --help   display this help and exit\n\nNotes:\n  NAME resolution uses only shell built-ins and capability-scoped gash commands.\n  No host PATH entries are resolved, cached, or reported.\n")
+		return []string{"true"}, true
+	}
+	failed := false
+	for _, requested := range argv[1:] {
+		if strings.HasPrefix(requested, "-") {
+			fmt.Fprintf(handler.Stderr, "hash: unsupported option: %s\n", requested)
+			failed = true
+			continue
+		}
+		name := normalizeDiscoveredName(requested)
+		if _, found := b.discoverCommand(name); !found || strings.Contains(requested, "/") {
+			fmt.Fprintf(handler.Stderr, "hash: %s: not found\n", requested)
+			failed = true
+		}
+	}
+	if failed {
+		return []string{"false"}, true
+	}
+	return []string{"true"}, true
 }
 
 func (b *Bash) virtualTypeDiscovery(ctx context.Context, argv []string) ([]string, bool) {

@@ -105,6 +105,40 @@ func TestCommandDiscoveryDoesNotCreateFilesystemEntries(t *testing.T) {
 	}
 }
 
+func TestHashUsesOnlyVirtualCommandDiscovery(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `
+hash
+hash -r
+hash echo ls
+hash definitely-missing; echo missing=$?
+hash /bin/echo; echo path=$?
+hash -t echo; echo option=$?
+`, ExecOptions{})
+	wantStdout := "missing=1\npath=1\noption=1\n"
+	wantStderr := "hash: definitely-missing: not found\nhash: /bin/echo: not found\nhash: unsupported option: -t\n"
+	if result.ExitCode != 0 || result.Stdout != wantStdout || result.Stderr != wantStderr {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
+func TestHashDiscoversCustomCommandsAndDocumentsNoHostPaths(t *testing.T) {
+	shell, err := New(Options{Commands: []Command{{Name: "custom", Run: func(_ context.Context, _ []string, _ *CommandContext) int {
+		return 0
+	}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	result := shell.Exec(context.Background(), `command -v hash; hash custom; hash --help`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+	if !strings.HasPrefix(result.Stdout, "hash\nhash - validate virtual gash command names") ||
+		!strings.Contains(result.Stdout, "No host PATH entries are resolved, cached, or reported.") {
+		t.Fatalf("stdout=%q", result.Stdout)
+	}
+}
+
 func TestCommandVFindsCustomCommands(t *testing.T) {
 	shell, err := New(Options{Commands: []Command{{Name: "custom", Run: func(_ context.Context, _ []string, c *CommandContext) int {
 		return 0
