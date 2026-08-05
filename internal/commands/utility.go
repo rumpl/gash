@@ -8,6 +8,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -96,6 +97,65 @@ func commandBase64(_ context.Context, args []string, c *CommandContext) int {
 		fmt.Fprintln(c.Stdout, encoded)
 	}
 	return 0
+}
+
+func commandCksum(_ context.Context, args []string, c *CommandContext) int {
+	operands := make([]string, 0, len(args))
+	optionsDone := false
+	for _, arg := range args {
+		if !optionsDone && arg == "--" {
+			optionsDone = true
+			continue
+		}
+		if !optionsDone && strings.HasPrefix(arg, "-") && arg != "-" {
+			return commandhelp.UnknownOption(c, "cksum", arg)
+		}
+		operands = append(operands, arg)
+	}
+
+	if len(operands) == 0 {
+		data, err := io.ReadAll(c.Stdin)
+		if err != nil {
+			return report(c, "cksum", err)
+		}
+		fmt.Fprintf(c.Stdout, "%d %d\n", posixChecksum(data), len(data))
+		return 0
+	}
+
+	code := 0
+	for _, operand := range operands {
+		data, err := readInputs([]string{operand}, c)
+		if err != nil {
+			report(c, "cksum: "+operand, err)
+			code = 1
+			continue
+		}
+		fmt.Fprintf(c.Stdout, "%d %d %s\n", posixChecksum(data), len(data), operand)
+	}
+	return code
+}
+
+func posixChecksum(data []byte) uint32 {
+	const polynomial uint32 = 0x04c11db7
+
+	crc := uint32(0)
+	update := func(value byte) {
+		crc ^= uint32(value) << 24
+		for range 8 {
+			if crc&0x80000000 != 0 {
+				crc = crc<<1 ^ polynomial
+			} else {
+				crc <<= 1
+			}
+		}
+	}
+	for _, value := range data {
+		update(value)
+	}
+	for length := uint64(len(data)); length != 0; length >>= 8 {
+		update(byte(length))
+	}
+	return ^crc
 }
 
 func checksum(kind string) CommandFunc {

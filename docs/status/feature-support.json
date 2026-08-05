@@ -101,6 +101,15 @@
             "notes": "In-process byte comparison with silent, verbose, byte-limit, initial-skip, positional skip, stdin, difference-location, and EOF behavior."
         },
         {
+            "name": "cksum",
+            "status": "useful",
+            "category": "utility",
+            "sources": [
+                "gash"
+            ],
+            "notes": "Practical in-process POSIX CRC checksum and byte-count utility over stdin and virtual filesystem operands; broader non-POSIX implementation-specific flags are intentionally unsupported."
+        },
+        {
             "name": "clear",
             "status": "core",
             "category": "utility",

@@ -73,6 +73,42 @@ func TestBase64CommonWorkflows(t *testing.T) {
 	}
 }
 
+func TestCksumPOSIXVectors(t *testing.T) {
+	assertCommandBytes(t, commandCksum, nil, []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'}, []byte("930766865 9\n"), nil)
+	assertCommandBytes(t, commandCksum, nil, nil, []byte("4294967295 0\n"), nil)
+	assertCommandBytes(t, commandCksum, []string{"digits.txt"}, nil, []byte("930766865 9 digits.txt\n"), map[string][]byte{
+		"digits.txt": []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'},
+	})
+}
+
+func TestCksumOperandsOptionsAndPartialFailures(t *testing.T) {
+	code, stdout, stderr, _ := runCommand(t, commandCksum,
+		[]string{"one.txt", "missing.txt", "-", "two.txt"},
+		[]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'},
+		map[string][]byte{
+			"one.txt": []byte{},
+			"two.txt": []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'},
+		},
+	)
+	if code == 0 {
+		t.Fatal("expected missing operand to produce a nonzero exit")
+	}
+	want := []byte("4294967295 0 one.txt\n930766865 9 -\n930766865 9 two.txt\n")
+	if !bytes.Equal(stdout, want) {
+		t.Fatalf("stdout=%q, want %q", stdout, want)
+	}
+	if !strings.Contains(stderr, "cksum: missing.txt:") {
+		t.Fatalf("stderr=%q, want missing operand diagnostic", stderr)
+	}
+
+	assertCommandBytes(t, commandCksum, []string{"--", "-named"}, nil, []byte("4294967295 0 -named\n"), map[string][]byte{"-named": {}})
+
+	code, stdout, stderr, _ = runCommand(t, commandCksum, []string{"-x"}, nil, nil)
+	if code == 0 || len(stdout) != 0 || !strings.Contains(stderr, "cksum: invalid option") {
+		t.Fatalf("unsupported option exit=%d stdout=%q stderr=%q", code, stdout, stderr)
+	}
+}
+
 func TestChecksumCommonWorkflows(t *testing.T) {
 	assertCommandBytes(t, checksum("md5"), nil, []byte("hello"), []byte("5d41402abc4b2a76b9719d911017c592  -\n"), nil)
 	assertCommandBytes(t, checksum("sha1"), []string{"a.txt"}, nil, []byte("55ca6286e3e4f4fba5d0448333fa99fc5a404a73  a.txt\n"), map[string][]byte{"a.txt": []byte("hi\n")})
