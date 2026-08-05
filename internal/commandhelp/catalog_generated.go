@@ -577,6 +577,19 @@ var catalog = map[string]Info{
 			"    --help display this help and exit",
 		},
 	},
+	"realpath": {
+		Name:    "realpath",
+		Summary: "print canonical absolute virtual paths",
+		Usage:   "realpath [OPTION]... FILE...",
+		Options: []string{
+			"-e, --canonicalize-existing  all path components must exist (default)",
+			"-m, --canonicalize-missing   allow missing trailing path components",
+			"    --help                   display this help and exit",
+		},
+		Notes: []string{
+			"Paths and symbolic links are resolved only within gash's virtual filesystem.",
+		},
+	},
 	"rev": {
 		Name:    "rev",
 		Summary: "reverse lines characterwise",

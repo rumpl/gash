@@ -54,8 +54,27 @@ type (
 type SymlinkFS interface {
 	Symlink(oldName, newName string) error
 }
+
+// GlobalSymlinkFS stores an absolute target from an enclosing virtual
+// namespace without rebasing it into the filesystem's local root.
+type GlobalSymlinkFS interface {
+	GlobalSymlink(target, name string) error
+}
 type ReadlinkFS interface {
 	Readlink(name string) (string, error)
+}
+
+// VirtualReadlinkFS returns link targets in the virtual namespace. It is used
+// by filesystem adapters whose native link target syntax may expose a backing
+// namespace, such as Rooted host filesystems.
+type VirtualReadlinkFS interface {
+	VirtualReadlink(name string) (string, error)
+}
+
+// ScopedVirtualReadlinkFS additionally reports whether an absolute target is
+// global to an enclosing namespace or local to this filesystem's root.
+type ScopedVirtualReadlinkFS interface {
+	ScopedVirtualReadlink(name string) (target string, global bool, err error)
 }
 type LstatFS interface {
 	Lstat(name string) (iofs.FileInfo, error)
@@ -113,6 +132,15 @@ func Readlink(fsys iofs.FS, name string) (string, error) {
 		return f.Readlink(Name(name))
 	}
 	return "", ErrUnsupported
+}
+
+// VirtualReadlink reads a symbolic link target represented in the virtual
+// namespace rather than any backing filesystem namespace.
+func VirtualReadlink(fsys iofs.FS, name string) (string, error) {
+	if f, ok := fsys.(VirtualReadlinkFS); ok {
+		return f.VirtualReadlink(Name(name))
+	}
+	return Readlink(fsys, name)
 }
 
 func CreateFile(fsys iofs.FS, name string, data []byte, perm iofs.FileMode) error {

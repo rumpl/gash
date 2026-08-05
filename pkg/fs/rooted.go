@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"encoding/base64"
 	"errors"
 	iofs "io/fs"
 	"os"
@@ -16,6 +17,8 @@ import (
 type Rooted struct {
 	root string
 }
+
+const rootedGlobalSymlinkPrefix = ".gash-global-symlink."
 
 func NewRooted(root string) (*Rooted, error) {
 	absolute, err := filepath.Abs(root)
@@ -97,24 +100,53 @@ func (r *Rooted) Lstat(name string) (iofs.FileInfo, error) {
 }
 
 func (r *Rooted) Readlink(name string) (string, error) {
+	target, _, err := r.ScopedVirtualReadlink(name)
+	return target, err
+}
+
+// VirtualReadlink returns Rooted link targets in its virtual namespace.
+func (r *Rooted) VirtualReadlink(name string) (string, error) {
+	target, _, err := r.ScopedVirtualReadlink(name)
+	return target, err
+}
+
+func (r *Rooted) ScopedVirtualReadlink(name string) (string, bool, error) {
 	host, err := r.lexicalHostPath(name)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	target, err := os.Readlink(host)
 	if err != nil {
-		return "", rootedPathError("readlink", name, err)
+		return "", false, rootedPathError("readlink", name, err)
 	}
-	if filepath.IsAbs(target) {
-		resolved, err := filepath.EvalSymlinks(filepath.Clean(target))
-		if err != nil {
-			return target, nil
+	if strings.HasPrefix(target, rootedGlobalSymlinkPrefix) {
+		encoded := strings.TrimPrefix(target, rootedGlobalSymlinkPrefix)
+		decoded, decodeErr := base64.RawURLEncoding.DecodeString(encoded)
+		if decodeErr != nil || len(decoded) == 0 || decoded[0] != '/' {
+			return "", false, iofs.ErrPermission
 		}
-		if !r.inside(resolved) {
-			return "", iofs.ErrPermission
-		}
+		return string(decoded), true, nil
 	}
-	return target, nil
+	if !filepath.IsAbs(target) {
+		return target, false, nil
+	}
+	clean := filepath.Clean(target)
+	if resolved, resolveErr := filepath.EvalSymlinks(clean); resolveErr == nil {
+		clean = resolved
+	}
+	if !r.inside(clean) {
+		// Unmarked absolute targets outside the backing root are host escape
+		// links. Never expose their target, including to missing-path walkers.
+		return "", false, iofs.ErrPermission
+	}
+	relative, err := filepath.Rel(r.root, clean)
+	if err != nil {
+		return "", false, iofs.ErrPermission
+	}
+	if relative == "." {
+		return "/", false, nil
+	}
+	return "/" + filepath.ToSlash(relative), false, nil
 }
 
 func (r *Rooted) CreateFile(name string, data []byte, perm iofs.FileMode) error {
@@ -245,12 +277,33 @@ func (r *Rooted) Symlink(target, name string) error {
 		return err
 	}
 	if filepath.IsAbs(target) {
-		resolved, err := filepath.EvalSymlinks(filepath.Clean(target))
-		if err == nil && !r.inside(resolved) {
-			return iofs.ErrPermission
+		// The capability API uses virtual absolute targets. Store their rooted
+		// host representation so ordinary host filesystem traversal remains
+		// functional; Readlink translates it back before exposing it.
+		target, err = r.lexicalHostPath(Name(filepath.ToSlash(target)))
+		if err != nil {
+			return err
 		}
 	}
 	if err := os.Symlink(target, newHost); err != nil {
+		return rootedPathError("symlink", name, err)
+	}
+	return nil
+}
+
+func (r *Rooted) GlobalSymlink(target, name string) error {
+	newHost, err := r.hostCreatePath(name)
+	if err != nil {
+		return err
+	}
+	if target == "" || target[0] != '/' {
+		return iofs.ErrInvalid
+	}
+	// Store global targets as an encoded relative marker. This distinguishes
+	// capability-created virtual links from pre-existing absolute host escape
+	// links without making the backing host follow the virtual target.
+	stored := rootedGlobalSymlinkPrefix + base64.RawURLEncoding.EncodeToString([]byte(target))
+	if err := os.Symlink(stored, newHost); err != nil {
 		return rootedPathError("symlink", name, err)
 	}
 	return nil
