@@ -49,6 +49,35 @@ func TestPipelinesRedirectionsAndConditionals(t *testing.T) {
 	}
 }
 
+func TestShufPipelineAndVirtualRange(t *testing.T) {
+	b := newTestBash(t)
+	result := b.Exec(context.Background(), `printf 'a\nb\nc\n' | shuf -n 2`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stderr != "" {
+		t.Fatalf("pipeline: %+v", result)
+	}
+	lines := strings.Fields(result.Stdout)
+	if len(lines) != 2 || lines[0] == lines[1] {
+		t.Fatalf("pipeline output=%q", result.Stdout)
+	}
+	for _, line := range lines {
+		if !strings.Contains("abc", line) {
+			t.Fatalf("unexpected shuffled line %q", line)
+		}
+	}
+
+	result = b.Exec(context.Background(), `shuf -i 1-3`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stderr != "" {
+		t.Fatalf("range: %+v", result)
+	}
+	seen := map[string]bool{}
+	for _, line := range strings.Fields(result.Stdout) {
+		seen[line] = true
+	}
+	if len(seen) != 3 || !seen["1"] || !seen["2"] || !seen["3"] {
+		t.Fatalf("range output=%q", result.Stdout)
+	}
+}
+
 func TestBashLanguageFeatures(t *testing.T) {
 	b := newTestBash(t)
 	script := `

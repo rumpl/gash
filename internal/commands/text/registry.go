@@ -11,6 +11,7 @@ func Commands() []command.Command {
 		{Name: "egrep", Run: commandGrep},
 		{Name: "fgrep", Run: commandFGrep},
 		{Name: "sort", Run: commandSort},
+		{Name: "shuf", Run: commandShuf},
 		{Name: "uniq", Run: commandUniq},
 		{Name: "tee", Run: commandTee},
 		{Name: "rev", Run: commandRev},

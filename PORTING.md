@@ -32,7 +32,7 @@ Current command inventory:
 | Status      | Count |
 | ----------- | ----: |
 | Core        |    25 |
-| Useful      |    40 |
+| Useful      |    45 |
 | Partial     |    27 |
 | Optional    |     5 |
 | Deferred    |     0 |
@@ -167,7 +167,7 @@ flags or edge cases:
 
 `chmod`, `cksum`, `cmp`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `factor`, `file`, `fold`, `head`,
 `install`, `join`, `ln`, `ls`, `mkdir`, `mktemp`, `mv`, `nl`, `od`, `paste`, `readlink`, `realpath`, `rev`, `rm`,
-`rmdir`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`,
+`rmdir`, `shuf`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`,
 `tree`, `unlink`, `unexpand`, `uniq`, `wc`, `yes`.
 
 `unlink` is an additive gash file utility (not pinned just-bash parity). It removes
@@ -181,6 +181,10 @@ and `--`; unlink/quiet, ownership, and suffix flags are intentionally unsupporte
 `factor` accepts non-negative decimal integers from arguments, or whitespace-separated
 standard input when no arguments are given. It prints `0:` and `1:` with no factors
 and limits inputs to 1000000000000 to bound cancellation-aware trial division.
+
+`shuf` randomizes lines from stdin or virtual files and supports bounded head
+counts, numeric input ranges, and bounded repeat mode. Random selection uses the
+operating system cryptographic source; broader GNU flags are intentionally unsupported.
 
 ### Partial
 
