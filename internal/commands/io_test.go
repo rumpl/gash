@@ -77,7 +77,7 @@ func TestCksumPOSIXVectors(t *testing.T) {
 	assertCommandBytes(t, commandCksum, nil, []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'}, []byte("930766865 9\n"), nil)
 	assertCommandBytes(t, commandCksum, nil, nil, []byte("4294967295 0\n"), nil)
 	assertCommandBytes(t, commandCksum, []string{"digits.txt"}, nil, []byte("930766865 9 digits.txt\n"), map[string][]byte{
-		"digits.txt": []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'},
+		"digits.txt": {'1', '2', '3', '4', '5', '6', '7', '8', '9'},
 	})
 }
 
@@ -86,8 +86,8 @@ func TestCksumOperandsOptionsAndPartialFailures(t *testing.T) {
 		[]string{"one.txt", "missing.txt", "-", "two.txt"},
 		[]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'},
 		map[string][]byte{
-			"one.txt": []byte{},
-			"two.txt": []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'},
+			"one.txt": {},
+			"two.txt": {'1', '2', '3', '4', '5', '6', '7', '8', '9'},
 		},
 	)
 	if code == 0 {

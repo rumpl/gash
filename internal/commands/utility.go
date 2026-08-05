@@ -8,7 +8,6 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
-	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -114,7 +113,7 @@ func commandCksum(_ context.Context, args []string, c *CommandContext) int {
 	}
 
 	if len(operands) == 0 {
-		data, err := io.ReadAll(c.Stdin)
+		data, err := readInputs(nil, c)
 		if err != nil {
 			return report(c, "cksum", err)
 		}

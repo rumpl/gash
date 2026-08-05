@@ -32,7 +32,7 @@ Current command inventory:
 | Status      | Count |
 | ----------- | ----: |
 | Core        |    25 |
-| Useful      |    37 |
+| Useful      |    38 |
 | Partial     |    27 |
 | Optional    |     5 |
 | Deferred    |     0 |
