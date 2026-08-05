@@ -622,6 +622,18 @@ var catalog = map[string]Info{
 			"Addresses: N, $, /regexp/, N,M, first~step, and /regexp/,+N ranges.",
 		},
 	},
+	"sha512sum": {
+		Name:    "sha512sum",
+		Summary: "compute and check SHA512 message digest",
+		Usage:   "sha512sum [OPTION]... [FILE]...",
+		Options: []string{
+			"    --       end option parsing",
+			"    --help   display this help and exit",
+		},
+		Notes: []string{
+			"Reads from stdin when no FILE is given or when FILE is -. Digest verification options are not supported.",
+		},
+	},
 	"sleep": {
 		Name:    "sleep",
 		Summary: "delay for a specified amount of time",

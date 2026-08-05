@@ -44,6 +44,7 @@ func BuiltinsWithNetwork(policy *network.Policy) []Command {
 		{Name: "md5sum", Run: checksum("md5")},
 		{Name: "sha1sum", Run: checksum("sha1")},
 		{Name: "sha256sum", Run: checksum("sha256")},
+		{Name: "sha512sum", Run: checksum("sha512")},
 		{Name: "hostname", Run: simpleOutput("localhost")},
 		{Name: "id", Run: commandID},
 		{Name: "uname", Run: commandUname},

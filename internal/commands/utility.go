@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"crypto/sha1"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
 	"strconv"
@@ -99,11 +100,23 @@ func commandBase64(_ context.Context, args []string, c *CommandContext) int {
 
 func checksum(kind string) CommandFunc {
 	return func(_ context.Context, args []string, c *CommandContext) int {
-		files := args
+		commandName := kind + "sum"
+		files := make([]string, 0, len(args))
+		parseOptions := true
+		for _, arg := range args {
+			if parseOptions && arg == "--" {
+				parseOptions = false
+				continue
+			}
+			if parseOptions && strings.HasPrefix(arg, "-") && arg != "-" {
+				return commandhelp.UnknownOption(c, commandName, arg)
+			}
+			files = append(files, arg)
+		}
 		if len(files) == 0 {
 			d, e := readInputs(nil, c)
 			if e != nil {
-				return report(c, kind+"sum", e)
+				return report(c, commandName, e)
 			}
 			fmt.Fprintf(c.Stdout, "%s  -\n", checksumString(kind, d))
 			return 0
@@ -113,14 +126,10 @@ func checksum(kind string) CommandFunc {
 		for _, name := range files {
 			d, e := readInputs([]string{name}, c)
 			if e != nil {
-				code = report(c, kind+"sum: "+name, e)
+				code = report(c, commandName+": "+name, e)
 				continue
 			}
-			label := name
-			if name == "-" {
-				label = "-"
-			}
-			fmt.Fprintf(c.Stdout, "%s  %s\n", checksumString(kind, d), label)
+			fmt.Fprintf(c.Stdout, "%s  %s\n", checksumString(kind, d), name)
 		}
 		return code
 	}
@@ -132,6 +141,8 @@ func checksumString(kind string, d []byte) string {
 		return fmt.Sprintf("%x", md5.Sum(d))
 	case "sha1":
 		return fmt.Sprintf("%x", sha1.Sum(d))
+	case "sha512":
+		return fmt.Sprintf("%x", sha512.Sum512(d))
 	default:
 		return fmt.Sprintf("%x", sha256.Sum256(d))
 	}

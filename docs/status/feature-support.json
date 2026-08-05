@@ -642,6 +642,15 @@
             ]
         },
         {
+            "name": "sha512sum",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash"
+            ],
+            "notes": "In-process SHA-512 digest generation for virtual filesystem files and stdin; verification flags are not supported."
+        },
+        {
             "name": "sleep",
             "status": "core",
             "category": "utility",
