@@ -69,6 +69,18 @@ func TestCommandVFindsUname(t *testing.T) {
 	}
 }
 
+func TestUUIDGenDiscoveryAndExecution(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `command -v uuidgen; which uuidgen; uuidgen`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+	lines := strings.Split(strings.TrimSuffix(result.Stdout, "\n"), "\n")
+	if len(lines) != 3 || lines[0] != "uuidgen" || lines[1] != "uuidgen: gash built-in" || len(lines[2]) != 36 {
+		t.Fatalf("stdout=%q", result.Stdout)
+	}
+}
+
 func TestCommandVReflectsOptionalCapabilities(t *testing.T) {
 	policy := network.NewPolicy()
 	shell, err := New(Options{Network: &policy})

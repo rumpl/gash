@@ -6,5 +6,6 @@ func Commands() []command.Command {
 	return []command.Command{
 		FactorCommand(),
 		Command(),
+		UUIDGenCommand(),
 	}
 }
