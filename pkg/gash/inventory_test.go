@@ -2,8 +2,11 @@ package gash
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/rumpl/gash/internal/commands"
@@ -91,6 +94,88 @@ func TestCommandInventoryConsistency(t *testing.T) {
 			t.Errorf("network-enabled command %q is missing from docs/status/feature-support.json", name)
 		} else if name != "curl" || entry.Status != "optional" {
 			t.Errorf("network-only command %q must be explicitly accounted for (currently only optional curl is expected); manifest status is %q", name, entry.Status)
+		}
+	}
+}
+
+func TestDocumentedCommandListsMatchManifest(t *testing.T) {
+	manifest := loadCommandInventoryManifest(t)
+	byStatus := map[string]map[string]bool{
+		"core": {}, "useful": {}, "partial": {},
+	}
+	readmeCommands := map[string]bool{}
+	statusCounts := map[string]int{}
+	for _, entry := range manifest.Commands {
+		statusCounts[entry.Status]++
+		if names, ok := byStatus[entry.Status]; ok {
+			names[entry.Name] = true
+			readmeCommands[entry.Name] = true
+		} else if entry.Status == "optional" && entry.Name == "curl" {
+			readmeCommands[entry.Name] = true
+		}
+	}
+
+	root := filepath.Join("..", "..")
+	readme := readDocumentationFile(t, filepath.Join(root, "README.md"))
+	assertDocumentedNames(t, "README current registered built-ins", markdownCommandParagraph(t, readme, "Current registered built-ins include:"), readmeCommands)
+
+	porting := readDocumentationFile(t, filepath.Join(root, "PORTING.md"))
+	for _, status := range []string{"core", "useful", "partial"} {
+		heading := "### " + strings.ToUpper(status[:1]) + status[1:]
+		assertDocumentedNames(t, "PORTING "+status, markdownCommandParagraph(t, porting, heading), byStatus[status])
+	}
+	countSummary := fmt.Sprintf("**%d commands**: **%d available by\ndefault** (**%d core**, **%d useful**, and **%d partial**) plus **%d optional**", len(manifest.Commands), statusCounts["core"]+statusCounts["useful"]+statusCounts["partial"], statusCounts["core"], statusCounts["useful"], statusCounts["partial"], statusCounts["optional"])
+	if !strings.Contains(porting, countSummary) {
+		t.Fatalf("PORTING command count summary is stale; want %q", countSummary)
+	}
+}
+
+var markdownCommandName = regexp.MustCompile("`([a-z0-9][a-z0-9-]*)`")
+
+func readDocumentationFile(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read %s: %v", path, err)
+	}
+	return string(data)
+}
+
+func markdownCommandParagraph(t *testing.T, document, marker string) map[string]bool {
+	t.Helper()
+	start := strings.Index(document, marker)
+	if start < 0 {
+		t.Fatalf("documentation marker %q not found", marker)
+	}
+	remainder := document[start+len(marker):]
+	paragraphs := strings.Split(remainder, "\n\n")
+	for _, paragraph := range paragraphs {
+		if !strings.HasPrefix(strings.TrimSpace(paragraph), "`") && !strings.HasPrefix(strings.TrimSpace(paragraph), "- `") {
+			continue
+		}
+		names := map[string]bool{}
+		for _, match := range markdownCommandName.FindAllStringSubmatch(paragraph, -1) {
+			if names[match[1]] {
+				t.Fatalf("%s contains duplicate command %q", marker, match[1])
+			}
+			names[match[1]] = true
+		}
+		return names
+	}
+	t.Fatalf("no command paragraph follows documentation marker %q", marker)
+	return nil
+}
+
+func assertDocumentedNames(t *testing.T, label string, got, want map[string]bool) {
+	t.Helper()
+	for name := range want {
+		if !got[name] {
+			t.Errorf("%s is missing %q", label, name)
+		}
+	}
+	for name := range got {
+		if !want[name] {
+			t.Errorf("%s contains stale or misplaced command %q", label, name)
 		}
 	}
 }
