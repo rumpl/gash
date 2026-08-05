@@ -882,6 +882,20 @@ var catalog = map[string]Info{
 			"-a          Convert all sequences of blanks (not just leading)",
 		},
 	},
+	"unlink": {
+		Name:    "unlink",
+		Summary: "remove one virtual filesystem file",
+		Usage:   "unlink FILE",
+		Description: []string{
+			"Removes exactly one non-directory path through the configured virtual filesystem.",
+		},
+		Options: []string{
+			"    --help   display this help and exit",
+		},
+		Notes: []string{
+			"The filesystem must provide the remove capability; host filesystem paths are never used implicitly.",
+		},
+	},
 	"uniq": {
 		Name:    "uniq",
 		Summary: "report or omit repeated lines",

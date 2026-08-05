@@ -9,6 +9,7 @@ func Commands() []command.Command {
 		{Name: "mktemp", Run: commandMktemp},
 		{Name: "touch", Run: commandTouch},
 		{Name: "rm", Run: commandRM},
+		{Name: "unlink", Run: commandUnlink},
 		{Name: "rmdir", Run: commandRmdir},
 		{Name: "cp", Run: commandCPParity},
 		{Name: "install", Run: commandInstall},

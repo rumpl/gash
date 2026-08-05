@@ -36,6 +36,21 @@ func TestIDDiscoveryAndHelp(t *testing.T) {
 	}
 }
 
+func TestUnlinkDiscoveryAndHelp(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `command -v unlink; which unlink; help unlink; unlink --help`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+	wantPrefix := "unlink\nunlink: gash built-in\nunlink - remove one virtual filesystem file\n\nUsage: unlink FILE\n"
+	if !strings.HasPrefix(result.Stdout, wantPrefix) {
+		t.Fatalf("stdout=%q, want prefix %q", result.Stdout, wantPrefix)
+	}
+	if strings.Count(result.Stdout, "unlink - remove one virtual filesystem file") != 2 {
+		t.Fatalf("help was not shown consistently: %q", result.Stdout)
+	}
+}
+
 func TestVerboseCommandAndTypeDiscoveryAvoidFilesystemPaths(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(context.Background(), `command -V bash; type bash; type -a ls`, ExecOptions{})
