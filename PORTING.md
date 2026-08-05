@@ -147,6 +147,11 @@ substantial work.
 
 ## Command status
 
+The machine-readable manifest currently tracks **103 commands**: **98 available by
+default** (**26 core**, **45 useful**, and **27 partial**) plus **5 optional**
+commands. The lists below are the human-readable view of those same entries;
+inventory tests keep their names and counts synchronized with the manifest.
+
 ### Core
 
 These commands are expected to be dependable for common workflows, but their
@@ -154,7 +159,7 @@ status does not certify exhaustive upstream edge-case parity:
 
 `base64`, `basename`, `bash`, `cat`, `cd`, `clear`, `dirname`, `echo`, `env`,
 `false`, `hostname`, `id`, `md5sum`, `printenv`, `printf`, `pwd`, `seq`, `sh`,
-`sha1sum`, `sha256sum`, `sha512sum`, `sleep`, `true`, `umask`, `uname`, `uuidgen`, `whoami`.
+`sha1sum`, `sha256sum`, `sha512sum`, `sleep`, `true`, `uname`, `uuidgen`, `whoami`.
 
 `id` reports the fixed virtual user and primary group `user` with uid and gid `1000`; it does not consult host credentials, user databases, supplementary groups, or environment variables.
 
@@ -170,7 +175,7 @@ flags or edge cases:
 `chmod`, `cksum`, `cmp`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `factor`, `file`, `fold`, `head`,
 `install`, `join`, `ln`, `ls`, `mkdir`, `mktemp`, `mv`, `nl`, `od`, `paste`, `readlink`, `realpath`, `rev`, `rm`,
 `rmdir`, `shuf`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`,
-`tree`, `unlink`, `unexpand`, `uniq`, `wc`, `yes`.
+`tree`, `umask`, `unlink`, `unexpand`, `uniq`, `wc`, `yes`.
 
 `unlink` is an additive gash file utility (not pinned just-bash parity). It removes
 exactly one non-directory path through the injected virtual filesystem and

@@ -1,4 +1,4 @@
-// Code generated from vercel-labs/just-bash command help definitions; DO NOT EDIT.
+// Code generated from pinned just-bash help definitions and gash additive command metadata; DO NOT EDIT.
 // Upstream commit: 2b316eb26b3f3e832e2cf3994d4fef160d5eb8e4.
 package commandhelp
 
@@ -1015,6 +1015,20 @@ var catalog = map[string]Info{
 			"-t, --verbose  print commands before executing",
 			"-r, --no-run-if-empty  do not run command if input is empty",
 			"    --help   display this help and exit",
+		},
+	},
+	"yes": {
+		Name:    "yes",
+		Summary: "output a string repeatedly until canceled",
+		Usage:   "yes [STRING]...",
+		Description: []string{
+			"Repeatedly writes STRING, or 'y' when no STRING is given, until execution is canceled or the output limit is reached.",
+		},
+		Options: []string{
+			"    --help       display this help and exit",
+		},
+		Notes: []string{
+			"Output is generated in-process and remains subject to gash cancellation and resource limits.",
 		},
 	},
 	"yq": {
