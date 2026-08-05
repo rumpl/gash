@@ -402,6 +402,25 @@ var catalog = map[string]Info{
 			"Script/style content is ignored and javascript:/data: links are not emitted. Advanced upstream conversion plugins and exact whitespace formatting are intentionally deferred.",
 		},
 	},
+	"id": {
+		Name:    "id",
+		Summary: "print the fixed gash virtual user and group identity",
+		Usage:   "id [OPTION]...",
+		Description: []string{
+			"Prints gash's deterministic virtual identity: user and primary group user, with uid and gid 1000. User operands are not supported.",
+		},
+		Options: []string{
+			"-u, --user     print only the effective user ID",
+			"-g, --group    print only the effective group ID",
+			"-G, --groups   print all group IDs",
+			"-n, --name     print names instead of numbers; requires exactly one selector",
+			"    --help     display this help and exit",
+		},
+		Notes: []string{
+			"Identity is fixed and does not use host credentials, the host user database, or environment variables.",
+			"Exactly one of --user, --group, or --groups may be selected. Operands and other options are rejected.",
+		},
+	},
 	"join": {
 		Name:    "join",
 		Summary: "join lines of two files on a common field",

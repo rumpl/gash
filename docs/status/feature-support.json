@@ -370,6 +370,15 @@
             "notes": "Implemented in-process with the Go HTML parser for common headings, paragraphs, emphasis, links/images, lists, blockquotes, and code blocks. Script/style content and unsafe javascript/data links are suppressed; exact upstream whitespace/plugins are intentionally deferred."
         },
         {
+            "name": "id",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash"
+            ],
+            "notes": "Reports the fixed virtual identity user/1000 and primary group user/1000 without consulting host credentials, user databases, supplementary groups, or environment variables. Supports common user/group/name probes; user operands are unsupported."
+        },
+        {
             "name": "join",
             "status": "useful",
             "category": "text",

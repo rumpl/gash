@@ -2,6 +2,7 @@ package gash
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -14,11 +15,24 @@ func TestCommandVUsesVirtualCommandRegistry(t *testing.T) {
 command -v curl >/dev/null; echo curl=$?
 command -v realpath >/dev/null; echo realpath=$?
 command -v ls
+command -v id
 command -v echo
 `, ExecOptions{})
-	want := "curl=1\nrealpath=1\nls\necho\n"
+	want := "curl=1\nrealpath=1\nls\nid\necho\n"
 	if result.ExitCode != 0 || result.Stdout != want || result.Stderr != "" {
 		t.Fatalf("result=%+v", result)
+	}
+}
+
+func TestIDDiscoveryAndHelp(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `command -v id; which id; help id`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+	wantPrefix := "id\nid: gash built-in\nid - print the fixed gash virtual user and group identity\n\nUsage: id [OPTION]...\n"
+	if !strings.HasPrefix(result.Stdout, wantPrefix) {
+		t.Fatalf("stdout=%q, want prefix %q", result.Stdout, wantPrefix)
 	}
 }
 
