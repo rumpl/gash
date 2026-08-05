@@ -21,6 +21,10 @@ func (r readOnly) Readlink(name string) (string, error) {
 	return Readlink(r.filesystem, name)
 }
 
+func (r readOnly) VirtualReadlink(name string) (string, error) {
+	return VirtualReadlink(r.filesystem, name)
+}
+
 func (r readOnly) Lstat(name string) (iofs.FileInfo, error) {
 	return Lstat(r.filesystem, name)
 }

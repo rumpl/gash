@@ -573,6 +573,15 @@
             ]
         },
         {
+            "name": "realpath",
+            "status": "useful",
+            "category": "path",
+            "sources": [
+                "gash"
+            ],
+            "notes": "Canonicalizes absolute virtual paths, follows virtual symlinks, and supports existing and missing-component modes without exposing host paths."
+        },
+        {
             "name": "rev",
             "status": "useful",
             "category": "text",

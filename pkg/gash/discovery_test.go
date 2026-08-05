@@ -18,7 +18,7 @@ command -v ls
 command -v id
 command -v echo
 `, ExecOptions{})
-	want := "curl=1\nrealpath=1\nls\nid\necho\n"
+	want := "curl=1\nrealpath=0\nls\nid\necho\n"
 	if result.ExitCode != 0 || result.Stdout != want || result.Stderr != "" {
 		t.Fatalf("result=%+v", result)
 	}

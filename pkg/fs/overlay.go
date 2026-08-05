@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"encoding/base64"
 	"errors"
 	"io"
 	iofs "io/fs"
@@ -14,7 +15,10 @@ import (
 // the same base name. The marker is an ordinary file, so any writable upper
 // filesystem can persist a deletion without a portable io/fs whiteout
 // capability. Entries using the prefix are never visible through the overlay.
-const whiteoutPrefix = ".wh."
+const (
+	whiteoutPrefix             = ".wh."
+	overlayGlobalSymlinkPrefix = ".gash-overlay-global-symlink."
+)
 
 // Overlay presents a writable upper filesystem over a read-only lower
 // filesystem. Reads prefer upper entries and fall back to lower entries.
@@ -339,20 +343,74 @@ func (o *Overlay) Symlink(target, name string) error {
 	return nil
 }
 
+func (o *Overlay) GlobalSymlink(target, name string) error {
+	name = Name(name)
+	if target == "" || target[0] != '/' {
+		return iofs.ErrInvalid
+	}
+	if err := o.prepareWrite("symlink", name); err != nil {
+		return err
+	}
+	if _, err := o.Lstat(name); err == nil {
+		return &iofs.PathError{Op: "symlink", Path: name, Err: iofs.ErrExist}
+	}
+	if f, ok := o.upper.(GlobalSymlinkFS); ok {
+		if err := f.GlobalSymlink(target, name); err != nil {
+			return err
+		}
+	} else {
+		stored := overlayGlobalSymlinkPrefix + base64.RawURLEncoding.EncodeToString([]byte(target))
+		if err := Symlink(o.upper, stored, name); err != nil {
+			return err
+		}
+	}
+	o.clearWhiteout(name)
+	return nil
+}
+
 func (o *Overlay) Readlink(name string) (string, error) {
+	target, _, err := o.ScopedVirtualReadlink(name)
+	return target, err
+}
+
+func (o *Overlay) VirtualReadlink(name string) (string, error) {
+	target, _, err := o.ScopedVirtualReadlink(name)
+	return target, err
+}
+
+func (o *Overlay) ScopedVirtualReadlink(name string) (string, bool, error) {
 	name = Name(name)
 	if err := rejectWhiteout("readlink", name); err != nil {
-		return "", err
+		return "", false, err
 	}
-	if target, err := Readlink(o.upper, name); err == nil {
-		return target, nil
+	if _, err := Lstat(o.upper, name); err == nil {
+		return scopedVirtualReadlink(o.upper, name)
 	} else if !isNotExist(err) {
-		return "", err
+		return "", false, err
 	}
 	if o.whitedOut(name) {
-		return "", notExist("readlink", name)
+		return "", false, notExist("readlink", name)
 	}
-	return Readlink(o.lower, name)
+	return scopedVirtualReadlink(o.lower, name)
+}
+
+func scopedVirtualReadlink(filesystem iofs.FS, name string) (string, bool, error) {
+	if f, ok := filesystem.(ScopedVirtualReadlinkFS); ok {
+		return f.ScopedVirtualReadlink(name)
+	}
+	target, err := VirtualReadlink(filesystem, name)
+	if err != nil {
+		return "", false, err
+	}
+	if strings.HasPrefix(target, overlayGlobalSymlinkPrefix) {
+		encoded := strings.TrimPrefix(target, overlayGlobalSymlinkPrefix)
+		decoded, decodeErr := base64.RawURLEncoding.DecodeString(encoded)
+		if decodeErr != nil || len(decoded) == 0 || decoded[0] != '/' {
+			return "", false, iofs.ErrPermission
+		}
+		return string(decoded), true, nil
+	}
+	return target, false, nil
 }
 
 func (o *Overlay) Chmod(name string, mode iofs.FileMode) error {
@@ -428,9 +486,15 @@ func (o *Overlay) copyUp(name string) error {
 	}
 	switch {
 	case info.Mode()&iofs.ModeSymlink != 0:
-		target, linkErr := Readlink(o.lower, name)
+		target, global, linkErr := scopedVirtualReadlink(o.lower, name)
 		if linkErr != nil {
 			return linkErr
+		}
+		if global {
+			if f, ok := o.upper.(GlobalSymlinkFS); ok {
+				return f.GlobalSymlink(target, name)
+			}
+			target = overlayGlobalSymlinkPrefix + base64.RawURLEncoding.EncodeToString([]byte(target))
 		}
 		return Symlink(o.upper, target, name)
 	case info.IsDir():
@@ -704,23 +768,26 @@ func (d *overlayDir) ReadDir(n int) ([]iofs.DirEntry, error) {
 }
 
 var (
-	_ iofs.FS          = (*Overlay)(nil)
-	_ iofs.ReadFileFS  = (*Overlay)(nil)
-	_ iofs.ReadDirFS   = (*Overlay)(nil)
-	_ iofs.StatFS      = (*Overlay)(nil)
-	_ iofs.ReadDirFile = (*overlayDir)(nil)
-	_ AppendFileFS     = (*Overlay)(nil)
-	_ ChmodFS          = (*Overlay)(nil)
-	_ ChtimesFS        = (*Overlay)(nil)
-	_ LinkFS           = (*Overlay)(nil)
-	_ LstatFS          = (*Overlay)(nil)
-	_ MkdirAllFS       = (*Overlay)(nil)
-	_ MkdirFS          = (*Overlay)(nil)
-	_ ReadlinkFS       = (*Overlay)(nil)
-	_ RemoveAllFS      = (*Overlay)(nil)
-	_ RemoveFS         = (*Overlay)(nil)
-	_ RenameFS         = (*Overlay)(nil)
-	_ SymlinkFS        = (*Overlay)(nil)
-	_ CreateFileFS     = (*Overlay)(nil)
-	_ WriteFileFS      = (*Overlay)(nil)
+	_ iofs.FS                 = (*Overlay)(nil)
+	_ iofs.ReadFileFS         = (*Overlay)(nil)
+	_ iofs.ReadDirFS          = (*Overlay)(nil)
+	_ iofs.StatFS             = (*Overlay)(nil)
+	_ iofs.ReadDirFile        = (*overlayDir)(nil)
+	_ AppendFileFS            = (*Overlay)(nil)
+	_ CreateFileFS            = (*Overlay)(nil)
+	_ ChmodFS                 = (*Overlay)(nil)
+	_ ChtimesFS               = (*Overlay)(nil)
+	_ LinkFS                  = (*Overlay)(nil)
+	_ GlobalSymlinkFS         = (*Overlay)(nil)
+	_ LstatFS                 = (*Overlay)(nil)
+	_ MkdirAllFS              = (*Overlay)(nil)
+	_ MkdirFS                 = (*Overlay)(nil)
+	_ ReadlinkFS              = (*Overlay)(nil)
+	_ VirtualReadlinkFS       = (*Overlay)(nil)
+	_ ScopedVirtualReadlinkFS = (*Overlay)(nil)
+	_ RemoveAllFS             = (*Overlay)(nil)
+	_ RemoveFS                = (*Overlay)(nil)
+	_ RenameFS                = (*Overlay)(nil)
+	_ SymlinkFS               = (*Overlay)(nil)
+	_ WriteFileFS             = (*Overlay)(nil)
 )

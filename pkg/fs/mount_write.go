@@ -93,8 +93,28 @@ func (m *Mountable) Readlink(name string) (string, error) {
 	return f.Readlink(relative)
 }
 
+func (m *Mountable) VirtualReadlink(name string) (string, error) {
+	filesystem, relative, mount := m.route(name)
+	if f, ok := filesystem.(ScopedVirtualReadlinkFS); ok {
+		target, global, err := f.ScopedVirtualReadlink(relative)
+		if err != nil || global || target == "" || target[0] != '/' || mount == "" {
+			return target, err
+		}
+		return "/" + path.Join(mount, target[1:]), nil
+	}
+	if f, ok := filesystem.(VirtualReadlinkFS); ok {
+		return f.VirtualReadlink(relative)
+	}
+	return m.Readlink(name)
+}
+
 func (m *Mountable) Symlink(target, name string) error {
-	filesystem, relative, _ := m.route(name)
+	filesystem, relative, mount := m.route(name)
+	if mount != "" && len(target) > 0 && target[0] == '/' {
+		if f, ok := filesystem.(GlobalSymlinkFS); ok {
+			return f.GlobalSymlink(target, relative)
+		}
+	}
 	f, ok := filesystem.(SymlinkFS)
 	if !ok {
 		return ErrReadOnly

@@ -22,6 +22,7 @@ func Commands() []command.Command {
 		{Name: "du", Run: commandDu},
 		{Name: "split", Run: commandSplit},
 		{Name: "readlink", Run: commandReadlink},
+		{Name: "realpath", Run: commandRealpath},
 		{Name: "find", Run: commandFind},
 	}
 }
