@@ -78,6 +78,21 @@ command -v type
 	}
 }
 
+func TestCommandDispatchedTypeDoesNotConsultHostPATH(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `
+command type ls missing; echo command_status=$?
+command -- type -t echo bash missing; echo command_typed=$?
+command builtin type ls missing; echo nested_status=$?
+command -- builtin -- type -t echo bash missing; echo nested_typed=$?
+`, ExecOptions{})
+	wantOut := "ls is a gash command\ncommand_status=1\nbuiltin\nfile\ncommand_typed=1\nls is a gash command\nnested_status=1\nbuiltin\nfile\nnested_typed=1\n"
+	wantErr := "type: missing: not found\ntype: missing: not found\n"
+	if result.ExitCode != 0 || result.Stdout != wantOut || result.Stderr != wantErr {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestTypeRejectsUnsupportedOptions(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(context.Background(), `type -p ls; echo status=$?`, ExecOptions{})
