@@ -156,6 +156,9 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 			if replacement, handled := b.virtualCommandDiscovery(callCtx, argv); handled {
 				return replacement, nil
 			}
+			if replacement, handled := b.virtualHashDiscovery(callCtx, argv); handled {
+				return replacement, nil
+			}
 			if replacement, handled := b.virtualTypeDiscovery(callCtx, argv); handled {
 				return replacement, nil
 			}

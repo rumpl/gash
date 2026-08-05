@@ -33,7 +33,7 @@ Current command inventory:
 | ----------- | ----: |
 | Core        |    26 |
 | Useful      |    45 |
-| Partial     |    27 |
+| Partial     |    28 |
 | Optional    |     5 |
 | Deferred    |     0 |
 | Unsupported |     0 |
@@ -208,6 +208,8 @@ These commands work for documented subsets and remain priority parity areas:
   complete GNU quoting and additional flags remain.
 - `help` — lists registered commands and catalog help; full interactive Bash help differs.
 - `history` — registered, but persistent interactive history is not implemented.
+- `hash` — compatibility-only, with an always-empty virtual table; `hash -r` is
+  a no-op and names resolve only against shell/gash commands, never host `PATH`.
 - `alias`, `unalias` — shell-native and scoped to one `Exec`.
 - `which` — reports virtual gash commands, never host `PATH` executables.
 - `time` — wall time is reported; host CPU accounting is intentionally absent.
