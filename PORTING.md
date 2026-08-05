@@ -32,7 +32,7 @@ Current command inventory:
 | Status      | Count |
 | ----------- | ----: |
 | Core        |    25 |
-| Useful      |    36 |
+| Useful      |    37 |
 | Partial     |    27 |
 | Optional    |     5 |
 | Deferred    |     0 |
@@ -166,7 +166,7 @@ These commands have practical in-process implementations with known unported
 flags or edge cases:
 
 `chmod`, `cmp`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `file`, `fold`, `head`,
-`join`, `ln`, `ls`, `mkdir`, `mktemp`, `mv`, `nl`, `od`, `paste`, `readlink`, `rev`, `rm`,
+`install`, `join`, `ln`, `ls`, `mkdir`, `mktemp`, `mv`, `nl`, `od`, `paste`, `readlink`, `rev`, `rm`,
 `rmdir`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`,
 `tree`, `unexpand`, `uniq`, `wc`, `yes`.
 

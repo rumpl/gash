@@ -379,6 +379,15 @@
             "notes": "Reports the fixed virtual identity user/1000 and primary group user/1000 without consulting host credentials, user databases, supplementary groups, or environment variables. Supports common user/group/name probes; user operands are unsupported."
         },
         {
+            "name": "install",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash"
+            ],
+            "notes": "In-process virtual-filesystem subset supporting regular-file copies, executable-style mode 0755 by default, -m modes, -D parent creation, and -d directory creation. Ownership/group changes, stripping, SELinux contexts, and timestamp preservation are explicitly rejected."
+        },
+        {
             "name": "join",
             "status": "useful",
             "category": "text",
