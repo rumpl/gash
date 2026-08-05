@@ -31,6 +31,15 @@ func TestVerboseCommandAndTypeDiscoveryAvoidFilesystemPaths(t *testing.T) {
 	}
 }
 
+func TestCommandVFindsUname(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `command -v uname; which uname; uname -a`, ExecOptions{})
+	want := "uname\nuname: gash built-in\nGash localhost 1.0.0 #1 gash virtual\n"
+	if result.ExitCode != 0 || result.Stdout != want || result.Stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestCommandVReflectsOptionalCapabilities(t *testing.T) {
 	policy := network.NewPolicy()
 	shell, err := New(Options{Network: &policy})

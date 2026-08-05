@@ -31,7 +31,7 @@ Current command inventory:
 
 | Status      | Count |
 | ----------- | ----: |
-| Core        |    22 |
+| Core        |    23 |
 | Useful      |    35 |
 | Partial     |    27 |
 | Optional    |     5 |
@@ -154,7 +154,9 @@ status does not certify exhaustive upstream edge-case parity:
 
 `base64`, `basename`, `bash`, `cat`, `cd`, `clear`, `dirname`, `echo`, `env`,
 `false`, `hostname`, `md5sum`, `printenv`, `printf`, `pwd`, `seq`, `sh`,
-`sha1sum`, `sha256sum`, `sleep`, `true`, `whoami`.
+`sha1sum`, `sha256sum`, `sleep`, `true`, `uname`, `whoami`.
+
+`uname` reports the host-independent virtual identity `Gash localhost 1.0.0 #1 gash virtual`; processor, hardware-platform, and operating-system fields are intentionally unsupported.
 
 ### Useful
 

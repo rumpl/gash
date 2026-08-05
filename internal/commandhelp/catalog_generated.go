@@ -757,6 +757,27 @@ var catalog = map[string]Info{
 			"MODE may be an octal mask or a symbolic rwx permission mode.",
 		},
 	},
+	"uname": {
+		Name:    "uname",
+		Summary: "print deterministic virtual system information",
+		Usage:   "uname [OPTION]...",
+		Description: []string{
+			"Prints stable gash platform values without consulting the host operating system or architecture.",
+		},
+		Options: []string{
+			"-a, --all             print all fields in GNU order",
+			"-s, --kernel-name     print the kernel name (Gash)",
+			"-n, --nodename        print the network node hostname (localhost)",
+			"-r, --kernel-release  print the kernel release (1.0.0)",
+			"-v, --kernel-version  print the kernel version (#1 gash)",
+			"-m, --machine         print the machine hardware name (virtual)",
+			"    --help            display this help and exit",
+		},
+		Notes: []string{
+			"Combined short options are supported and fields are always emitted in s, n, r, v, m order.",
+			"Processor, hardware-platform, and operating-system options are not supported.",
+		},
+	},
 	"unexpand": {
 		Name:    "unexpand",
 		Summary: "convert spaces to tabs",

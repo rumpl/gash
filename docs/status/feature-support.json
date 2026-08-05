@@ -793,6 +793,15 @@
             "notes": "Supports octal and rwx symbolic masks, -S/-p display, shell redirections, and in-process file creation."
         },
         {
+            "name": "uname",
+            "status": "core",
+            "category": "utility",
+            "sources": [
+                "gash"
+            ],
+            "notes": "Deterministic virtual platform identity: Gash, localhost, 1.0.0, #1 gash, and machine virtual. Processor, hardware-platform, and operating-system flags are intentionally unsupported."
+        },
+        {
             "name": "unexpand",
             "status": "useful",
             "category": "text",
