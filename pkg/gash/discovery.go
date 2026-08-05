@@ -123,6 +123,20 @@ func (b *Bash) discoverCommand(name string) (string, bool) {
 	return "", false
 }
 
+func (b *Bash) commandTypes() map[string]string {
+	types := make(map[string]string, len(discoverableShellBuiltins)+len(b.commands)+3)
+	for name := range b.commands {
+		types[name] = "file"
+	}
+	for name := range discoverableShellBuiltins {
+		types[name] = "builtin"
+	}
+	for _, name := range []string{"bash", "sh", "kill"} {
+		types[name] = "file"
+	}
+	return types
+}
+
 type positionalState struct {
 	count atomic.Int64
 }
