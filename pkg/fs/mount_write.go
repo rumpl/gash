@@ -6,6 +6,15 @@ import (
 	"time"
 )
 
+func (m *Mountable) CreateFile(name string, data []byte, perm iofs.FileMode) error {
+	filesystem, relative, _ := m.route(name)
+	f, ok := filesystem.(CreateFileFS)
+	if !ok {
+		return ErrReadOnly
+	}
+	return f.CreateFile(relative, data, perm)
+}
+
 func (m *Mountable) WriteFile(name string, data []byte, perm iofs.FileMode) error {
 	filesystem, relative, _ := m.route(name)
 	f, ok := filesystem.(WriteFileFS)
