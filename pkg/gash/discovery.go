@@ -94,13 +94,7 @@ func (b *Bash) virtualTypeDiscovery(_ context.Context, argv []string) ([]string,
 		return argv, false
 	}
 	args := argv
-	if args[0] == "command" {
-		args = args[1:]
-		if len(args) > 0 && args[0] == "--" {
-			args = args[1:]
-		}
-	}
-	if len(args) > 0 && args[0] == "builtin" {
+	for len(args) > 0 && (args[0] == "command" || args[0] == "builtin") {
 		args = args[1:]
 		if len(args) > 0 && args[0] == "--" {
 			args = args[1:]
@@ -109,7 +103,7 @@ func (b *Bash) virtualTypeDiscovery(_ context.Context, argv []string) ([]string,
 	if len(args) == 0 || args[0] != "type" {
 		return argv, false
 	}
-	// Direct type, builtin type, and command-dispatched variants would otherwise
+	// Direct type and any nesting of command/builtin wrappers would otherwise
 	// reach mvdan's shell-native implementation and expose host PATH lookup.
 	// Preserve the type operands while forcing the registered capability-scoped
 	// implementation for every supported dispatch form.

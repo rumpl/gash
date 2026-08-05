@@ -85,9 +85,13 @@ command type ls missing; echo command_status=$?
 command -- type -t echo bash missing; echo command_typed=$?
 command builtin type ls missing; echo nested_status=$?
 command -- builtin -- type -t echo bash missing; echo nested_typed=$?
+builtin command type ls missing; echo builtin_command_status=$?
+command command -- type -t echo bash missing; echo command_command_typed=$?
+builtin builtin -- type ls missing; echo builtin_builtin_status=$?
+command builtin command builtin -- type -t echo bash missing; echo deeply_nested_typed=$?
 `, ExecOptions{})
-	wantOut := "ls is a gash command\ncommand_status=1\nbuiltin\nfile\ncommand_typed=1\nls is a gash command\nnested_status=1\nbuiltin\nfile\nnested_typed=1\n"
-	wantErr := "type: missing: not found\ntype: missing: not found\n"
+	wantOut := "ls is a gash command\ncommand_status=1\nbuiltin\nfile\ncommand_typed=1\nls is a gash command\nnested_status=1\nbuiltin\nfile\nnested_typed=1\nls is a gash command\nbuiltin_command_status=1\nbuiltin\nfile\ncommand_command_typed=1\nls is a gash command\nbuiltin_builtin_status=1\nbuiltin\nfile\ndeeply_nested_typed=1\n"
+	wantErr := "type: missing: not found\ntype: missing: not found\ntype: missing: not found\ntype: missing: not found\n"
 	if result.ExitCode != 0 || result.Stdout != wantOut || result.Stderr != wantErr {
 		t.Fatalf("result=%+v", result)
 	}
