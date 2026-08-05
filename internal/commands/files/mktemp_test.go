@@ -110,6 +110,35 @@ func TestMktempReportsFilesystemAndArgumentErrors(t *testing.T) {
 	}
 }
 
+func TestMktempNormalizesRelativeTemplateOutput(t *testing.T) {
+	tests := []struct {
+		name     string
+		template string
+		want     string
+		created  string
+	}{
+		{name: "current directory", template: "./local.XXX", want: "local.aaa\n", created: "work/local.aaa"},
+		{name: "redundant components", template: "nested//./item.XXX", want: "nested/item.aaa\n", created: "work/nested/item.aaa"},
+		{name: "parent traversal", template: "../root.XXX", want: "/root.aaa\n", created: "root.aaa"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			withMktempRandom(t, bytes.NewReader(bytes.Repeat([]byte{0}, 3)))
+			filesystem := gfs.NewMemory(0)
+			if err := filesystem.MkdirAll("work/nested", 0o755); err != nil {
+				t.Fatal(err)
+			}
+			result := runCommandWithFS(t, commandMktemp, []string{tc.template}, filesystem)
+			if result.exitCode != 0 || result.stdout != tc.want || result.stderr != "" {
+				t.Fatalf("exit=%d stdout=%q stderr=%q", result.exitCode, result.stdout, result.stderr)
+			}
+			if !exists(filesystem, tc.created) {
+				t.Fatalf("created entry %q is missing", tc.created)
+			}
+		})
+	}
+}
+
 func TestMktempAbsoluteTemplatePrintsUsableAbsolutePath(t *testing.T) {
 	withMktempRandom(t, bytes.NewReader(bytes.Repeat([]byte{0}, 3)))
 	result := runCommand(t, commandMktemp, []string{"/root.XXX"}, nil)

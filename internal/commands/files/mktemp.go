@@ -72,16 +72,16 @@ func commandMktemp(_ context.Context, args []string, c *CommandContext) int {
 			return report(c, "mktemp", err)
 		}
 		name := prefix + suffix
-		if _, err := gfs.Lstat(c.FS, abs(c, name)); err == nil {
+		if _, err := gfs.Lstat(c.FS, name); err == nil {
 			continue
 		} else if !errors.Is(err, iofs.ErrNotExist) {
 			return report(c, "mktemp: "+name, err)
 		}
 
 		if opts.directory {
-			err = gfs.Mkdir(c.FS, abs(c, name), c.CreationMode(0o700))
+			err = gfs.Mkdir(c.FS, name, c.CreationMode(0o700))
 		} else {
-			err = gfs.CreateFile(c.FS, abs(c, name), nil, c.CreationMode(0o600))
+			err = gfs.CreateFile(c.FS, name, nil, c.CreationMode(0o600))
 		}
 		if errors.Is(err, iofs.ErrExist) {
 			continue
@@ -151,7 +151,7 @@ func parseMktemp(args []string, c *CommandContext) (mktempOptions, bool) {
 	return opts, true
 }
 
-func mktempTemplate(opts mktempOptions, c *CommandContext) (absoluteInput, display string, ok bool) {
+func mktempTemplate(opts mktempOptions, c *CommandContext) (absoluteTemplate, display string, ok bool) {
 	template := opts.template
 	if template == "" {
 		template = "tmp.XXXXXXXXXX"
@@ -163,8 +163,28 @@ func mktempTemplate(opts mktempOptions, c *CommandContext) (absoluteInput, displ
 		}
 		template = path.Join(opts.tmpdir, template)
 	}
-	template = path.Clean(template)
-	return template, template, true
+	absoluteInput := strings.HasPrefix(template, "/")
+	absoluteTemplate = abs(c, path.Clean(template))
+	if absoluteInput {
+		return absoluteTemplate, absoluteTemplate, true
+	}
+	return absoluteTemplate, mktempDisplayPath(*c.Cwd, absoluteTemplate), true
+}
+
+// mktempDisplayPath keeps ordinary paths relative to cwd, but prints an
+// absolute virtual path when reaching the created entry would require parent
+// traversal. This makes the reported path normalized and directly reusable
+// without preserving ambiguous . or .. components from the input.
+func mktempDisplayPath(cwd, absoluteTemplate string) string {
+	cwd = path.Clean(cwd)
+	absoluteTemplate = path.Clean(absoluteTemplate)
+	if cwd == "/" {
+		return strings.TrimPrefix(absoluteTemplate, "/")
+	}
+	if strings.HasPrefix(absoluteTemplate, cwd+"/") {
+		return strings.TrimPrefix(absoluteTemplate, cwd+"/")
+	}
+	return absoluteTemplate
 }
 
 func randomAlphaNumeric(length int) (string, error) {
