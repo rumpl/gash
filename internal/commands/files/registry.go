@@ -11,6 +11,7 @@ func Commands() []command.Command {
 		{Name: "rm", Run: commandRM},
 		{Name: "rmdir", Run: commandRmdir},
 		{Name: "cp", Run: commandCPParity},
+		{Name: "install", Run: commandInstall},
 		{Name: "cmp", Run: commandCmp},
 		{Name: "mv", Run: commandMV},
 		{Name: "ln", Run: commandLNParity},

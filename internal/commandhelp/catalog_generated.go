@@ -421,6 +421,24 @@ var catalog = map[string]Info{
 			"Exactly one of --user, --group, or --groups may be selected. Operands and other options are rejected.",
 		},
 	},
+	"install": {
+		Name:    "install",
+		Summary: "copy files and set attributes",
+		Usage:   "install [OPTION]... SOURCE... DEST\ninstall -d [OPTION]... DIRECTORY...",
+		Description: []string{
+			"Copies regular files inside the virtual filesystem using mode 0755 by default.",
+		},
+		Options: []string{
+			"-D                 create missing destination parent directories",
+			"-d, --directory    create directories and parents instead of copying",
+			"-m, --mode=MODE    set octal or supported symbolic permission mode",
+			"    --              end option parsing",
+			"    --help          display this help and exit",
+		},
+		Notes: []string{
+			"Ownership/group, stripping, SELinux contexts, and timestamp preservation are explicitly unsupported.",
+		},
+	},
 	"join": {
 		Name:    "join",
 		Summary: "join lines of two files on a common field",
