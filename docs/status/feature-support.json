@@ -865,6 +865,15 @@
             ]
         },
         {
+            "name": "unlink",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash"
+            ],
+            "notes": "Additive gash file utility, not pinned just-bash parity. Removes exactly one non-directory path through the injected virtual filesystem and reports unsupported remove capabilities."
+        },
+        {
             "name": "uniq",
             "status": "useful",
             "category": "text",
