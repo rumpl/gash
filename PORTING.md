@@ -165,7 +165,7 @@ status does not certify exhaustive upstream edge-case parity:
 These commands have practical in-process implementations with known unported
 flags or edge cases:
 
-`chmod`, `cksum`, `cmp`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `file`, `fold`, `head`,
+`chmod`, `cksum`, `cmp`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `factor`, `file`, `fold`, `head`,
 `install`, `join`, `ln`, `ls`, `mkdir`, `mktemp`, `mv`, `nl`, `od`, `paste`, `readlink`, `realpath`, `rev`, `rm`,
 `rmdir`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`,
 `tree`, `unlink`, `unexpand`, `uniq`, `wc`, `yes`.
@@ -177,6 +177,10 @@ reports missing remove capabilities as errors.
 `mktemp` creates files and directories only inside the configured virtual
 filesystem. It supports trailing-X templates, `-d`, `-p DIR`, `--tmpdir=DIR`,
 and `--`; unlink/quiet, ownership, and suffix flags are intentionally unsupported.
+
+`factor` accepts non-negative decimal integers from arguments, or whitespace-separated
+standard input when no arguments are given. It prints `0:` and `1:` with no factors
+and limits inputs to 1000000000000 to bound cancellation-aware trial division.
 
 ### Partial
 

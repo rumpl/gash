@@ -274,6 +274,21 @@ var catalog = map[string]Info{
 			"    --help       display this help and exit",
 		},
 	},
+	"factor": {
+		Name:    "factor",
+		Summary: "factor non-negative decimal integers",
+		Usage:   "factor [NUMBER]...",
+		Description: []string{
+			"Prints each NUMBER followed by its prime factors. With no arguments, reads whitespace-separated numbers from standard input.",
+		},
+		Options: []string{
+			"    --help   display this help and exit",
+		},
+		Notes: []string{
+			"Inputs are limited to 1000000000000 to bound trial-division work.",
+			"Zero and one have no prime factors and are printed as '0:' and '1:'.",
+		},
+	},
 	"fgrep": {
 		Name:    "fgrep",
 		Summary: "print lines that match fixed strings",
