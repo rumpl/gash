@@ -22,6 +22,10 @@ type Context struct {
 	// current shell. It is informational for discovery built-ins such as help and
 	// which; command execution must go through RunCommand.
 	Commands []string
+	// CommandTypes classifies names visible through safe shell discovery. Values
+	// use Bash's `type -t` vocabulary (currently "builtin" or "file").
+	// Host PATH entries are never included.
+	CommandTypes map[string]string
 	// RunCommand executes argv through the embedding shell's safe command path.
 	// It must not consult the host PATH.
 	RunCommand func(context.Context, []string, *Context) int

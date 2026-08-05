@@ -855,6 +855,16 @@
             ]
         },
         {
+            "name": "type",
+            "status": "partial",
+            "category": "path",
+            "sources": [
+                "gash",
+                "gash:shell-native"
+            ],
+            "notes": "Registered in-process discovery command supporting NAME..., -a, and -t. Discovery is deterministic and limited to shell built-ins, shell entry points, and the capability-scoped gash registry; host PATH lookup, executable paths, and Bash alias/function reporting are intentionally not supported."
+        },
+        {
             "name": "umask",
             "status": "useful",
             "category": "files",

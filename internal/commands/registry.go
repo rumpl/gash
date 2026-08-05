@@ -39,6 +39,7 @@ func BuiltinsWithNetwork(policy *network.Policy) []Command {
 		{Name: "time", Run: commandTime},
 		{Name: "timeout", Run: commandTimeout},
 		{Name: "which", Run: commandWhich},
+		{Name: "type", Run: commandType},
 		{Name: "expr", Run: commandExpr},
 		{Name: "base64", Run: commandBase64},
 		{Name: "cksum", Run: commandCksum},

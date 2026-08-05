@@ -60,6 +60,51 @@ func TestVerboseCommandAndTypeDiscoveryAvoidFilesystemPaths(t *testing.T) {
 	}
 }
 
+func TestTypeDiscoveryUsesRegisteredCommandSurface(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `
+type echo ls bash missing; echo status=$?
+type -t echo ls bash type missing; echo typed=$?
+type -a ls bash
+command type -t ls
+builtin type ls missing; echo builtin_status=$?
+builtin -- type -t echo bash missing; echo builtin_typed=$?
+command -v type
+`, ExecOptions{})
+	wantOut := "echo is a shell builtin\nls is a gash command\nbash is a gash command\nstatus=1\nbuiltin\nfile\nfile\nbuiltin\ntyped=1\nls is a gash command\nbash is a gash command\nfile\nls is a gash command\nbuiltin_status=1\nbuiltin\nfile\nbuiltin_typed=1\ntype\n"
+	wantErr := "type: missing: not found\ntype: missing: not found\n"
+	if result.ExitCode != 0 || result.Stdout != wantOut || result.Stderr != wantErr {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
+func TestCommandDispatchedTypeDoesNotConsultHostPATH(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `
+command type ls missing; echo command_status=$?
+command -- type -t echo bash missing; echo command_typed=$?
+command builtin type ls missing; echo nested_status=$?
+command -- builtin -- type -t echo bash missing; echo nested_typed=$?
+builtin command type ls missing; echo builtin_command_status=$?
+command command -- type -t echo bash missing; echo command_command_typed=$?
+builtin builtin -- type ls missing; echo builtin_builtin_status=$?
+command builtin command builtin -- type -t echo bash missing; echo deeply_nested_typed=$?
+`, ExecOptions{})
+	wantOut := "ls is a gash command\ncommand_status=1\nbuiltin\nfile\ncommand_typed=1\nls is a gash command\nnested_status=1\nbuiltin\nfile\nnested_typed=1\nls is a gash command\nbuiltin_command_status=1\nbuiltin\nfile\ncommand_command_typed=1\nls is a gash command\nbuiltin_builtin_status=1\nbuiltin\nfile\ndeeply_nested_typed=1\n"
+	wantErr := "type: missing: not found\ntype: missing: not found\ntype: missing: not found\ntype: missing: not found\n"
+	if result.ExitCode != 0 || result.Stdout != wantOut || result.Stderr != wantErr {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
+func TestTypeRejectsUnsupportedOptions(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `type -p ls; echo status=$?`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "status=1\n" || result.Stderr != "type: invalid option -- 'p'\n" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestCommandVFindsUname(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(context.Background(), `command -v uname; which uname; uname -a`, ExecOptions{})

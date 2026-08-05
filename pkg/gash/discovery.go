@@ -89,33 +89,25 @@ func (b *Bash) virtualHashDiscovery(ctx context.Context, argv []string) ([]strin
 	return []string{"true"}, true
 }
 
-func (b *Bash) virtualTypeDiscovery(ctx context.Context, argv []string) ([]string, bool) {
-	if len(argv) < 2 || argv[0] != "type" {
+func (b *Bash) virtualTypeDiscovery(_ context.Context, argv []string) ([]string, bool) {
+	if len(argv) == 0 {
 		return argv, false
 	}
-	names := argv[1:]
-	if names[0] == "-a" {
-		names = names[1:]
-	} else if strings.HasPrefix(names[0], "-") {
-		return argv, false
-	}
-	handler := interp.HandlerCtx(ctx)
-	lastFound := true
-	for _, requested := range names {
-		name := normalizeDiscoveredName(requested)
-		kind, found := b.discoverCommand(name)
-		if !found || strings.Contains(name, "/") {
-			fmt.Fprintf(handler.Stderr, "type: %s: not found\n", requested)
-			lastFound = false
-			continue
+	args := argv
+	for len(args) > 0 && (args[0] == "command" || args[0] == "builtin") {
+		args = args[1:]
+		if len(args) > 0 && args[0] == "--" {
+			args = args[1:]
 		}
-		fmt.Fprintf(handler.Stdout, "%s is %s\n", name, kind)
-		lastFound = true
 	}
-	if lastFound {
-		return []string{"true"}, true
+	if len(args) == 0 || args[0] != "type" {
+		return argv, false
 	}
-	return []string{"false"}, true
+	// Direct type and any nesting of command/builtin wrappers would otherwise
+	// reach mvdan's shell-native implementation and expose host PATH lookup.
+	// Preserve the type operands while forcing the registered capability-scoped
+	// implementation for every supported dispatch form.
+	return append([]string{"/usr/bin/type"}, args[1:]...), true
 }
 
 func (b *Bash) discoverCommand(name string) (string, bool) {
@@ -129,6 +121,20 @@ func (b *Bash) discoverCommand(name string) (string, bool) {
 		return "a gash command", true
 	}
 	return "", false
+}
+
+func (b *Bash) commandTypes() map[string]string {
+	types := make(map[string]string, len(discoverableShellBuiltins)+len(b.commands)+3)
+	for name := range b.commands {
+		types[name] = "file"
+	}
+	for name := range discoverableShellBuiltins {
+		types[name] = "builtin"
+	}
+	for _, name := range []string{"bash", "sh", "kill"} {
+		types[name] = "file"
+	}
+	return types
 }
 
 type positionalState struct {
