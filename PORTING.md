@@ -32,7 +32,7 @@ Current command inventory:
 | Status      | Count |
 | ----------- | ----: |
 | Core        |    25 |
-| Useful      |    37 |
+| Useful      |    38 |
 | Partial     |    27 |
 | Optional    |     5 |
 | Deferred    |     0 |
@@ -165,7 +165,7 @@ status does not certify exhaustive upstream edge-case parity:
 These commands have practical in-process implementations with known unported
 flags or edge cases:
 
-`chmod`, `cmp`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `file`, `fold`, `head`,
+`chmod`, `cksum`, `cmp`, `column`, `comm`, `cp`, `cut`, `du`, `expand`, `file`, `fold`, `head`,
 `install`, `join`, `ln`, `ls`, `mkdir`, `mktemp`, `mv`, `nl`, `od`, `paste`, `readlink`, `rev`, `rm`,
 `rmdir`, `sort`, `split`, `stat`, `strings`, `tac`, `tail`, `tee`, `touch`, `tr`,
 `tree`, `unexpand`, `uniq`, `wc`, `yes`.

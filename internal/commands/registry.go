@@ -41,6 +41,7 @@ func BuiltinsWithNetwork(policy *network.Policy) []Command {
 		{Name: "which", Run: commandWhich},
 		{Name: "expr", Run: commandExpr},
 		{Name: "base64", Run: commandBase64},
+		{Name: "cksum", Run: commandCksum},
 		{Name: "md5sum", Run: checksum("md5")},
 		{Name: "sha1sum", Run: checksum("sha1")},
 		{Name: "sha256sum", Run: checksum("sha256")},

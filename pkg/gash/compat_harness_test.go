@@ -31,6 +31,12 @@ func TestJustBashStyleCompatibilityHarness(t *testing.T) {
 			WantStdout: "apple\napple pie\n",
 		},
 		{
+			Name:       "cksum reads execution stdin",
+			Script:     `cksum`,
+			Stdin:      "123" + "456" + "789",
+			WantStdout: "930766865 9\n",
+		},
+		{
 			Name: "redirections append and read from cwd",
 			Files: map[string]string{
 				"work/input.txt": "first\n",

@@ -29,6 +29,23 @@ func TestRunWithHostRoot(t *testing.T) {
 	}
 }
 
+func TestRunForwardsStdinWithCommand(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	exitCode := run(
+		[]string{"-c", "cksum"},
+		strings.NewReader("123"+"456"+"789"),
+		&stdout,
+		&stderr,
+	)
+	if exitCode != 0 {
+		t.Fatalf("exit=%d stderr=%q", exitCode, stderr.String())
+	}
+	if stdout.String() != "930766865 9\n" {
+		t.Fatalf("stdout=%q", stdout.String())
+	}
+}
+
 func TestRunWithHostRootDoesNotPermitWrites(t *testing.T) {
 	root := t.TempDir()
 	var stdout bytes.Buffer

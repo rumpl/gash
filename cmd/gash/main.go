@@ -56,6 +56,15 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	if exitCode != 0 {
 		return exitCode
 	}
+	var executionStdin string
+	if *command != "" || scriptName != "" {
+		data, err := io.ReadAll(stdin)
+		if err != nil {
+			fmt.Fprintln(stderr, "gash:", err)
+			return 1
+		}
+		executionStdin = string(data)
+	}
 
 	options := gash.Options{
 		Cwd: *cwd,
@@ -112,7 +121,7 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "gash:", err)
 		return 1
 	}
-	result := bash.Exec(context.Background(), script, gash.ExecOptions{Args: scriptArgs, ScriptName: scriptName})
+	result := bash.Exec(context.Background(), script, gash.ExecOptions{Args: scriptArgs, ScriptName: scriptName, Stdin: executionStdin})
 	if *jsonOutput {
 		if err := json.NewEncoder(stdout).Encode(result); err != nil {
 			fmt.Fprintln(stderr, "gash:", err)

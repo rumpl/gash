@@ -80,6 +80,21 @@ var catalog = map[string]Info{
 			"    --help                  display this help and exit",
 		},
 	},
+	"cksum": {
+		Name:    "cksum",
+		Summary: "print POSIX CRC checksums and byte counts",
+		Usage:   "cksum [--] [FILE]...",
+		Description: []string{
+			"Reads stdin when no FILE is given. A FILE of - also reads stdin at that operand position.",
+		},
+		Options: []string{
+			"--             end option parsing",
+			"    --help     display this help and exit",
+		},
+		Notes: []string{
+			"Uses the POSIX cksum CRC algorithm, including the input length in the checksum.",
+		},
+	},
 	"clear": {
 		Name:    "clear",
 		Summary: "clear the terminal screen",
