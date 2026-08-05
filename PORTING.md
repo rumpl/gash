@@ -147,8 +147,8 @@ substantial work.
 
 ## Command status
 
-The machine-readable manifest currently tracks **103 commands**: **98 available by
-default** (**26 core**, **45 useful**, and **27 partial**) plus **5 optional**
+The machine-readable manifest currently tracks **105 commands**: **100 available by
+default** (**26 core**, **45 useful**, and **29 partial**) plus **5 optional**
 commands. The lists below are the human-readable view of those same entries;
 inventory tests keep their names and counts synchronized with the manifest.
 
