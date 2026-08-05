@@ -703,6 +703,21 @@ var catalog = map[string]Info{
 			"    --help display this help and exit",
 		},
 	},
+	"shuf": {
+		Name:    "shuf",
+		Summary: "generate random permutations of input lines",
+		Usage:   "shuf [OPTION]... [FILE]...",
+		Options: []string{
+			"-n, --head-count=COUNT  output at most COUNT lines",
+			"-i, --input-range=LO-HI treat each number LO through HI as an input line",
+			"-r, --repeat            output lines repeatedly; requires --head-count",
+			"    --help              display this help and exit",
+		},
+		Notes: []string{
+			"Reads stdin when no FILE is given. Randomness uses the operating system cryptographic source.",
+			"Unsupported GNU shuf options are rejected rather than silently ignored.",
+		},
+	},
 	"sort": {
 		Name:    "sort",
 		Summary: "sort lines of text files",

@@ -696,6 +696,15 @@
             ]
         },
         {
+            "name": "shuf",
+            "status": "useful",
+            "category": "text",
+            "sources": [
+                "gash"
+            ],
+            "notes": "In-process line randomization over stdin and virtual files, with bounded head counts, virtual numeric ranges, repeat mode, and operating-system cryptographic randomness. Unsupported GNU options are rejected."
+        },
+        {
             "name": "sort",
             "status": "useful",
             "category": "text",
