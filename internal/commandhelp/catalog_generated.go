@@ -946,6 +946,21 @@ var catalog = map[string]Info{
 			"Only gash built-ins and shell entry points are reported; host PATH executables are never resolved.",
 		},
 	},
+	"uuidgen": {
+		Name:    "uuidgen",
+		Summary: "generate a random UUID",
+		Usage:   "uuidgen [-r|--random]",
+		Description: []string{
+			"Generates an RFC 4122 version-4 UUID using Go cryptographic randomness.",
+		},
+		Options: []string{
+			"-r, --random  generate a random UUID (default)",
+			"    --help    display this help and exit",
+		},
+		Notes: []string{
+			"Time- and MAC-based UUID modes are intentionally unsupported.",
+		},
+	},
 	"wc": {
 		Name:    "wc",
 		Summary: "print newline, word, and byte counts for each file",
