@@ -467,6 +467,23 @@ var catalog = map[string]Info{
 			"    --help           display this help and exit",
 		},
 	},
+	"mktemp": {
+		Name:    "mktemp",
+		Summary: "create a temporary file or directory",
+		Usage:   "mktemp [OPTION]... [TEMPLATE]",
+		Description: []string{
+			"Create inside the configured virtual filesystem. TEMPLATE must end with at least three X characters in its final component.",
+		},
+		Options: []string{
+			"-d                 create a directory instead of a file",
+			"-p DIR             create in DIR using a basename template",
+			"    --tmpdir=DIR    create in DIR using a basename template",
+			"    --help          display this help and exit",
+		},
+		Notes: []string{
+			"Flags such as -u, -q, ownership, and suffix options are intentionally unsupported.",
+		},
+	},
 	"mv": {
 		Name:    "mv",
 		Summary: "move (rename) files",

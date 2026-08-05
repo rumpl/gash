@@ -170,6 +170,36 @@ func (m *Memory) Lstat(name string) (iofs.FileInfo, error) {
 	return fileInfo{name: path.Base(resolved), node: cloneNode(n)}, nil
 }
 
+func (m *Memory) CreateFile(name string, data []byte, perm iofs.FileMode) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if err := valid(name); err != nil {
+		return err
+	}
+	if _, _, err := m.resolveLocked(name, false); err == nil {
+		return iofs.ErrExist
+	} else if !errors.Is(err, iofs.ErrNotExist) {
+		return err
+	}
+	resolvedParent, p, err := m.resolveLocked(parent(name), true)
+	if err != nil {
+		return err
+	}
+	if p.kind != directory {
+		return ErrNotDir
+	}
+	if m.limit > 0 && m.used+int64(len(data)) > m.limit {
+		return ErrQuota
+	}
+	resolved := path.Join(resolvedParent, path.Base(name))
+	if m.nodes[resolved] != nil {
+		return iofs.ErrExist
+	}
+	m.nodes[resolved] = &node{kind: regular, data: append([]byte(nil), data...), mode: perm.Perm(), mtime: time.Now(), links: 1}
+	m.used += int64(len(data))
+	return nil
+}
+
 func (m *Memory) WriteFile(name string, data []byte, perm iofs.FileMode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

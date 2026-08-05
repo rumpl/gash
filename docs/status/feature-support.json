@@ -444,6 +444,15 @@
             ]
         },
         {
+            "name": "mktemp",
+            "status": "useful",
+            "category": "files",
+            "sources": [
+                "gash"
+            ],
+            "notes": "Creates collision-resistant files and directories inside the virtual filesystem with -d, -p, --tmpdir, and trailing-X templates. Unlink, quiet, ownership, and suffix flags are intentionally unsupported."
+        },
+        {
             "name": "mv",
             "status": "useful",
             "category": "files",

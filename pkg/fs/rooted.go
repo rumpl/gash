@@ -117,6 +117,27 @@ func (r *Rooted) Readlink(name string) (string, error) {
 	return target, nil
 }
 
+func (r *Rooted) CreateFile(name string, data []byte, perm iofs.FileMode) error {
+	host, err := r.hostCreatePath(name)
+	if err != nil {
+		return err
+	}
+	file, err := os.OpenFile(host, os.O_WRONLY|os.O_CREATE|os.O_EXCL, perm)
+	if err != nil {
+		return rootedPathError("create", name, err)
+	}
+	if _, err = file.Write(data); err != nil {
+		_ = file.Close()
+		_ = os.Remove(host)
+		return rootedPathError("create", name, err)
+	}
+	if err = file.Close(); err != nil {
+		_ = os.Remove(host)
+		return rootedPathError("create", name, err)
+	}
+	return nil
+}
+
 func (r *Rooted) WriteFile(name string, data []byte, perm iofs.FileMode) error {
 	host, err := r.hostWritePath(name)
 	if err != nil {

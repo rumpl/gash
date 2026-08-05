@@ -162,6 +162,23 @@ func (o *Overlay) Lstat(name string) (iofs.FileInfo, error) {
 	return Lstat(o.lower, name)
 }
 
+func (o *Overlay) CreateFile(name string, data []byte, perm iofs.FileMode) error {
+	name = Name(name)
+	if err := o.prepareWrite("create", name); err != nil {
+		return err
+	}
+	if _, err := o.Lstat(name); err == nil {
+		return iofs.ErrExist
+	} else if !isNotExist(err) {
+		return err
+	}
+	if err := CreateFile(o.upper, name, data, perm); err != nil {
+		return err
+	}
+	o.clearWhiteout(name)
+	return nil
+}
+
 func (o *Overlay) WriteFile(name string, data []byte, perm iofs.FileMode) error {
 	name = Name(name)
 	if err := o.prepareWrite("open", name); err != nil {
@@ -704,5 +721,6 @@ var (
 	_ RemoveFS         = (*Overlay)(nil)
 	_ RenameFS         = (*Overlay)(nil)
 	_ SymlinkFS        = (*Overlay)(nil)
+	_ CreateFileFS     = (*Overlay)(nil)
 	_ WriteFileFS      = (*Overlay)(nil)
 )

@@ -6,6 +6,7 @@ func Commands() []command.Command {
 	return []command.Command{
 		{Name: "ls", Run: commandLS},
 		{Name: "mkdir", Run: commandMkdir},
+		{Name: "mktemp", Run: commandMktemp},
 		{Name: "touch", Run: commandTouch},
 		{Name: "rm", Run: commandRM},
 		{Name: "rmdir", Run: commandRmdir},

@@ -28,6 +28,9 @@ var (
 // through the capability interfaces below.
 type FileSystem = iofs.FS
 
+type CreateFileFS interface {
+	CreateFile(name string, data []byte, perm iofs.FileMode) error
+}
 type WriteFileFS interface {
 	WriteFile(name string, data []byte, perm iofs.FileMode) error
 }
@@ -110,6 +113,16 @@ func Readlink(fsys iofs.FS, name string) (string, error) {
 		return f.Readlink(Name(name))
 	}
 	return "", ErrUnsupported
+}
+
+func CreateFile(fsys iofs.FS, name string, data []byte, perm iofs.FileMode) error {
+	if Name(name) == "dev/null" {
+		return iofs.ErrExist
+	}
+	if f, ok := fsys.(CreateFileFS); ok {
+		return f.CreateFile(Name(name), data, perm)
+	}
+	return ErrReadOnly
 }
 
 func WriteFile(fsys iofs.FS, name string, data []byte, perm iofs.FileMode) error {
