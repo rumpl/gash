@@ -90,12 +90,28 @@ func (b *Bash) virtualHashDiscovery(ctx context.Context, argv []string) ([]strin
 }
 
 func (b *Bash) virtualTypeDiscovery(_ context.Context, argv []string) ([]string, bool) {
-	if len(argv) == 0 || argv[0] != "type" {
+	if len(argv) == 0 {
 		return argv, false
 	}
-	// mvdan's shell-native type implementation can search PATH. Force ordinary
-	// type calls through the registered in-process command instead.
-	return append([]string{"/usr/bin/type"}, argv[1:]...), true
+	if argv[0] == "type" {
+		// mvdan's shell-native type implementation can search PATH. Force ordinary
+		// type calls through the registered in-process command instead.
+		return append([]string{"/usr/bin/type"}, argv[1:]...), true
+	}
+	if argv[0] != "builtin" {
+		return argv, false
+	}
+	args := argv[1:]
+	if len(args) > 0 && args[0] == "--" {
+		args = args[1:]
+	}
+	if len(args) == 0 || args[0] != "type" {
+		return argv, false
+	}
+	// `builtin type` would otherwise bypass the registered command and expose
+	// mvdan's host PATH lookup. Preserve the type operands while forcing the same
+	// capability-scoped implementation used by direct invocations.
+	return append([]string{"/usr/bin/type"}, args[1:]...), true
 }
 
 func (b *Bash) discoverCommand(name string) (string, bool) {

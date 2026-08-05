@@ -67,10 +67,12 @@ type echo ls bash missing; echo status=$?
 type -t echo ls bash type missing; echo typed=$?
 type -a ls bash
 command type -t ls
+builtin type ls missing; echo builtin_status=$?
+builtin -- type -t echo bash missing; echo builtin_typed=$?
 command -v type
 `, ExecOptions{})
-	wantOut := "echo is a shell builtin\nls is a gash command\nbash is a gash command\nstatus=1\nbuiltin\nfile\nfile\nbuiltin\ntyped=1\nls is a gash command\nbash is a gash command\nfile\ntype\n"
-	wantErr := "type: missing: not found\n"
+	wantOut := "echo is a shell builtin\nls is a gash command\nbash is a gash command\nstatus=1\nbuiltin\nfile\nfile\nbuiltin\ntyped=1\nls is a gash command\nbash is a gash command\nfile\nls is a gash command\nbuiltin_status=1\nbuiltin\nfile\nbuiltin_typed=1\ntype\n"
+	wantErr := "type: missing: not found\ntype: missing: not found\n"
 	if result.ExitCode != 0 || result.Stdout != wantOut || result.Stderr != wantErr {
 		t.Fatalf("result=%+v", result)
 	}
