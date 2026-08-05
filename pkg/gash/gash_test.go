@@ -72,6 +72,10 @@ func TestVirtualIdentityAndNoHostFilesystem(t *testing.T) {
 	if result.Stdout != "1000:1000:1000" {
 		t.Fatalf("host identity leaked: %+v", result)
 	}
+	result = b.Exec(context.Background(), "id; id -un; id -G", ExecOptions{Env: map[string]string{"USER": "host-user", "UID": "42", "EUID": "43", "GID": "44"}})
+	if result.ExitCode != 0 || result.Stdout != "uid=1000(user) gid=1000(user) groups=1000(user)\nuser\n1000\n" {
+		t.Fatalf("host identity leaked through id: %+v", result)
+	}
 	result = b.Exec(context.Background(), "cat /etc/passwd", ExecOptions{})
 	if result.ExitCode == 0 {
 		t.Fatalf("host filesystem was visible: %+v", result)
