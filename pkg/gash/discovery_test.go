@@ -60,6 +60,30 @@ func TestVerboseCommandAndTypeDiscoveryAvoidFilesystemPaths(t *testing.T) {
 	}
 }
 
+func TestTypeDiscoveryUsesRegisteredCommandSurface(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `
+type echo ls bash missing; echo status=$?
+type -t echo ls bash type missing; echo typed=$?
+type -a ls bash
+command type -t ls
+command -v type
+`, ExecOptions{})
+	wantOut := "echo is a shell builtin\nls is a gash command\nbash is a gash command\nstatus=1\nbuiltin\nfile\nfile\nbuiltin\ntyped=1\nls is a gash command\nbash is a gash command\nfile\ntype\n"
+	wantErr := "type: missing: not found\n"
+	if result.ExitCode != 0 || result.Stdout != wantOut || result.Stderr != wantErr {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
+func TestTypeRejectsUnsupportedOptions(t *testing.T) {
+	shell := newTestBash(t)
+	result := shell.Exec(context.Background(), `type -p ls; echo status=$?`, ExecOptions{})
+	if result.ExitCode != 0 || result.Stdout != "status=1\n" || result.Stderr != "type: invalid option -- 'p'\n" {
+		t.Fatalf("result=%+v", result)
+	}
+}
+
 func TestCommandVFindsUname(t *testing.T) {
 	shell := newTestBash(t)
 	result := shell.Exec(context.Background(), `command -v uname; which uname; uname -a`, ExecOptions{})

@@ -89,33 +89,13 @@ func (b *Bash) virtualHashDiscovery(ctx context.Context, argv []string) ([]strin
 	return []string{"true"}, true
 }
 
-func (b *Bash) virtualTypeDiscovery(ctx context.Context, argv []string) ([]string, bool) {
-	if len(argv) < 2 || argv[0] != "type" {
+func (b *Bash) virtualTypeDiscovery(_ context.Context, argv []string) ([]string, bool) {
+	if len(argv) == 0 || argv[0] != "type" {
 		return argv, false
 	}
-	names := argv[1:]
-	if names[0] == "-a" {
-		names = names[1:]
-	} else if strings.HasPrefix(names[0], "-") {
-		return argv, false
-	}
-	handler := interp.HandlerCtx(ctx)
-	lastFound := true
-	for _, requested := range names {
-		name := normalizeDiscoveredName(requested)
-		kind, found := b.discoverCommand(name)
-		if !found || strings.Contains(name, "/") {
-			fmt.Fprintf(handler.Stderr, "type: %s: not found\n", requested)
-			lastFound = false
-			continue
-		}
-		fmt.Fprintf(handler.Stdout, "%s is %s\n", name, kind)
-		lastFound = true
-	}
-	if lastFound {
-		return []string{"true"}, true
-	}
-	return []string{"false"}, true
+	// mvdan's shell-native type implementation can search PATH. Force ordinary
+	// type calls through the registered in-process command instead.
+	return append([]string{"/usr/bin/type"}, argv[1:]...), true
 }
 
 func (b *Bash) discoverCommand(name string) (string, bool) {

@@ -33,7 +33,7 @@ Current command inventory:
 | ----------- | ----: |
 | Core        |    26 |
 | Useful      |    45 |
-| Partial     |    28 |
+| Partial     |    29 |
 | Optional    |     5 |
 | Deferred    |     0 |
 | Unsupported |     0 |
@@ -214,6 +214,7 @@ These commands work for documented subsets and remain priority parity areas:
 - `which` — reports virtual gash commands, never host `PATH` executables.
 - `time` — wall time is reported; host CPU accounting is intentionally absent.
 - `timeout` — context cancellation works; additional GNU flags remain.
+- `type` — registered deterministic discovery supports `NAME...`, `-a`, and `-t`; it reports shell built-ins and capability-scoped gash commands without consulting host `PATH`. Alias/function and executable-path reporting remain intentionally deferred.
 - `gzip`, `gunzip`, `zcat`, `tar` — in-process gzip and ustar/pax support with
   traversal and size protections; advanced flags, metadata cases, and codecs remain.
 - `jq` — practical gojq-backed subset; modules, file imports, uncommon flags,
@@ -258,7 +259,7 @@ assumption:
 - [x] Implement virtual `umask` for file and directory creation, with isolated
       subshell and nested-shell state; reject concurrent pipeline mutations.
 - [ ] Implement `PIPESTATUS` and Bash printf time formatting.
-- [ ] Complete function/alias-aware `command` and `type` discovery.
+- [ ] Complete function/alias-aware `command` and `type` discovery; registered `type` already handles deterministic registry-only `NAME...`, `-a`, and `-t`.
 - [ ] Complete background inheritance for shell functions, positional
       parameters, and non-default shell options.
 - [ ] Complete background-job trap, signal, and cancellation semantics beyond

@@ -261,7 +261,7 @@ func (b *Bash) execCommand(ctx context.Context, args []string, depth int, scope 
 		}
 		return nil
 	}
-	commandCtx := &CommandContext{FS: b.FS, Cwd: &cwd, Env: env, Umask: umaskFromContext(ctx), Stdin: h.Stdin, Stdout: h.Stdout, Stderr: h.Stderr, Commands: b.commandNames(), Now: b.now}
+	commandCtx := &CommandContext{FS: b.FS, Cwd: &cwd, Env: env, Umask: umaskFromContext(ctx), Stdin: h.Stdin, Stdout: h.Stdout, Stderr: h.Stderr, Commands: b.commandNames(), CommandTypes: b.commandTypes(), Now: b.now}
 	commandCtx.RunCommand = func(runCtx context.Context, argv []string, child *CommandContext) int {
 		return b.runCommandFromContext(runCtx, argv, child, depth, scope)
 	}

@@ -61,6 +61,51 @@ func commandWhich(_ context.Context, args []string, c *CommandContext) int {
 	return code
 }
 
+func commandType(_ context.Context, args []string, c *CommandContext) int {
+	mode := "description"
+	for len(args) > 0 && strings.HasPrefix(args[0], "-") {
+		switch args[0] {
+		case "--":
+			args = args[1:]
+			goto operands
+		case "-a":
+			mode = "description"
+		case "-t":
+			mode = "type"
+		default:
+			return commandhelp.UnknownOption(c, "type", args[0])
+		}
+		args = args[1:]
+	}
+
+operands:
+	if len(args) == 0 {
+		fmt.Fprintln(c.Stderr, "type: missing operand")
+		return 1
+	}
+	code := 0
+	for _, name := range args {
+		kind, found := c.CommandTypes[name]
+		if !found || strings.Contains(name, "/") {
+			code = 1
+			if mode == "description" {
+				fmt.Fprintf(c.Stderr, "type: %s: not found\n", name)
+			}
+			continue
+		}
+		if mode == "type" {
+			fmt.Fprintln(c.Stdout, kind)
+			continue
+		}
+		if kind == "builtin" {
+			fmt.Fprintf(c.Stdout, "%s is a shell builtin\n", name)
+		} else {
+			fmt.Fprintf(c.Stdout, "%s is a gash command\n", name)
+		}
+	}
+	return code
+}
+
 func commandHistory(_ context.Context, args []string, c *CommandContext) int {
 	if len(args) > 0 {
 		fmt.Fprintln(c.Stderr, "history: non-interactive command history is not persisted")

@@ -884,6 +884,20 @@ var catalog = map[string]Info{
 			"    --help  display this help and exit",
 		},
 	},
+	"type": {
+		Name:    "type",
+		Summary: "describe a virtual command",
+		Usage:   "type [-a|-t] NAME...",
+		Options: []string{
+			"-a       report every safe match (gash has one deterministic match per name)",
+			"-t       print builtin or file for each found name",
+			"--       end option parsing",
+		},
+		Notes: []string{
+			"Discovery is limited to shell built-ins, shell entry points, and the capability-scoped gash registry; host PATH is never consulted.",
+			"Unlike interactive Bash, gash does not currently report aliases, functions, keywords, or executable paths.",
+		},
+	},
 	"umask": {
 		Name:    "umask",
 		Summary: "set or display the file creation mask",
