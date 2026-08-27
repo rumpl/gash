@@ -1,5 +1,6 @@
 const status = document.querySelector("#status");
 const script = document.querySelector("#script");
+const stdin = document.querySelector("#stdin");
 const output = document.querySelector("#output");
 const runButton = document.querySelector("#run");
 const resetButton = document.querySelector("#reset");
@@ -22,7 +23,7 @@ async function run() {
   output.className = "";
   output.textContent = "Running…";
   try {
-    const result = await gash.exec(script.value);
+    const result = await gash.exec(script.value, { stdin: stdin.value });
     output.textContent = result.stdout + result.stderr || "(no output)";
     output.classList.toggle("error", result.exitCode !== 0);
     status.textContent = `Exit ${result.exitCode}`;

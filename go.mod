@@ -25,3 +25,5 @@ require (
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
+
+replace mvdan.cc/sh/v3 => ./third_party/mvdan-sh

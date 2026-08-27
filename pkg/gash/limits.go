@@ -92,6 +92,7 @@ type executionScope struct {
 	limits   Limits
 	commands *atomic.Int64
 	input    *atomic.Int64
+	output   *outputBudget
 	trapsMu  sync.RWMutex
 	traps    map[string]string
 	jobs     *jobState

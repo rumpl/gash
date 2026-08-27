@@ -14,11 +14,19 @@
     </header>
     <p>A capability-scoped Bash interpreter running entirely in your browser.</p>
     <label for="script">Script</label>
-    <textarea id="script" spellcheck="false">printf 'Names starting with G:\n'
-printf 'GRACE\n'
+    <textarea id="script" spellcheck="false">printf 'beta\nalpha\n' | sort
+message=$(cat <<'EOF'
+hello from a heredoc
+EOF
+)
+printf 'substitution: %s\n' "$message"
+printf 'stdin: '; cat
 mkdir -p /tmp/demo
 echo 'The virtual filesystem persists between runs.' > /tmp/demo/readme
 cat /tmp/demo/readme</textarea>
+    <label for="stdin">Standard input</label>
+    <textarea id="stdin" class="stdin" spellcheck="false">hello from browser stdin
+</textarea>
     <div class="actions">
       <button id="run" disabled>Run <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
       <button id="reset" class="secondary" disabled>Reset filesystem</button>

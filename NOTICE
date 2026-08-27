@@ -7,3 +7,8 @@ https://github.com/vercel-labs/just-bash
 just-bash is Copyright Vercel, Inc. and contributors and is distributed under
 the Apache License, Version 2.0. No TypeScript source code or bundled runtime
 artifacts from just-bash are included in this repository.
+
+This distribution includes a modified copy of mvdan.cc/sh/v3:
+Copyright (c) 2016 Daniel Martí and contributors
+https://github.com/mvdan/sh
+Distributed under the BSD 3-Clause License; see third_party/mvdan-sh/LICENSE.

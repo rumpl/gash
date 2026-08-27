@@ -135,15 +135,10 @@ func TestOutputLimitCoversLongLoopPipelineAndCommandSubstitution(t *testing.T) {
 			},
 		},
 		{
-			// mvdan connects pipeline stages with host os.Pipe values before the
-			// final command writes to gash's bounded stdout. The pipe itself is not
-			// currently counted, so this regression case documents the remaining
-			// unsupported aggregate-limit gap while host process/filesystem access
-			// stays blocked at gash's ExecHandler/OpenHandler boundary.
-			name:   "pipeline output documents mvdan pipe bypass",
+			name:   "pipeline aggregate limit",
 			script: `printf '%s' 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz' | cat`,
 			check: func(t *testing.T, result Result) {
-				if result.ExitCode != 0 || result.Stdout != "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz" {
+				if result.ExitCode != 126 {
 					t.Fatalf("%+v", result)
 				}
 			},
@@ -166,7 +161,7 @@ func TestOutputLimitCoversLongLoopPipelineAndCommandSubstitution(t *testing.T) {
 				t.Fatalf("output limit did not cancel promptly: %s result=%+v", time.Since(start), result)
 			}
 			tc.check(t, result)
-			if len(result.Stdout)+len(result.Stderr) > 128 && tc.name != "pipeline output documents mvdan pipe bypass" {
+			if len(result.Stdout)+len(result.Stderr) > 128 {
 				t.Fatalf("unexpectedly large output after limit: stdout=%d stderr=%d", len(result.Stdout), len(result.Stderr))
 			}
 		})

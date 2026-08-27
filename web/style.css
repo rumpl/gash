@@ -14,3 +14,5 @@ pre.error { color: #ff9e9e; }
 button { cursor: pointer; border: 0; border-radius: 6px; padding: .65rem 1rem; background: #61d095; color: #07110c; font: bold .9rem inherit; }
 button.secondary { background: #293b48; color: #d8e2eb; } button:disabled { cursor: wait; opacity: .45; }
 kbd { padding: .05rem .3rem; border: 1px solid #346b51; border-radius: 3px; }
+
+textarea.stdin { min-height: 6rem; }

@@ -48,7 +48,7 @@ func (b *Bash) Exec(parent context.Context, script string, options ExecOptions) 
 	budget := &outputBudget{maximum: int64(b.limits.MaxOutputBytes), cancel: cancelOutput}
 	out := &boundedBuffer{budget: budget}
 	errout := &boundedBuffer{budget: budget}
-	scope := &executionScope{limits: b.limits}
+	scope := &executionScope{limits: b.limits, output: budget}
 	ctx = scope.initializeJobs(ctx)
 	code, finalEnv := b.execute(ctx, script, options.Stdin, cwd, env, options.Args, options.ScriptName, out, errout, 0, scope, false)
 	scope.stopJobs()
@@ -132,6 +132,9 @@ func (b *Bash) execute(ctx context.Context, script, stdin, cwd string, env map[s
 		},
 		interp.Params(args...),
 		interp.StdIO(interpreterStdin(stdin), stdout, interpreterStderr),
+		interp.PipeHandler(func(pipeCtx context.Context) (io.ReadCloser, io.WriteCloser) {
+			return newExecutionPipe(pipeCtx, scope)
+		}),
 		interp.OpenHandler(b.openHandler),
 		interp.ReadDirHandler2(b.readDirHandler),
 		interp.StatHandler(b.statHandler),
