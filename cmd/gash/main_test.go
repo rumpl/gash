@@ -119,3 +119,76 @@ func TestRunWithoutRootUsesMemoryFilesystem(t *testing.T) {
 		t.Fatalf("stdout=%q", stdout.String())
 	}
 }
+
+func TestRunWithSQLiteFilesystemPersistsAndMounts(t *testing.T) {
+	source := t.TempDir()
+	if err := os.WriteFile(filepath.Join(source, "seed.txt"), []byte("seeded\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	database := filepath.Join(t.TempDir(), "gash.db")
+
+	var stdout, stderr bytes.Buffer
+	exitCode := run(
+		[]string{"--sqlite", database, "--mount", source + ":/data", "-c", "cat /data/seed.txt; echo written > /data/out.txt"},
+		&bytes.Buffer{},
+		&stdout,
+		&stderr,
+	)
+	if exitCode != 0 || stdout.String() != "seeded\n" {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+	}
+
+	// The mounted directory was copied, so removing it changes nothing, and
+	// files written by the shell survive in the database.
+	if err := os.RemoveAll(source); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	exitCode = run(
+		[]string{"--sqlite", database, "-c", "cat /data/seed.txt /data/out.txt"},
+		&bytes.Buffer{},
+		&stdout,
+		&stderr,
+	)
+	if exitCode != 0 || stdout.String() != "seeded\nwritten\n" {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", exitCode, stdout.String(), stderr.String())
+	}
+}
+
+func TestRunRejectsInvalidDatabaseCombinations(t *testing.T) {
+	cases := map[string][]string{
+		"--mount requires":   {"--mount", t.TempDir(), "-c", "true"},
+		"mutually exclusive": {"--sqlite", filepath.Join(t.TempDir(), "a.db"), "--turso", "libsql://example.turso.io", "-c", "true"},
+		"--root cannot be":   {"--root", t.TempDir(), "--sqlite", filepath.Join(t.TempDir(), "b.db"), "-c", "true"},
+		"mount policy must":  {"--sqlite", filepath.Join(t.TempDir(), "c.db"), "--mount-policy", "sometimes", "-c", "true"},
+	}
+	for want, args := range cases {
+		var stdout, stderr bytes.Buffer
+		if exitCode := run(args, &bytes.Buffer{}, &stdout, &stderr); exitCode != 1 {
+			t.Fatalf("%s: exit=%d stderr=%q", want, exitCode, stderr.String())
+		}
+		if !strings.Contains(stderr.String(), want) {
+			t.Fatalf("stderr=%q want %q", stderr.String(), want)
+		}
+	}
+}
+
+func TestMountFlagParsing(t *testing.T) {
+	var mounts mountFlags
+	if err := mounts.Set("/host/dir"); err != nil {
+		t.Fatal(err)
+	}
+	if err := mounts.Set("/host/other:/target"); err != nil {
+		t.Fatal(err)
+	}
+	if len(mounts) != 2 || mounts[0].Target != "/" || mounts[1].HostPath != "/host/other" || mounts[1].Target != "/target" {
+		t.Fatalf("mounts=%+v", mounts)
+	}
+	if err := mounts.Set(":/target"); err == nil {
+		t.Fatal("expected an empty host path to be rejected")
+	}
+	if err := mounts.Set("/host/dir:relative"); err == nil {
+		t.Fatal("expected a relative target to be rejected")
+	}
+}

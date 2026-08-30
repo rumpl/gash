@@ -118,6 +118,11 @@ substantial work.
 - [x] Provide least-authority read-only views that strip mutation capabilities
       while preserving read-only symlink inspection through `ReadlinkFS` and
       `LstatFS`.
+- [x] Provide database-backed filesystems that persist the full capability set
+      in SQL tables, with a local SQLite backend and a remote Turso (libSQL)
+      backend behind one `DB` interface.
+- [x] Provide copy mounts that import a source tree into a filesystem instead of
+      routing reads to it, with if-absent, merge, and replace policies.
 
 ### Security boundaries
 
@@ -313,6 +318,10 @@ Upstream has finer-grained accounting still to port where applicable:
 - [ ] Expand nested-mount, shadowing, symlink, hard-link, and cross-device tests.
 - [ ] Harden `Rooted` against symlink-swap/TOCTOU races for hostile concurrent host changes.
 - [ ] Add shared conformance tests for every writable filesystem implementation.
+- [ ] Share the database-backed conformance suite with `Memory`, `Rooted`, and `Overlay`.
+- [ ] Stream large database-backed file bodies instead of reading and writing whole blobs.
+- [ ] Define multi-process concurrency guarantees for database-backed filesystems, whose
+      operations are currently serialized per process rather than in a database transaction.
 
 ## Remaining command parity work
 

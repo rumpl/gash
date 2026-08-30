@@ -69,9 +69,12 @@ gash --root . -c 'ls; cat README.md'
 printf 'echo "$NAME"\n' | gash -e NAME=world
 gash --json -c 'false'
 gash script.sh
+gash --sqlite state.db --mount ./project:/project -c 'ls /project'
 ```
 
 The CLI starts with a fresh in-memory filesystem by default. Pass `--root DIR` to expose a host directory read-only as `/`; the virtual working directory then defaults to `/`. A script filename is read by the CLI as input but does not, by itself, expose the script's directory.
+
+Pass `--sqlite FILE` or `--turso URL` (with `--turso-token`, defaulting to `$TURSO_AUTH_TOKEN`) to keep the virtual filesystem in a database instead, so state persists between runs. `--mount HOSTDIR[:TARGET]` copies a host directory into that database filesystem, repeatable, and `--mount-policy if-absent|merge|replace` decides how an existing target is treated.
 
 ## Supported behavior
 
@@ -123,6 +126,41 @@ Virtual absolute shell paths are translated to valid root-relative `io/fs` paths
 
 The CLI's `--root DIR` option exposes a host directory as `/` through `fs.Rooted`. `fs.Rooted` resolves symlinks under the configured root and rejects lexical traversal or symlink escapes outside that directory. It implements write capabilities for gash commands, so scripts can mutate files inside `DIR`; use a read-only `Options.FS` implementation when mutation must be disallowed.
 
+### Database-backed filesystems
+
+`fs.Database` keeps a complete filesystem — data, permissions, modification times, symbolic links and hard links — in two SQL tables, so shell state survives the process. Two backends are bundled:
+
+```go
+// Persisted in a local SQLite file through the CGO-free modernc.org/sqlite driver.
+sqliteFS, err := fs.NewSQLite(fs.SQLiteOptions{Path: "state.db"})
+
+// Persisted in a Turso (libSQL) database over its HTTP pipeline API.
+tursoFS, err := fs.NewTurso(fs.TursoOptions{
+    URL:       os.Getenv("TURSO_DATABASE_URL"), // libsql://, wss://, ws://, https:// or http://
+    AuthToken: os.Getenv("TURSO_AUTH_TOKEN"),
+})
+
+shell, _ := gash.New(gash.Options{FS: sqliteFS, Cwd: "/"})
+```
+
+Both return the same `*fs.Database`, implement the full capability set, and accept `Table` (table prefix, so several independent filesystems can share one database), `Limit` (retained file bytes), and `Timeout` (per-statement deadline). The Turso backend speaks the Hrana v2 pipeline protocol directly over `net/http`, so it adds no driver dependency; `NewSQLite` is unavailable on `js/wasm`, where its driver does not build, while the Turso backend still works. Every operation is serialized in-process — separate processes sharing one database are coordinated only by the database's own locking — and `Close` releases the backing handle. Supply any other SQLite-compatible database by implementing the small `fs.DB` interface (`Exec`, `Query`, `Close`) and calling `fs.NewDatabase`.
+
+### Copy mounts
+
+A copy mount is the opposite of an `fs.Mountable` mount: instead of routing reads to another filesystem, it copies the source tree **into** the destination once, so a database-backed filesystem owns the data afterwards and the source may disappear.
+
+```go
+filesystem, err := fs.NewSQLite(fs.SQLiteOptions{
+    Path: "state.db",
+    Mounts: []fs.CopyMount{
+        {HostPath: "./project", Target: "/project"},          // host directory, via fs.Rooted
+        {Source: assets, Target: "/assets", Policy: fs.MountMerge}, // any io/fs.FS
+    },
+})
+```
+
+The policy decides what happens when the target already holds data: `MountIfAbsent` (default) leaves a populated target untouched so restarts never clobber shell work, `MountMerge` refreshes the entries the source provides, and `MountReplace` clears the target first. `fs.CopyTree` and `fs.ApplyMount` perform the same copy into any writable filesystem, including `fs.Memory`.
+
 ## Limits and security
 
 Defaults are deliberately bounded:
@@ -144,7 +182,7 @@ The public libraries are `pkg/gash` and `pkg/fs`; implementation-only command co
 
 ## Examples
 
-Runnable programs for in-memory, seeded, custom-command, Docker Agent, host filesystem, overlay, mount, network-policy, security-boundary, and SQLite setups are available in [`examples/`](examples/).
+Runnable programs for in-memory, seeded, custom-command, Docker Agent, host filesystem, overlay, mount, network-policy, security-boundary, SQLite, and database-backed filesystem setups are available in [`examples/`](examples/).
 
 ```sh
 go run ./examples/basic
@@ -152,11 +190,12 @@ go run ./examples/host-readonly -- .
 (cd examples/docker-agent && go run . "Inspect the project with the shell tool")
 go run ./examples/security
 go run ./examples/sqlite
+go run ./examples/sqlite-fs
 ```
 
 ## WebAssembly
 
-Gash can run in a browser through the `js/wasm` target. The JavaScript API exposes a persistent in-memory shell as `gash.exec(script, options)`, returning a Promise with `stdout`, `stderr`, `exitCode`, and `env`. The browser build excludes `sqlite3`, whose Go dependency does not support `js/wasm`; host filesystem and network capabilities are not enabled. Go’s browser port also lacks `os.Pipe`, so pipelines, heredocs, command substitution, and non-empty `stdin` are not available in this target; scripts using ordinary commands, control flow, and virtual-file redirections run normally.
+Gash can run in a browser through the `js/wasm` target. The JavaScript API exposes a persistent in-memory shell as `gash.exec(script, options)`, returning a Promise with `stdout`, `stderr`, `exitCode`, and `env`. The browser build excludes `sqlite3` and `fs.NewSQLite`, whose Go dependency does not support `js/wasm`; host filesystem and network capabilities are not enabled. Go's browser port also lacks `os.Pipe`, so pipelines, heredocs, command substitution, and non-empty `stdin` are not available in this target; scripts using ordinary commands, control flow, and virtual-file redirections run normally.
 
 Build and open the included demo:
 
