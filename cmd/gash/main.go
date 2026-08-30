@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	iofs "io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,6 +32,77 @@ func (e envFlags) Set(value string) error {
 	return nil
 }
 
+// mountFlags collects repeated --mount HOSTDIR[:TARGET] options. Unlike a
+// routed mount, each one copies the host directory into the virtual
+// filesystem, so the data survives the host directory.
+type mountFlags []gfs.CopyMount
+
+func (m *mountFlags) String() string {
+	return "HOSTDIR[:TARGET]"
+}
+
+func (m *mountFlags) Set(value string) error {
+	hostPath, target, found := strings.Cut(value, ":")
+	if hostPath == "" {
+		return errors.New("mount must be HOSTDIR[:TARGET]")
+	}
+	if !found || target == "" {
+		target = "/"
+	}
+	if !strings.HasPrefix(target, "/") {
+		return fmt.Errorf("mount target must be absolute: %q", target)
+	}
+	*m = append(*m, gfs.CopyMount{HostPath: hostPath, Target: target})
+	return nil
+}
+
+func mountPolicy(name string) (gfs.MountPolicy, error) {
+	switch name {
+	case "", "if-absent":
+		return gfs.MountIfAbsent, nil
+	case "merge":
+		return gfs.MountMerge, nil
+	case "replace":
+		return gfs.MountReplace, nil
+	default:
+		return 0, errors.New("mount policy must be if-absent, merge, or replace")
+	}
+}
+
+type databaseOptions struct {
+	sqlitePath string
+	turso      string
+	tursoToken string
+	policy     string
+	mounts     mountFlags
+}
+
+// databaseFilesystem builds the SQLite or Turso backed filesystem selected on
+// the command line, applying every copy mount before it is used.
+func databaseFilesystem(options databaseOptions) (iofs.FS, error) {
+	if options.sqlitePath != "" && options.turso != "" {
+		return nil, errors.New("--sqlite and --turso are mutually exclusive")
+	}
+	policy, err := mountPolicy(options.policy)
+	if err != nil {
+		return nil, err
+	}
+	mounts := append(mountFlags(nil), options.mounts...)
+	for i := range mounts {
+		mounts[i].Policy = policy
+	}
+	switch {
+	case options.sqlitePath != "":
+		return gfs.NewSQLite(gfs.SQLiteOptions{Path: options.sqlitePath, Mounts: mounts})
+	case options.turso != "":
+		return gfs.NewTurso(gfs.TursoOptions{URL: options.turso, AuthToken: options.tursoToken, Mounts: mounts})
+	case len(mounts) > 0:
+		return nil, errors.New("--mount requires --sqlite or --turso")
+	default:
+		return nil, nil
+	}
+}
+
 func main() {
 	os.Exit(run(os.Args[1:], os.Stdin, os.Stdout, os.Stderr))
 }
@@ -42,6 +115,12 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	cwd := set.String("cwd", "", "virtual working directory (defaults to / with --root)")
 	root := set.String("root", "", "expose a host directory read-only as the virtual filesystem root")
 	networkAllow := set.String("network-allow", "", "enable curl for comma-separated allowed HTTP(S) origins (scheme://host[:port][/path])")
+	database := databaseOptions{tursoToken: os.Getenv("TURSO_AUTH_TOKEN")}
+	set.StringVar(&database.sqlitePath, "sqlite", "", "persist the virtual filesystem in a SQLite database file")
+	set.StringVar(&database.turso, "turso", "", "persist the virtual filesystem in a Turso (libSQL) database URL")
+	set.StringVar(&database.tursoToken, "turso-token", database.tursoToken, "auth token for --turso (defaults to $TURSO_AUTH_TOKEN)")
+	set.StringVar(&database.policy, "mount-policy", "if-absent", "how --mount treats an existing target: if-absent, merge, or replace")
+	set.Var(&database.mounts, "mount", "copy a host directory into the database filesystem as HOSTDIR[:TARGET] (repeatable)")
 	env := envFlags{}
 	set.Var(env, "e", "set an environment variable (repeatable)")
 	set.Usage = func() {
@@ -70,6 +149,10 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		Cwd: *cwd,
 		Env: env,
 	}
+	if *root != "" && (database.sqlitePath != "" || database.turso != "") {
+		fmt.Fprintln(stderr, "gash: --root cannot be combined with --sqlite or --turso")
+		return 1
+	}
 	if *root != "" {
 		absoluteRoot, err := filepath.Abs(*root)
 		if err != nil {
@@ -91,6 +174,20 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			return 1
 		}
 		options.FS = gfs.ReadOnly(rootFS)
+		if options.Cwd == "" {
+			options.Cwd = "/"
+		}
+	}
+	databaseFS, err := databaseFilesystem(database)
+	if err != nil {
+		fmt.Fprintln(stderr, "gash:", err)
+		return 1
+	}
+	if databaseFS != nil {
+		if closer, ok := databaseFS.(io.Closer); ok {
+			defer closer.Close()
+		}
+		options.FS = databaseFS
 		if options.Cwd == "" {
 			options.Cwd = "/"
 		}

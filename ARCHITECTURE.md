@@ -17,6 +17,10 @@ pkg/fs/                public filesystem implementations
   memory.go            bounded in-memory filesystem
   mount.go             mount routing and read namespace
   mount_write.go       mutation and cross-mount operations
+  database.go          SQL-table-backed filesystem over the DB interface
+  sqlite.go            SQLite backend (modernc.org/sqlite, database/sql)
+  turso.go             Turso/libSQL backend over the Hrana v2 HTTP protocol
+  copy.go              copy mounts: copying a source tree into a filesystem
 internal/command/      dependency-neutral command contract
 internal/commandutil/  shared command helpers
 internal/commands/     registry and command-family packages
@@ -51,6 +55,8 @@ pkg/fs ---> io/fs
 The base contract is `io/fs.FS`, which is intentionally read-only and works with standard implementations. Mutations are separate optional interfaces (`WriteFileFS`, `MkdirFS`, `RenameFS`, and others). This provides least authority and avoids forcing every backend to pretend it is writable.
 
 Shell paths are absolute Unix paths. They are converted to root-relative, `fs.ValidPath`-compatible names at the boundary. The interpreter receives custom open, stat, and directory handlers and never receives the host defaults.
+
+Database-backed filesystems keep that contract: `pkg/fs.Database` stores paths and nodes as rows and reaches its backend through the two-method `DB` interface, so the SQLite driver and the Turso HTTP client are interchangeable and neither is visible to commands. Copy mounts import a source tree once through the same capability helpers, so no shell command can reach the source filesystem afterwards.
 
 ## Execution boundary
 
